@@ -5,7 +5,7 @@
  * Higher surprisal = lower predictability = higher processing cost.
  */
 const llm = require('../services/llm');
-const { mean, stdev } = require('../utils/nlp');
+const { mean } = require('../utils/nlp');
 
 const LAYER_ID = 'L1';
 const LAYER_NAME = 'Lexical Sophistication';

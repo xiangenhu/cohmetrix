@@ -5,7 +5,7 @@
  * distance between dependent and head. UD provides cross-lingual representation.
  */
 const llm = require('../services/llm');
-const { mean, stdev } = require('../utils/nlp');
+const { mean } = require('../utils/nlp');
 
 const LAYER_ID = 'L2';
 const LAYER_NAME = 'Syntactic Complexity';

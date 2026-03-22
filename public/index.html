@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoCohMetrix — Cohesion Analysis</title>
+
+  <!-- Modular CSS -->
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/topbar.css">
+  <link rel="stylesheet" href="/css/upload.css">
+  <link rel="stylesheet" href="/css/processing.css">
+  <link rel="stylesheet" href="/css/results.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">Neo<span>CohMetrix</span></div>
+    <div class="pill">v0.9 · Beta</div>
+    <div class="topbar-right">
+      <button class="nav-btn active">Upload</button>
+      <button class="nav-btn" id="btn-process" style="opacity:0.4;pointer-events:none">Analysis</button>
+      <button class="nav-btn" id="btn-results" style="opacity:0.4;pointer-events:none">Results</button>
+    </div>
+  </div>
+
+  <!-- ══ UPLOAD SCREEN ══ -->
+  <div class="screen active" id="s-upload">
+    <div style="width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:2rem 1rem">
+      <div style="text-align:center;margin-bottom:4px">
+        <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis</div>
+        <div style="font-size:13px;color:var(--text-secondary)">11-layer deep text analysis for essay grading · L0 – L10</div>
+      </div>
+      <div class="upload-card">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon">&#128196;</div>
+          <div class="drop-title" id="drop-title">Drop your essay here</div>
+          <div class="drop-sub" id="drop-sub">.txt · .docx · .pdf supported · max 50 pages</div>
+          <button class="browse-btn" id="browse-btn">Browse file</button>
+          <input type="file" id="file-input" accept=".txt,.docx,.pdf" hidden>
+        </div>
+        <div class="or-row">or paste text directly</div>
+        <div class="paste-area">
+          <div class="field-label">Essay text</div>
+          <textarea id="essay-text" placeholder="Paste essay content here...&#10;&#10;Example: The relationship between technology and education has evolved significantly over the past decade. Artificial intelligence, once confined to research laboratories, now permeates every aspect of learning..."></textarea>
+        </div>
+        <div class="prompt-area">
+          <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional — enables L4.8 on-topic scoring)</span></div>
+          <input type="text" id="prompt-text" placeholder="e.g. Discuss the impact of AI on higher education in 800–1000 words.">
+        </div>
+        <div class="upload-section-label">Analysis options</div>
+        <div class="options-row">
+          <div class="opt-chip on"><div class="opt-dot"></div>L0–L5 Core</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L6 RST</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L7 Argumentation</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L8 Stance</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L9 Affect</div>
+          <div class="opt-chip"><div class="opt-dot"></div>L10 Reader-adaptive</div>
+        </div>
+        <div style="padding:4px 20px 14px">
+          <div class="learner-id-row">
+            <span>Learner ID (L10):</span>
+            <input type="text" id="learner-id" placeholder="student_4821">
+            <span class="learner-id-hint">pulls UALS/LRS profile</span>
+          </div>
+        </div>
+        <button class="run-btn" id="run-btn">Run Neo-Coh-Metrix Analysis →</button>
+      </div>
+      <div style="text-align:center"><span class="sample-link" id="sample-link">Load sample essay</span></div>
+    </div>
+  </div>
+
+  <!-- ══ PROCESSING SCREEN ══ -->
+  <div class="screen" id="s-process">
+    <div class="proc-card">
+      <div class="proc-header">
+        <div class="proc-spinner" id="spinner"></div>
+        <div>
+          <div class="proc-title" id="proc-title">Initializing NLP pipeline…</div>
+          <div class="proc-sub" id="proc-sub">Preparing analysis modules</div>
+        </div>
+      </div>
+      <div class="layer-rows" id="layer-rows"></div>
+      <div class="proc-log" id="proc-log"></div>
+    </div>
+  </div>
+
+  <!-- ══ RESULTS SCREEN ══ -->
+  <div class="screen" id="s-results">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="st-words">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Sentences</div><div class="stat-val" id="st-sents">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Paragraphs</div><div class="stat-val" id="st-paras">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Mean sent. len</div><div class="stat-val" id="st-msl">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Type-Token</div><div class="stat-val" id="st-ttr">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">AWL density</div><div class="stat-val" id="st-awl">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="st-time">—</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center">
+        <button class="nav-btn" id="btn-new-essay" style="font-size:11px">← New essay</button>
+      </div>
+    </div>
+    <div class="results-inner">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sb-header">Analysis Layers</div>
+        <div id="layer-list"></div>
+      </div>
+      <!-- Center -->
+      <div class="center-panel" id="center-panel"></div>
+      <!-- Right -->
+      <div class="right-panel">
+        <div>
+          <div class="rp-section-title">Composite factors</div>
+          <div class="factor-chart-wrap"><canvas id="radar-chart"></canvas></div>
+        </div>
+        <div class="overall-score">
+          <div class="os-num" id="overall-score-num">—</div>
+          <div class="os-label">Overall Cohesion Score</div>
+          <div class="os-sub">Weighted F1–F6 composite · 0–100</div>
+        </div>
+        <div>
+          <div class="rp-section-title">Reader profile (L10)</div>
+          <div class="reader-card" id="reader-profile-card">
+            <div class="reader-row"><span class="reader-label">Awaiting analysis…</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="rp-section-title">Priority feedback</div>
+          <div class="feedback-box">
+            <div class="fb-label" id="feedback-count">AI Tutor</div>
+            <div id="feedback-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<!-- Modular JS -->
+<script src="/js/charts.js"></script>
+<script src="/js/results.js"></script>
+<script src="/js/processing.js"></script>
+<script src="/js/upload.js"></script>
+<script src="/js/app.js"></script>
+
+<script>
+  // New essay button
+  document.getElementById('btn-new-essay').addEventListener('click', () => {
+    App.showScreen('upload');
+    App.resetNavigation();
+  });
+</script>
+</body>
+</html>

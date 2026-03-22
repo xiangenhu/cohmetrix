@@ -4,17 +4,34 @@ module.exports = {
   port: parseInt(process.env.PORT, 10) || 8080,
   nodeEnv: process.env.NODE_ENV || 'development',
 
-  anthropic: {
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
+  llm: {
+    provider: process.env.LLM_PROVIDER || 'anthropic',
     maxTokens: parseInt(process.env.LLM_MAX_TOKENS, 10) || 4096,
     temperature: parseFloat(process.env.LLM_TEMPERATURE) || 0.1,
     batchSize: parseInt(process.env.LLM_BATCH_SIZE, 10) || 10,
   },
 
+  anthropic: {
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
+  },
+
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY,
+    model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+  },
+
+  azure: {
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    deployment: process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-4.1-mini',
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview',
+  },
+
   gcs: {
     bucketName: process.env.GCS_BUCKET_NAME || 'neo-cohmetrix-results',
     projectId: process.env.GCS_PROJECT_ID,
+    keyFile: process.env.GCS_KEY_FILE,
   },
 
   analysis: {

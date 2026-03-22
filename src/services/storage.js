@@ -8,16 +8,24 @@ let bucket = null;
 const memoryStore = new Map();
 
 function initStorage() {
-  if (storage) return;
+  if (storage !== null) return; // already attempted
+  // Only init GCS if project ID and bucket are configured
+  if (!config.gcs.projectId && !config.gcs.keyFile && !process.env.GOOGLE_APPLICATION_CREDENTIALS && !process.env.K_SERVICE) {
+    console.log('[GCS] No credentials configured, using in-memory store');
+    storage = 'memory';
+    return;
+  }
   try {
     const opts = {};
     if (config.gcs.projectId) opts.projectId = config.gcs.projectId;
-    storage = new Storage(opts);
-    bucket = storage.bucket(config.gcs.bucketName);
+    if (config.gcs.keyFile) opts.keyFilename = config.gcs.keyFile;
+    const gcs = new Storage(opts);
+    bucket = gcs.bucket(config.gcs.bucketName);
+    storage = gcs;
     console.log(`[GCS] Connected to bucket: ${config.gcs.bucketName}`);
   } catch (err) {
     console.warn('[GCS] Failed to initialize, using in-memory store:', err.message);
-    storage = null;
+    storage = 'memory';
   }
 }
 
