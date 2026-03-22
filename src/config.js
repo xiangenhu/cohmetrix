@@ -34,6 +34,13 @@ module.exports = {
     keyFile: process.env.GCS_KEY_FILE,
   },
 
+  oauth: {
+    gatewayUrl: process.env.OAUTH_GATEWAY_URL || 'https://oauth.skoonline.org',
+    provider: process.env.OAUTH_PROVIDER || 'google',
+  },
+
+  targetAudience: process.env.TARGET_AUDIENCE || 'teacher',
+
   analysis: {
     maxEssayWords: parseInt(process.env.MAX_ESSAY_WORDS, 10) || 50000,
     maxFileSizeMB: parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 10,

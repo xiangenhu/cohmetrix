@@ -8,6 +8,7 @@ const { layers, layerMap } = require('../layers');
 const { parseDocument } = require('../utils/nlp');
 const config = require('../config');
 const llm = require('./llm');
+const { enrichWithEvidence } = require('./evidence');
 
 // Layer execution groups for parallel processing
 // Group 1: NLP-only layers (fast)
@@ -35,6 +36,7 @@ async function runAnalysis(text, options = {}) {
   } = options;
 
   const startTime = Date.now();
+  const tokenTracker = llm.createTracker();
   onProgress({ type: 'init', message: 'Initializing NLP pipeline…' });
 
   // Parse document
@@ -79,12 +81,14 @@ async function runAnalysis(text, options = {}) {
         layerTimings[layerId] = elapsed;
         layerResults[layerId] = result;
 
+        const tokenSnapshot = tokenTracker.getSummary();
         onProgress({
           type: 'layer_done',
           layerId,
           layerName: layer.LAYER_NAME,
           score: result.score,
           elapsed,
+          tokenUsage: tokenSnapshot,
           message: `${layer.LAYER_NAME} complete (${(elapsed / 1000).toFixed(1)}s)`,
         });
       } catch (err) {
@@ -99,6 +103,18 @@ async function runAnalysis(text, options = {}) {
     });
 
     await Promise.all(promises);
+  }
+
+  // Enrich with evidence excerpts and plain-language descriptions
+  onProgress({ type: 'log', message: 'Generating evidence and plain-language descriptions…' });
+  let enrichedLayers;
+  try {
+    enrichedLayers = await enrichWithEvidence(Object.values(layerResults), doc.text);
+    // Update layerResults with enriched data
+    enrichedLayers.forEach(l => { layerResults[l.layerId] = l; });
+  } catch (err) {
+    console.error('[Pipeline] Evidence enrichment failed:', err.message);
+    enrichedLayers = Object.values(layerResults);
   }
 
   // Compute composite scores (PCA analog: F1-F6)
@@ -116,15 +132,18 @@ async function runAnalysis(text, options = {}) {
   }
 
   const totalTime = (Date.now() - startTime) / 1000;
+  const tokenUsage = tokenTracker.getSummary();
   onProgress({
-    type: 'complete',
-    message: `Analysis complete · ${totalTime.toFixed(1)}s total`,
+    type: 'log',
+    message: `Analysis complete · ${totalTime.toFixed(1)}s total · ${tokenUsage.totalTokens.toLocaleString()} tokens`,
+    tokenUsage,
   });
 
   return {
     id: null, // assigned by caller
     timestamp: new Date().toISOString(),
     analysisTime: totalTime,
+    targetAudience: config.targetAudience,
     document: {
       wordCount: doc.wordCount,
       sentenceCount: doc.sentenceCount,
@@ -132,7 +151,9 @@ async function runAnalysis(text, options = {}) {
       text: doc.text,
       promptText,
     },
-    layers: Object.values(layerResults),
+    tokenUsage,
+    llmProvider: llm.getProviderInfo(),
+    layers: enrichedLayers,
     compositeScores,
     overallScore,
     feedback,

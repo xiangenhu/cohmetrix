@@ -49,8 +49,6 @@ const App = (() => {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-  App.init();
-  Upload.init();
-  Library.init();
-  History.init();
+  // Auth.init() handles the login flow and calls App.init() etc. on success
+  Auth.init();
 });

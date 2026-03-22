@@ -64,12 +64,23 @@ const Processing = (() => {
     logEl.textContent = message + '\n' + logEl.textContent;
   }
 
+  function updateTokenDisplay(usage) {
+    const el = (id, val) => {
+      const e = document.getElementById(id);
+      if (e) e.textContent = (val || 0).toLocaleString();
+    };
+    el('proc-prompt-tokens', usage.promptTokens);
+    el('proc-completion-tokens', usage.completionTokens);
+    el('proc-total-tokens', usage.totalTokens);
+    el('proc-llm-calls', usage.calls);
+  }
+
   async function start(formData) {
     initUI();
 
     try {
-      // Submit analysis request
-      const response = await fetch('/api/analyze', {
+      // Submit analysis request (with auth token)
+      const response = await Auth.apiFetch('/api/analyze', {
         method: 'POST',
         body: formData,
       });
@@ -82,8 +93,9 @@ const Processing = (() => {
       const { analysisId } = await response.json();
       addLog(`Analysis started · ID: ${analysisId.substring(0, 8)}…`);
 
-      // Connect to SSE stream for progress
-      const evtSource = new EventSource(`/api/analyze/${analysisId}/stream`);
+      // Connect to SSE stream for progress (token via query param since EventSource has no header support)
+      const sseToken = Auth.getToken();
+      const evtSource = new EventSource(`/api/analyze/${analysisId}/stream?token=${encodeURIComponent(sseToken)}`);
 
       evtSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -103,6 +115,7 @@ const Processing = (() => {
           case 'layer_done':
             updateLayer(data.layerId, 'done');
             addLog(data.message);
+            if (data.tokenUsage) updateTokenDisplay(data.tokenUsage);
             break;
 
           case 'layer_error':
@@ -116,6 +129,7 @@ const Processing = (() => {
             document.getElementById('proc-title').textContent = 'Analysis complete';
             document.getElementById('proc-sub').textContent = data.message;
             addLog(data.message);
+            if (data.tokenUsage) updateTokenDisplay(data.tokenUsage);
 
             // Fetch results and show
             setTimeout(() => {
@@ -150,7 +164,7 @@ const Processing = (() => {
 
   async function fetchAndShowResults(analysisId) {
     try {
-      const resp = await fetch(`/api/results/${analysisId}`);
+      const resp = await Auth.apiFetch(`/api/results/${analysisId}`);
       if (!resp.ok) throw new Error('Failed to load results');
       const data = await resp.json();
       Results.show(data);

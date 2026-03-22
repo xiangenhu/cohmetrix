@@ -1,0 +1,235 @@
+/* ═══ Context-Sensitive Help Chat ═══ */
+
+/* Help button (?) */
+.help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--border-secondary);
+  background: var(--bg-primary);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+.help-btn:hover {
+  background: var(--teal-light);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+/* In sidebar layer items */
+.layer-item .help-btn {
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.layer-item:hover .help-btn { opacity: 1; }
+
+/* In metric cards */
+.mc-id .help-btn {
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── Chat Panel (slide-out from right) ── */
+.help-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.help-overlay.open { display: flex; }
+
+.help-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.help-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 380px;
+  max-width: 90vw;
+  background: var(--bg-primary);
+  border-left: 1px solid var(--border-tertiary);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Chat header */
+.help-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-tertiary);
+  flex-shrink: 0;
+}
+
+.help-header-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  color: var(--teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.help-header-text { flex: 1; min-width: 0; }
+
+.help-header-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.help-header-sub {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.help-close-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-close-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Chat messages area */
+.help-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.help-msg {
+  max-width: 90%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.help-msg.assistant {
+  align-self: flex-start;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+}
+
+.help-msg.user {
+  align-self: flex-end;
+  background: var(--navy);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.help-msg.loading {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* Definition card shown first */
+.help-def-card {
+  background: var(--teal-light);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #065F46;
+  border-left: 3px solid var(--teal);
+}
+
+.help-def-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--teal);
+  margin-bottom: 4px;
+}
+
+/* Chat input area */
+.help-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-tertiary);
+  flex-shrink: 0;
+}
+
+.help-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  outline: none;
+}
+
+.help-input:focus { border-color: var(--teal); }
+
+.help-input::placeholder { color: var(--text-tertiary); }
+
+.help-send-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--teal);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.help-send-btn:hover { opacity: 0.85; }
+.help-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }

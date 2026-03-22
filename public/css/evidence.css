@@ -1,0 +1,136 @@
+/* ═══ Evidence & Plain Descriptions ═══ */
+
+/* Plain description under metric label */
+.mc-plain {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+/* Evidence toggle */
+.mc-evidence-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--teal);
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+.mc-evidence-toggle:hover { text-decoration: underline; }
+
+.mc-evidence-toggle .chevron {
+  font-size: 8px;
+  transition: transform 0.15s;
+}
+
+.mc-evidence-toggle.open .chevron { transform: rotate(90deg); }
+
+/* Evidence list */
+.mc-evidence-list {
+  display: none;
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: rgba(13, 148, 136, 0.04);
+  border-radius: 6px;
+  border-left: 2px solid var(--teal);
+}
+
+.mc-evidence-list.open { display: block; }
+
+.mc-evidence-item {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: 3px 0;
+  display: flex;
+  gap: 5px;
+}
+
+.mc-evidence-item::before {
+  content: '"';
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: -1px;
+}
+
+.mc-evidence-quote {
+  font-style: italic;
+}
+
+/* Verdict badge on metric card */
+.mc-verdict {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.mc-verdict.strength { background: rgba(5, 150, 105, 0.12); color: #059669; }
+.mc-verdict.adequate { background: rgba(217, 119, 6, 0.10); color: #B45309; }
+.mc-verdict.needs_work { background: rgba(190, 58, 74, 0.12); color: #BE3A4A; }
+
+/* Layer summary (replaces the technical "basis" text) */
+.cp-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 2.5px solid var(--teal);
+}
+
+/* Show/hide technical basis */
+.cp-basis-toggle {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 2px 0;
+  font-family: var(--font-sans);
+}
+
+.cp-basis-toggle:hover { color: var(--text-secondary); }
+
+.cp-basis-technical {
+  display: none;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-top: 4px;
+}
+
+.cp-basis-technical.open { display: block; }
+
+/* Audience badge in topbar */
+.audience-badge {
+  font-size: 9px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: var(--amber-light);
+  color: #92400E;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
+}

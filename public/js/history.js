@@ -29,7 +29,7 @@ const History = (() => {
     body.innerHTML = '<div class="history-loading">Loading past analyses…</div>';
 
     try {
-      const resp = await fetch('/api/results?full=true');
+      const resp = await Auth.apiFetch('/api/results?full=true');
       if (!resp.ok) throw new Error('Failed to load');
       const data = await resp.json();
       results = data.results || [];

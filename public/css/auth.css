@@ -1,0 +1,113 @@
+/* ═══ Authentication ═══ */
+
+/* Login screen */
+#s-login {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-align: center;
+  padding: 40px 32px 32px;
+}
+
+.login-logo {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.login-logo span { color: var(--teal); }
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0.5px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.login-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-primary);
+}
+
+.login-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.login-note {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+/* User bar in topbar */
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-tertiary);
+}
+
+.user-name {
+  font-size: 11px;
+  color: var(--text-secondary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.logout-btn:hover {
+  background: var(--coral-light);
+  color: var(--coral);
+  border-color: var(--coral);
+}

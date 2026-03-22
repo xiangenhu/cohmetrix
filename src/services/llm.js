@@ -1,17 +1,57 @@
 /**
- * LLM Service — Multi-provider abstraction.
+ * LLM Service — Multi-provider abstraction with token usage tracking.
  *
  * Supports: anthropic, openai, azure
  * Controlled by LLM_PROVIDER env var.
  */
 const config = require('../config');
 
+// ─── Token usage tracker ─────────────────────────────────────────────────────
+
+class TokenTracker {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.calls = 0;
+    this.promptTokens = 0;
+    this.completionTokens = 0;
+    this.totalTokens = 0;
+    this.perCall = [];
+  }
+  record(prompt, completion) {
+    this.calls++;
+    this.promptTokens += prompt || 0;
+    this.completionTokens += completion || 0;
+    this.totalTokens += (prompt || 0) + (completion || 0);
+    this.perCall.push({ prompt: prompt || 0, completion: completion || 0 });
+  }
+  getSummary() {
+    return {
+      calls: this.calls,
+      promptTokens: this.promptTokens,
+      completionTokens: this.completionTokens,
+      totalTokens: this.totalTokens,
+    };
+  }
+}
+
+// Global tracker for current analysis run
+let activeTracker = new TokenTracker();
+
+function createTracker() {
+  const tracker = new TokenTracker();
+  activeTracker = tracker;
+  return tracker;
+}
+
+function getActiveTracker() {
+  return activeTracker;
+}
+
 // ─── Provider implementations ────────────────────────────────────────────────
 
 const providers = {
-  /**
-   * Anthropic (Claude)
-   */
   anthropic: (() => {
     let client = null;
     return {
@@ -29,14 +69,14 @@ const providers = {
           system: systemPrompt || 'You are an expert NLP analyst. Return only valid JSON unless instructed otherwise.',
           messages: [{ role: 'user', content: prompt }],
         });
+        // Track tokens
+        const usage = response.usage || {};
+        activeTracker.record(usage.input_tokens, usage.output_tokens);
         return response.content[0].text;
       },
     };
   })(),
 
-  /**
-   * OpenAI
-   */
   openai: (() => {
     return {
       name: 'OpenAI',
@@ -60,14 +100,14 @@ const providers = {
         });
         const data = await resp.json();
         if (data.error) throw new Error(`OpenAI: ${data.error.message}`);
+        // Track tokens
+        const usage = data.usage || {};
+        activeTracker.record(usage.prompt_tokens, usage.completion_tokens);
         return data.choices[0].message.content;
       },
     };
   })(),
 
-  /**
-   * Azure OpenAI
-   */
   azure: (() => {
     return {
       name: 'Azure OpenAI',
@@ -91,6 +131,9 @@ const providers = {
         });
         const data = await resp.json();
         if (data.error) throw new Error(`Azure: ${data.error.message}`);
+        // Track tokens
+        const usage = data.usage || {};
+        activeTracker.record(usage.prompt_tokens, usage.completion_tokens);
         return data.choices[0].message.content;
       },
     };
@@ -108,26 +151,16 @@ function getProvider() {
   return provider;
 }
 
-/**
- * Send a prompt and get a text response from the active provider.
- */
 async function complete(prompt, opts = {}) {
   return getProvider().complete(prompt, opts);
 }
 
-/**
- * Send a prompt and parse JSON response.
- */
 async function completeJSON(prompt, opts = {}) {
   const text = await complete(prompt, opts);
-  // Extract JSON from potential markdown code blocks
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, text];
   return JSON.parse(jsonMatch[1].trim());
 }
 
-/**
- * Process items in batches using LLM.
- */
 async function batchProcess(items, promptFn, { batchSize } = {}) {
   const size = batchSize || config.llm.batchSize;
   const results = [];
@@ -140,12 +173,12 @@ async function batchProcess(items, promptFn, { batchSize } = {}) {
   return results;
 }
 
-/**
- * Get info about the active provider (for logging/health checks).
- */
 function getProviderInfo() {
   const p = getProvider();
   return { provider: config.llm.provider, name: p.name, model: p.model() };
 }
 
-module.exports = { complete, completeJSON, batchProcess, getProviderInfo };
+module.exports = {
+  complete, completeJSON, batchProcess, getProviderInfo,
+  createTracker, getActiveTracker, TokenTracker,
+};

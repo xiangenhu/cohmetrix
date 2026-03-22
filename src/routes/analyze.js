@@ -74,10 +74,15 @@ router.post('/', upload.single('file'), async (req, res) => {
       result.id = analysisId;
       await storage.saveResult(analysisId, result);
 
-      // Notify SSE clients of completion
+      // Notify SSE clients of completion (only AFTER save succeeds)
       const clients = sseClients.get(analysisId) || [];
+      const completeEvent = {
+        type: 'complete',
+        message: `All ${result.layers?.length || 0} layers processed · ${result.analysisTime.toFixed(1)}s total`,
+        tokenUsage: result.tokenUsage,
+      };
       clients.forEach(client => {
-        client.write(`data: ${JSON.stringify({ type: 'complete', message: `All layers processed · ${result.analysisTime.toFixed(1)}s total` })}\n\n`);
+        client.write(`data: ${JSON.stringify(completeEvent)}\n\n`);
         client.end();
       });
       sseClients.delete(analysisId);

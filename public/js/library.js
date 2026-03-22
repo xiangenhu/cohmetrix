@@ -60,7 +60,7 @@ const Library = (() => {
     body.innerHTML = '<div class="library-loading">Loading documents…</div>';
 
     try {
-      const resp = await fetch('/api/documents');
+      const resp = await Auth.apiFetch('/api/documents');
       if (!resp.ok) throw new Error('Failed to load');
       const data = await resp.json();
       documents = data.documents || [];
@@ -168,7 +168,7 @@ const Library = (() => {
     textarea.placeholder = 'Loading document text…';
 
     try {
-      const resp = await fetch(`/api/documents/content/${encodeURIComponent(doc.name)}?extract=true`);
+      const resp = await Auth.apiFetch(`/api/documents/content/${encodeURIComponent(doc.name)}?extract=true`);
       if (!resp.ok) throw new Error('Extract failed');
       const data = await resp.json();
       textarea.value = data.text;
@@ -191,7 +191,7 @@ const Library = (() => {
     formData.append('file', file);
 
     try {
-      const resp = await fetch('/api/documents', {
+      const resp = await Auth.apiFetch('/api/documents', {
         method: 'POST',
         body: formData,
       });
@@ -211,7 +211,7 @@ const Library = (() => {
     if (!confirm(`Delete "${doc.name}"?`)) return;
 
     try {
-      const resp = await fetch(`/api/documents/${encodeURIComponent(doc.name)}`, { method: 'DELETE' });
+      const resp = await Auth.apiFetch(`/api/documents/${encodeURIComponent(doc.name)}`, { method: 'DELETE' });
       if (!resp.ok) throw new Error('Delete failed');
       if (selectedDoc && selectedDoc.path === doc.path) {
         selectedDoc = null;
@@ -229,7 +229,7 @@ const Library = (() => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await fetch('/api/documents', { method: 'POST', body: formData });
+      await Auth.apiFetch('/api/documents', { method: 'POST', body: formData });
       if (isLoaded) loadDocuments();
     } catch (err) {
       console.error('Save to library failed:', err);
