@@ -1,0 +1,205 @@
+/**
+ * Results — Renders analysis results in the three-panel layout.
+ */
+const Results = (() => {
+  let analysisData = null;
+  let activeLayerIdx = 0;
+
+  // Theoretical basis descriptions for each layer
+  const LAYER_BASIS = {
+    L0: 'Surface metrics serve as confound controls and normalization denominators for all higher layers. MATTR is preferred over raw TTR for length-invariant vocabulary diversity.',
+    L1: 'Per-token LLM surprisal replaces MRC frequency norms. Higher surprisal = lower predictability = higher processing cost, grounded in information theory (Hale 2001; Levy 2008).',
+    L2: 'Dependency Locality Theory (Gibson 2000): integration cost grows with distance between dependent and head. Universal Dependencies provides cross-lingual, validated syntactic representation.',
+    L3: 'Tracks entity re-introduction across sentences (Givón 1983 topic continuity scale). Neural coreference resolution replaces surface argument overlap.',
+    L4: 'SBERT contextual embeddings replace LSA. Resolves polysemy collapse, word-order blindness, and negation failures of the original Coh-Metrix semantic layer.',
+    L5: 'Kintsch (1998) Construction-Integration model: deep comprehension requires building a mental simulation. LLMs extract causal chains and event structures directly.',
+    L6: 'RST (Mann & Thompson 1988) captures intentional discourse organization. LLM-based analysis enables full-document rhetorical structure assessment.',
+    L7: 'Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal. LLM-based argument mining classifies roles at sentence level.',
+    L8: 'Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969). Epistemic calibration is critical for academic register.',
+    L9: 'Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay reveals tonal consistency and emotional engagement.',
+    L10: 'All L0–L9 metrics re-scored relative to learner profile from UALS/LRS. ZPD proximity operationalizes Vygotsky (1978) — optimal challenge ≈ 0.5–1.5 SD above learner baseline.',
+  };
+
+  function scoreCls(s) {
+    return s >= 75 ? 'score-hi' : s >= 60 ? 'score-mid' : 'score-lo';
+  }
+
+  function scoreColor(s) {
+    return s >= 75 ? '#059669' : s >= 60 ? '#D97706' : '#BE3A4A';
+  }
+
+  function metricPct(metric) {
+    const v = parseFloat(metric.value);
+    if (isNaN(v)) return 50;
+    // Heuristic normalization based on unit type
+    switch (metric.unit) {
+      case 'ratio': case 'cos': case 'score': case 'ZPD': return Math.min(v * 100, 100);
+      case 'bits': return Math.min(v / 12 * 100, 100);
+      case '/9': return v / 9 * 100;
+      case '/5': return v / 5 * 100;
+      case 'tokens': return Math.min(v / 5 * 100, 100);
+      case 'SD': return Math.min(v / 3 * 100, 100);
+      case '%': case 'sents': case 'paras': case 'claims': case 'chains':
+      case 'mentions': case 'levels': case 'events': case '/100w': case '/para':
+      case '/500w': case '/sent': case 'mods': case 'years':
+        return Math.min(v * 10, 100);
+      default: return 50;
+    }
+  }
+
+  function metricColor(pct) {
+    if (pct >= 60) return '#0D9488';
+    if (pct >= 35) return '#D97706';
+    return '#BE3A4A';
+  }
+
+  function show(data) {
+    analysisData = data;
+    activeLayerIdx = 0;
+    renderStatsBar();
+    renderSidebar();
+    renderCenter(0);
+    renderRightPanel();
+  }
+
+  function renderStatsBar() {
+    const d = analysisData.document;
+    const l0 = analysisData.layers.find(l => l.layerId === 'L0');
+    document.getElementById('st-words').textContent = d.wordCount;
+    document.getElementById('st-sents').textContent = d.sentenceCount;
+    document.getElementById('st-paras').textContent = d.paragraphCount;
+    document.getElementById('st-msl').textContent = l0?.metrics?.['L0.4']?.value || '—';
+    document.getElementById('st-ttr').textContent = l0?.metrics?.['L0.7']?.value || '—';
+    document.getElementById('st-awl').textContent = analysisData.layers.find(l => l.layerId === 'L1')?.metrics?.['L1.5']?.value || '—';
+    document.getElementById('st-time').textContent = analysisData.analysisTime.toFixed(1) + 's';
+  }
+
+  function renderSidebar() {
+    const list = document.getElementById('layer-list');
+    list.innerHTML = '';
+    analysisData.layers.forEach((l, i) => {
+      const item = document.createElement('div');
+      item.className = 'layer-item' + (i === activeLayerIdx ? ' active' : '');
+      item.innerHTML = `
+        <span class="li-badge">${l.layerId}</span>
+        <span class="li-name">${l.layerName}</span>
+        <span class="li-score ${scoreCls(l.score)}">${l.score}</span>`;
+      item.addEventListener('click', () => selectLayer(i));
+      list.appendChild(item);
+    });
+  }
+
+  function selectLayer(i) {
+    activeLayerIdx = i;
+    document.querySelectorAll('.layer-item').forEach((el, j) => {
+      el.classList.toggle('active', j === i);
+    });
+    renderCenter(i);
+  }
+
+  function renderCenter(i) {
+    const l = analysisData.layers[i];
+    if (!l) return;
+
+    const cp = document.getElementById('center-panel');
+    const basis = LAYER_BASIS[l.layerId] || '';
+
+    // Filter out non-display metrics (like speech act distribution JSON)
+    const displayMetrics = Object.entries(l.metrics)
+      .filter(([, m]) => typeof m.value !== 'string' || !m.value.startsWith('{'))
+      .slice(0, 4); // Show top 4 metrics like the reference UI
+
+    const metricsHtml = displayMetrics.map(([id, m]) => {
+      const pct = metricPct(m);
+      const color = metricColor(pct);
+      return `<div class="metric-card">
+        <div class="mc-id">${id}</div>
+        <div class="mc-val">${m.value}<span style="font-size:11px;color:var(--text-tertiary);font-weight:400"> ${m.unit}</span></div>
+        <div class="mc-label">${m.label}</div>
+        <div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${color}"></div></div>
+      </div>`;
+    }).join('');
+
+    cp.innerHTML = `
+      <div class="cp-header">
+        <div class="cp-layer-name">${l.layerId} — ${l.layerName}</div>
+        <div class="cp-layer-tag">score: <strong>${l.score}/100</strong></div>
+      </div>
+      <div class="cp-basis">${basis}</div>
+      <div class="metrics-grid">${metricsHtml}</div>
+      <div class="chart-wrap"><canvas id="layer-chart"></canvas></div>
+      <div class="interp-box">
+        <div class="interp-label">Interpretation</div>
+        <div class="interp-text" id="interp-text">Generating interpretation…</div>
+      </div>`;
+
+    // Render bar chart
+    setTimeout(() => Charts.renderLayerChart(l), 50);
+
+    // Generate interpretation via stored data or request
+    renderInterpretation(l);
+  }
+
+  async function renderInterpretation(layer) {
+    const interpEl = document.getElementById('interp-text');
+    if (!interpEl) return;
+
+    // Build interpretation from metrics
+    const metrics = Object.entries(layer.metrics)
+      .filter(([, m]) => typeof m.value !== 'string' || !m.value.startsWith('{'))
+      .map(([id, m]) => `${id} ${m.label}: ${m.value} ${m.unit}`)
+      .join(', ');
+
+    interpEl.textContent = `${layer.layerName} score: ${layer.score}/100. Key metrics — ${metrics}.`;
+
+    // Try to get richer interpretation from server
+    try {
+      const resp = await fetch('/api/interpret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ layerId: layer.layerId, layerName: layer.layerName, score: layer.score, metrics: layer.metrics }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.interpretation) {
+          interpEl.textContent = data.interpretation;
+        }
+      }
+    } catch {
+      // Keep the basic interpretation
+    }
+  }
+
+  function renderRightPanel() {
+    // Composite scores radar
+    setTimeout(() => Charts.renderRadarChart(analysisData.compositeScores), 100);
+
+    // Overall score
+    document.getElementById('overall-score-num').textContent = analysisData.overallScore;
+
+    // Reader profile (L10)
+    const rp = analysisData.readerProfile;
+    const readerCard = document.getElementById('reader-profile-card');
+    if (rp) {
+      readerCard.innerHTML = `
+        <div class="reader-row"><span class="reader-label">Vocab level</span><span class="reader-val" style="color:var(--teal)">${rp.vocabLevel}</span></div>
+        <div class="reader-row"><span class="reader-label">Syntax fluency</span><span class="reader-val">${rp.syntaxFluency}</span></div>
+        <div class="reader-row"><span class="reader-label">Domain expertise</span><span class="reader-val">${rp.domainExpertise}</span></div>
+        <div class="reader-row"><span class="reader-label">ZPD proximity</span><span class="reader-val" style="color:${rp.zpdProximity > 0.5 ? '#059669' : 'var(--amber)'}">${rp.zpdProximity} ${rp.zpdProximity > 0.5 ? '✓' : ''}</span></div>
+        <div class="reader-row"><span class="reader-label">Difficulty z-score</span><span class="reader-val">${rp.difficultyZScore > 0 ? '+' : ''}${rp.difficultyZScore}</span></div>
+        <div class="reader-row"><span class="reader-label">Scaffold type</span><span class="reader-val" style="color:var(--amber)">${rp.scaffoldType}</span></div>`;
+    } else {
+      readerCard.innerHTML = '<div class="reader-row"><span class="reader-label">L10 not enabled</span></div>';
+    }
+
+    // Feedback
+    const fbBox = document.getElementById('feedback-items');
+    const feedback = analysisData.feedback || [];
+    fbBox.innerHTML = feedback.map(f => `
+      <div class="fb-item"><div class="fb-dot"></div><div>${f}</div></div>
+    `).join('') || '<div class="fb-item"><div class="fb-dot"></div><div>No feedback generated.</div></div>';
+    document.getElementById('feedback-count').textContent = `AI Tutor · ${feedback.length} points`;
+  }
+
+  return { show };
+})();

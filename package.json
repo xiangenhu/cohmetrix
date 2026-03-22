@@ -1,0 +1,31 @@
+{
+  "name": "neo-cohmetrix",
+  "version": "0.9.0",
+  "description": "Neo-CohMetrix: 11-layer deep text cohesion analysis for essay grading",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@google-cloud/storage": "^7.14.0",
+    "compromise": "^14.14.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "multer": "^1.4.5-lts.1",
+    "natural": "^8.0.1",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.8.0",
+    "uuid": "^11.0.3",
+    "wink-nlp": "^2.3.0",
+    "wink-eng-lite-web-model": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
