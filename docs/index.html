@@ -1,0 +1,586 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1A3A5C;--teal:#0D9488;--teal-light:#E1F5EE;--amber:#D97706;--amber-light:#FEF3C7;
+  --coral:#BE3A4A;--coral-light:#FAECE7;--slate:#64748B;
+  --font-mono:var(--font-mono,'Courier New',monospace);
+}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary);min-height:600px}
+.app{display:flex;flex-direction:column;height:100%;min-height:600px}
+
+/* ── TOP BAR ─────────────────────── */
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.logo{font-size:15px;font-weight:500;letter-spacing:-0.3px;color:var(--color-text-primary)}
+.logo span{color:var(--teal)}
+.pill{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--teal-light);color:#065F46;letter-spacing:0.3px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-btn{font-size:12px;padding:5px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);cursor:pointer}
+.nav-btn:hover{background:var(--color-background-secondary)}
+.nav-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* ── SCREENS ─────────────────────── */
+.screen{display:none;flex:1}
+.screen.active{display:flex}
+
+/* ═══ UPLOAD SCREEN ═══ */
+#s-upload{flex-direction:column;align-items:center;justify-content:center;padding:2rem;gap:20px}
+.upload-card{width:100%;max-width:640px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.drop-zone{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);margin:20px;padding:36px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--teal);background:var(--teal-light)}
+.drop-icon{width:40px;height:40px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:18px}
+.drop-title{font-size:14px;font-weight:500}
+.drop-sub{font-size:12px;color:var(--color-text-secondary)}
+.or-row{display:flex;align-items:center;gap:10px;margin:0 20px;font-size:12px;color:var(--color-text-tertiary)}
+.or-row::before,.or-row::after{content:'';flex:1;height:0.5px;background:var(--color-border-tertiary)}
+.paste-area{margin:10px 20px 0;display:flex;flex-direction:column;gap:6px}
+.paste-area textarea{width:100%;height:90px;font-size:12px;font-family:var(--font-mono);padding:10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);resize:none}
+.paste-area textarea::placeholder{color:var(--color-text-tertiary)}
+.field-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:0.3px;text-transform:uppercase}
+.prompt-area{margin:12px 20px 0;display:flex;flex-direction:column;gap:6px}
+.prompt-area input{width:100%;font-size:13px;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary)}
+.options-row{display:flex;gap:8px;margin:14px 20px;flex-wrap:wrap}
+.opt-chip{display:flex;align-items:center;gap:6px;padding:5px 11px;border:0.5px solid var(--color-border-tertiary);border-radius:20px;font-size:11px;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.opt-chip.on{background:var(--teal-light);border-color:#0D9488;color:#065F46}
+.opt-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:0.6}
+.run-btn{display:block;width:calc(100% - 40px);margin:0 20px 20px;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;transition:opacity 0.15s}
+.run-btn:hover{opacity:0.88}
+.sample-link{font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline}
+
+/* ═══ PROCESSING SCREEN ═══ */
+#s-process{flex-direction:column;align-items:center;justify-content:center;padding:2rem;gap:16px}
+.proc-card{width:100%;max-width:520px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px}
+.proc-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.proc-spinner{width:28px;height:28px;border:2.5px solid var(--teal-light);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-title{font-size:15px;font-weight:500}
+.proc-sub{font-size:12px;color:var(--color-text-secondary)}
+.layer-rows{display:flex;flex-direction:column;gap:8px}
+.layer-row{display:flex;align-items:center;gap:10px}
+.lr-badge{font-size:10px;font-weight:500;font-family:var(--font-mono);width:26px;text-align:right;color:var(--color-text-tertiary)}
+.lr-label{font-size:12px;color:var(--color-text-secondary);width:160px;flex-shrink:0}
+.lr-bar-bg{flex:1;height:5px;border-radius:3px;background:var(--color-background-secondary);overflow:hidden}
+.lr-bar{height:100%;border-radius:3px;background:var(--teal);width:0%;transition:width 0.6s ease}
+.lr-bar.done{background:var(--teal)}
+.lr-bar.active{background:var(--amber)}
+.lr-status{font-size:10px;width:48px;text-align:right;color:var(--color-text-tertiary)}
+.lr-status.done{color:#059669}
+.lr-status.active{color:var(--amber)}
+.proc-log{margin-top:16px;padding:10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-family:var(--font-mono);font-size:10px;color:var(--color-text-secondary);height:60px;overflow:hidden}
+
+/* ═══ RESULTS SCREEN ═══ */
+#s-results{flex-direction:column}
+.results-inner{display:grid;grid-template-columns:220px 1fr 240px;flex:1;overflow:hidden;min-height:540px}
+
+/* sidebar */
+.sidebar{border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;background:var(--color-background-primary)}
+.sb-header{padding:12px 14px 8px;font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.5px;text-transform:uppercase;border-bottom:0.5px solid var(--color-border-tertiary)}
+.layer-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary)}
+.layer-item:hover{background:var(--color-background-secondary)}
+.layer-item.active{background:var(--teal-light)}
+.li-badge{font-size:9px;font-weight:500;font-family:var(--font-mono);min-width:24px;color:var(--color-text-tertiary)}
+.layer-item.active .li-badge{color:var(--teal)}
+.li-name{font-size:12px;flex:1;color:var(--color-text-secondary)}
+.layer-item.active .li-name{color:var(--color-text-primary);font-weight:500}
+.li-score{font-size:11px;font-weight:500;font-family:var(--font-mono)}
+.score-hi{color:#059669}.score-mid{color:var(--amber)}.score-lo{color:var(--coral)}
+
+/* center panel */
+.center-panel{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.cp-header{display:flex;align-items:baseline;gap:10px;padding-bottom:10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.cp-layer-name{font-size:18px;font-weight:500}
+.cp-layer-tag{font-size:11px;color:var(--color-text-tertiary)}
+.cp-basis{font-size:12px;color:var(--color-text-secondary);line-height:1.6;padding:10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border-left:2.5px solid var(--teal)}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.mc-id{font-size:9px;font-family:var(--font-mono);color:var(--color-text-tertiary);letter-spacing:0.3px}
+.mc-val{font-size:22px;font-weight:500;font-family:var(--font-mono);line-height:1.1;margin:2px 0}
+.mc-label{font-size:11px;color:var(--color-text-secondary)}
+.mc-bar-bg{height:3px;border-radius:2px;background:var(--color-border-tertiary);margin-top:6px;overflow:hidden}
+.mc-bar{height:100%;border-radius:2px}
+.chart-wrap{position:relative;width:100%;height:180px}
+.interp-box{background:var(--amber-light);border-radius:var(--border-radius-md);padding:12px;border-left:3px solid var(--amber)}
+.interp-label{font-size:10px;font-weight:500;color:var(--amber);letter-spacing:0.3px;text-transform:uppercase;margin-bottom:4px}
+.interp-text{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+
+/* right panel */
+.right-panel{border-left:0.5px solid var(--color-border-tertiary);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;background:var(--color-background-primary)}
+.rp-section-title{font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px}
+.factor-chart-wrap{position:relative;width:100%;height:200px}
+.reader-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.reader-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px}
+.reader-row:last-child{border-bottom:none}
+.reader-label{color:var(--color-text-secondary)}
+.reader-val{font-weight:500;font-family:var(--font-mono)}
+.overall-score{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)}
+.os-num{font-size:40px;font-weight:500;font-family:var(--font-mono);color:var(--teal)}
+.os-label{font-size:11px;color:var(--color-text-secondary)}
+.os-sub{font-size:10px;color:var(--color-text-tertiary)}
+.feedback-box{background:var(--teal-light);border-radius:var(--border-radius-md);padding:12px}
+.fb-label{font-size:10px;font-weight:500;color:#065F46;letter-spacing:0.3px;text-transform:uppercase;margin-bottom:6px}
+.fb-item{font-size:11px;color:#065F46;padding:4px 0;line-height:1.5;display:flex;gap:6px}
+.fb-dot{width:5px;height:5px;border-radius:50%;background:#0D9488;margin-top:5px;flex-shrink:0}
+
+/* essay stats bar */
+.stats-bar{display:flex;gap:16px;padding:10px 16px;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);flex-wrap:wrap}
+.stat-item{display:flex;flex-direction:column;gap:1px}
+.stat-label{font-size:9px;color:var(--color-text-tertiary);letter-spacing:0.3px;text-transform:uppercase}
+.stat-val{font-size:13px;font-weight:500;font-family:var(--font-mono)}
+.stat-sep{width:0.5px;background:var(--color-border-tertiary);align-self:stretch}
+</style>
+
+<div class="app">
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">Neo<span>CohMetrix</span></div>
+  <div class="pill">v0.9 · Beta</div>
+  <div class="topbar-right">
+    <button class="nav-btn active" onclick="showScreen('upload')">Upload</button>
+    <button class="nav-btn" onclick="showScreen('process')" id="btn-process" style="opacity:0.4;pointer-events:none">Analysis</button>
+    <button class="nav-btn" onclick="showScreen('results')" id="btn-results" style="opacity:0.4;pointer-events:none">Results</button>
+  </div>
+</div>
+
+<!-- ══ UPLOAD SCREEN ══ -->
+<div class="screen active" id="s-upload">
+  <div style="width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:2rem 1rem">
+    <div style="text-align:center;margin-bottom:4px">
+      <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis</div>
+      <div style="font-size:13px;color:var(--color-text-secondary)">11-layer deep text analysis for essay grading · L0 – L10</div>
+    </div>
+    <div class="upload-card">
+      <div class="drop-zone" id="drop-zone" onclick="triggerSample()">
+        <div class="drop-icon">📄</div>
+        <div class="drop-title">Drop your essay here</div>
+        <div class="drop-sub">.txt · .docx · .pdf supported · max 50 pages</div>
+        <button style="font-size:12px;padding:5px 14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;margin-top:4px" onclick="event.stopPropagation();triggerSample()">Browse file</button>
+      </div>
+      <div class="or-row">or paste text directly</div>
+      <div class="paste-area">
+        <div class="field-label">Essay text</div>
+        <textarea id="essay-text" placeholder="Paste essay content here...&#10;&#10;Example: The relationship between technology and education has evolved significantly over the past decade. Artificial intelligence, once confined to research laboratories, now permeates every aspect of learning..."></textarea>
+      </div>
+      <div class="prompt-area">
+        <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--color-text-tertiary)">(optional — enables L4.8 on-topic scoring)</span></div>
+        <input type="text" id="prompt-text" placeholder="e.g. Discuss the impact of AI on higher education in 800–1000 words.">
+      </div>
+      <div style="padding:12px 20px 4px;font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:0.3px;text-transform:uppercase">Analysis options</div>
+      <div class="options-row">
+        <div class="opt-chip on" onclick="toggleChip(this)"><div class="opt-dot"></div>L0–L5 Core</div>
+        <div class="opt-chip on" onclick="toggleChip(this)"><div class="opt-dot"></div>L6 RST</div>
+        <div class="opt-chip on" onclick="toggleChip(this)"><div class="opt-dot"></div>L7 Argumentation</div>
+        <div class="opt-chip on" onclick="toggleChip(this)"><div class="opt-dot"></div>L8 Stance</div>
+        <div class="opt-chip on" onclick="toggleChip(this)"><div class="opt-dot"></div>L9 Affect</div>
+        <div class="opt-chip" onclick="toggleChip(this)"><div class="opt-dot"></div>L10 Reader-adaptive</div>
+      </div>
+      <div style="padding:4px 20px 14px">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:12px">
+          <span style="color:var(--color-text-secondary)">Learner ID (L10):</span>
+          <input type="text" placeholder="student_4821" style="border:none;background:transparent;font-size:12px;font-family:var(--font-mono);width:120px;color:var(--color-text-primary)">
+          <span style="margin-left:auto;color:var(--color-text-tertiary);font-size:11px">pulls UALS/LRS profile</span>
+        </div>
+      </div>
+      <button class="run-btn" onclick="startAnalysis()">Run Neo-Coh-Metrix Analysis →</button>
+    </div>
+    <div style="text-align:center"><span class="sample-link" onclick="loadSample()">Load sample essay</span></div>
+  </div>
+</div>
+
+<!-- ══ PROCESSING SCREEN ══ -->
+<div class="screen" id="s-process">
+  <div class="proc-card">
+    <div class="proc-header">
+      <div class="proc-spinner" id="spinner"></div>
+      <div><div class="proc-title" id="proc-title">Initializing NLP pipeline…</div>
+        <div class="proc-sub" id="proc-sub">spaCy en_core_web_trf · coreferee · SBERT</div></div>
+    </div>
+    <div class="layer-rows" id="layer-rows"></div>
+    <div class="proc-log" id="proc-log"></div>
+  </div>
+</div>
+
+<!-- ══ RESULTS SCREEN ══ -->
+<div class="screen" id="s-results">
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="st-words">847</div></div>
+    <div class="stat-sep"></div>
+    <div class="stat-item"><div class="stat-label">Sentences</div><div class="stat-val" id="st-sents">38</div></div>
+    <div class="stat-sep"></div>
+    <div class="stat-item"><div class="stat-label">Paragraphs</div><div class="stat-val" id="st-paras">6</div></div>
+    <div class="stat-sep"></div>
+    <div class="stat-item"><div class="stat-label">Mean sent. len</div><div class="stat-val">22.3</div></div>
+    <div class="stat-sep"></div>
+    <div class="stat-item"><div class="stat-label">Type-Token</div><div class="stat-val">0.61</div></div>
+    <div class="stat-sep"></div>
+    <div class="stat-item"><div class="stat-label">AWL density</div><div class="stat-val">0.18</div></div>
+    <div class="stat-sep"></div>
+    <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="st-time">6.4s</div></div>
+    <div style="margin-left:auto;display:flex;align-items:center">
+      <button class="nav-btn" onclick="showScreen('upload')" style="font-size:11px">← New essay</button>
+    </div>
+  </div>
+  <div class="results-inner">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-header">Analysis Layers</div>
+      <div id="layer-list"></div>
+    </div>
+    <!-- Center -->
+    <div class="center-panel" id="center-panel"></div>
+    <!-- Right -->
+    <div class="right-panel">
+      <div>
+        <div class="rp-section-title">Composite factors</div>
+        <div class="factor-chart-wrap"><canvas id="radar-chart"></canvas></div>
+      </div>
+      <div class="overall-score">
+        <div class="os-num">72</div>
+        <div class="os-label">Overall Cohesion Score</div>
+        <div class="os-sub">Weighted F1–F6 composite · 0–100</div>
+      </div>
+      <div>
+        <div class="rp-section-title">Reader profile (L10)</div>
+        <div class="reader-card">
+          <div class="reader-row"><span class="reader-label">Vocab level</span><span class="reader-val" style="color:var(--teal)">B2+</span></div>
+          <div class="reader-row"><span class="reader-label">Syntax fluency</span><span class="reader-val">0.74</span></div>
+          <div class="reader-row"><span class="reader-label">Domain expertise</span><span class="reader-val">Intermediate</span></div>
+          <div class="reader-row"><span class="reader-label">ZPD proximity</span><span class="reader-val" style="color:#059669">0.82 ✓</span></div>
+          <div class="reader-row"><span class="reader-label">Difficulty z-score</span><span class="reader-val">+0.4</span></div>
+          <div class="reader-row"><span class="reader-label">Scaffold type</span><span class="reader-val" style="color:var(--amber)">Argumentative</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="rp-section-title">Priority feedback</div>
+        <div class="feedback-box">
+          <div class="fb-label">AI Tutor · 3 points</div>
+          <div class="fb-item"><div class="fb-dot"></div><div>Argument support is thin: only 1.2 premises per claim. Add specific evidence or data for each main assertion.</div></div>
+          <div class="fb-item"><div class="fb-dot"></div><div>Strong lexical sophistication (surprisal 7.8 bits) matches your register well — maintain this level.</div></div>
+          <div class="fb-item"><div class="fb-dot"></div><div>Topic drift detected at paragraph 4 (L4.4 = 0.21). Reconnect this paragraph to your main thesis.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const LAYERS = [
+  {id:'L0',name:'Surface & Structural',score:88,cls:'hi',
+   basis:'Surface metrics serve as confound controls and normalization denominators for all higher layers. MATTR is preferred over raw TTR for length-invariant vocabulary diversity.',
+   metrics:[
+     {id:'L0.4',val:'22.3',unit:'tokens',label:'Mean sentence length',pct:62,color:'#0D9488'},
+     {id:'L0.7',val:'0.61',unit:'MATTR',label:'Moving-avg type-token ratio',pct:61,color:'#0D9488'},
+     {id:'L0.5',val:'8.1',unit:'SD',label:'Sentence length variance',pct:40,color:'#D97706'},
+     {id:'L0.8',val:'6.3',unit:'sents',label:'Mean paragraph length',pct:52,color:'#0D9488'},
+   ],
+   interp:'Surface structure is well-controlled. Sentence length variance (SD 8.1) is moderate — some stylistic variety but not excessive. MATTR of 0.61 indicates good lexical diversity for an 847-word essay.',
+   chartData:[88,72,65,80]},
+  {id:'L1',name:'Lexical Sophistication',score:81,cls:'hi',
+   basis:'Per-token LLM surprisal replaces MRC frequency norms. Higher surprisal = lower predictability = higher processing cost, grounded in information theory (Hale 2001; Levy 2008).',
+   metrics:[
+     {id:'L1.1',val:'7.8',unit:'bits',label:'Mean token surprisal',pct:74,color:'#0D9488'},
+     {id:'L1.3',val:'8.2',unit:'years',label:'Mean age of acquisition',pct:68,color:'#0D9488'},
+     {id:'L1.5',val:'0.18',unit:'AWL%',label:'Academic word density',pct:60,color:'#0D9488'},
+     {id:'L1.6',val:'0.09',unit:'ratio',label:'Rare word ratio',pct:36,color:'#D97706'},
+   ],
+   interp:'Lexical profile is strong. Surprisal of 7.8 bits indicates appropriately sophisticated vocabulary. AWL density of 0.18 is within the target range for undergraduate academic writing (0.12–0.22).',
+   chartData:[82,74,78,60]},
+  {id:'L2',name:'Syntactic Complexity',score:74,cls:'mid',
+   basis:'Dependency Locality Theory (Gibson 2000): integration cost grows with distance between dependent and head. Universal Dependencies provides cross-lingual, validated syntactic representation.',
+   metrics:[
+     {id:'L2.1',val:'2.84',unit:'tokens',label:'Mean dependency distance',pct:57,color:'#0D9488'},
+     {id:'L2.4',val:'0.38',unit:'ratio',label:'Subordination ratio',pct:38,color:'#D97706'},
+     {id:'L2.5',val:'0.11',unit:'ratio',label:'Passive voice ratio',pct:22,color:'#0D9488'},
+     {id:'L2.6',val:'1.7',unit:'mods',label:'NP elaboration (modifiers)',pct:57,color:'#0D9488'},
+   ],
+   interp:'Syntactic complexity is moderate (MDD 2.84, population mean ~3.1). Subordination ratio of 0.38 is below the target range for advanced academic writing (0.45+). Consider more embedded clauses to signal reasoning depth.',
+   chartData:[70,74,65,75]},
+  {id:'L3',name:'Referential Cohesion',score:68,cls:'mid',
+   basis:'Tracks entity re-introduction across sentences (Givón 1983 topic continuity scale). Neural coreference resolution replaces surface argument overlap.',
+   metrics:[
+     {id:'L3.1',val:'0.52',unit:'ratio',label:'Local argument overlap',pct:52,color:'#D97706'},
+     {id:'L3.5',val:'3.2',unit:'mentions',label:'Mean coreference chain length',pct:53,color:'#D97706'},
+     {id:'L3.4',val:'11',unit:'chains',label:'Coreference chain count',pct:44,color:'#D97706'},
+     {id:'L3.8',val:'6.3',unit:'tokens',label:'Pronoun-antecedent distance',pct:37,color:'#059669'},
+   ],
+   interp:'Referential cohesion is acceptable but below optimal. Local argument overlap of 0.52 is at the lower bound of the acceptable range (0.50–0.75). Coreference chains average only 3.2 mentions — entities are introduced but not sustained across paragraphs.',
+   chartData:[68,52,70,58]},
+  {id:'L4',name:'Semantic Cohesion',score:63,cls:'mid',
+   basis:'SBERT contextual embeddings replace LSA. Resolves polysemy collapse, word-order blindness, and negation failures of the original Coh-Metrix semantic layer.',
+   metrics:[
+     {id:'L4.1',val:'0.44',unit:'cos',label:'Local semantic overlap',pct:44,color:'#D97706'},
+     {id:'L4.3',val:'0.18',unit:'SD',label:'Semantic coherence variance',pct:45,color:'#D97706'},
+     {id:'L4.4',val:'0.21',unit:'drop',label:'Topic drift index',pct:21,color:'#BE3A4A'},
+     {id:'L4.7',val:'0.61',unit:'cos',label:'Intro-conclusion alignment',pct:61,color:'#D97706'},
+   ],
+   interp:'⚠ Topic drift detected (L4.4 = 0.21) — a sharp cosine drop occurs between paragraphs 3 and 4, indicating a thematic shift without transitional bridging. Local semantic overlap (0.44) is below the acceptable threshold of 0.50. This is the primary cohesion weakness.',
+   chartData:[44,63,58,72]},
+  {id:'L5',name:'Situation Model',score:71,cls:'mid',
+   basis:'Kintsch (1998) Construction-Integration model: deep comprehension requires building a mental simulation. LLMs extract causal chains and event structures directly.',
+   metrics:[
+     {id:'L5.1',val:'0.58',unit:'ratio',label:'Causal cohesion ratio',pct:58,color:'#D97706'},
+     {id:'L5.2',val:'2.1',unit:'/100w',label:'Causal chain density',pct:42,color:'#D97706'},
+     {id:'L5.3',val:'2.8',unit:'events',label:'Mean causal chain length',pct:56,color:'#D97706'},
+     {id:'L5.5',val:'0.71',unit:'ratio',label:'Temporal grounding score',pct:71,color:'#0D9488'},
+   ],
+   interp:'Situation model is moderately developed. Causal chain density (2.1 per 100 words) is acceptable but chains are short (mean 2.8 events). Good temporal grounding (0.71) — most claims are anchored to time frames. Causal reasoning could be deepened.',
+   chartData:[71,58,75,64]},
+  {id:'L6',name:'Rhetorical Structure',score:77,cls:'hi',
+   basis:'RST (Mann & Thompson 1988) captures intentional discourse organization. DMRST parser (Liu & Zeldes 2022) enables full-document RST analysis.',
+   metrics:[
+     {id:'L6.1',val:'6',unit:'levels',label:'RST tree depth',pct:60,color:'#0D9488'},
+     {id:'L6.4',val:'0.31',unit:'ratio',label:'Evidence relation ratio',pct:62,color:'#0D9488'},
+     {id:'L6.5',val:'0.14',unit:'ratio',label:'Contrast/Concession ratio',pct:56,color:'#D97706'},
+     {id:'L6.8',val:'1.82',unit:'bits',label:'Rhetorical diversity index',pct:73,color:'#0D9488'},
+   ],
+   interp:'Rhetorical structure is well-organized. RST tree depth of 6 indicates adequate discourse hierarchy. Rhetorical diversity (1.82 bits, target >1.8) meets the threshold. Contrast/Concession ratio is slightly low — the writer does not frequently acknowledge opposing viewpoints.',
+   chartData:[77,65,80,72]},
+  {id:'L7',name:'Argumentation',score:54,cls:'lo',
+   basis:'Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal. LLM-based argument mining classifies roles at sentence level (F1 ~0.80 on academic text).',
+   metrics:[
+     {id:'L7.1',val:'5',unit:'claims',label:'Main claim count',pct:50,color:'#D97706'},
+     {id:'L7.2',val:'1.2',unit:'per claim',label:'Premises per claim',pct:24,color:'#BE3A4A'},
+     {id:'L7.4',val:'0',unit:'binary',label:'Counter-argument present',pct:0,color:'#BE3A4A'},
+     {id:'L7.7',val:'0.40',unit:'ratio',label:'Unsupported claim ratio',pct:40,color:'#BE3A4A'},
+   ],
+   interp:'⚠ Argumentation is the weakest layer. Only 1.2 premises per claim (target >2.0). 40% of claims lack any supporting premise. No counter-arguments are acknowledged anywhere in the essay. This significantly limits the argumentative quality score.',
+   chartData:[54,30,48,55]},
+  {id:'L8',name:'Pragmatic Stance',score:78,cls:'hi',
+   basis:'Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969). Epistemic calibration is critical for academic register — neither over-claiming nor under-asserting.',
+   metrics:[
+     {id:'L8.3',val:'1.8',unit:'/100w',label:'Hedging density',pct:60,color:'#0D9488'},
+     {id:'L8.5',val:'2.1',unit:'ratio',label:'Hedge-to-boost ratio',pct:70,color:'#0D9488'},
+     {id:'L8.6',val:'0.34',unit:'ratio',label:'Evidentiality score',pct:34,color:'#D97706'},
+     {id:'L8.8',val:'0.22',unit:'ratio',label:'First-person stance shift',pct:22,color:'#0D9488'},
+   ],
+   interp:'Epistemic stance is well-calibrated. Hedging density (1.8/100w) is within the optimal range (1.0–3.0). Good hedge-to-boost ratio (2.1) indicates appropriate uncertainty marking. Evidentiality is moderate (0.34) — more explicit source attribution would strengthen credibility.',
+   chartData:[78,82,70,74]},
+  {id:'L9',name:'Affective Trajectory',score:72,cls:'mid',
+   basis:'Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay reveals tonal consistency and emotional engagement. LLM-rated per sentence.',
+   metrics:[
+     {id:'L9.1',val:'5.8',unit:'/9',label:'Mean valence',pct:64,color:'#0D9488'},
+     {id:'L9.2',val:'0.9',unit:'SD',label:'Valence variability',pct:36,color:'#0D9488'},
+     {id:'L9.4',val:'6.1',unit:'/9',label:'Mean dominance',pct:68,color:'#0D9488'},
+     {id:'L9.5',val:'+0.04',unit:'slope',label:'Valence arc (intro→concl)',pct:60,color:'#0D9488'},
+   ],
+   interp:'Affective profile is appropriate for academic writing. Valence (5.8/9) is slightly above neutral — suitable for an essay arguing a position. Low variability (SD 0.9) shows tonal consistency. Positive arc slope (+0.04) indicates the essay builds toward a constructive conclusion.',
+   chartData:[72,78,68,75]},
+  {id:'L10',name:'Reader-Adaptive',score:79,cls:'hi',
+   basis:'All L0–L9 metrics re-scored relative to learner profile from UALS/LRS. ZPD proximity operationalizes Vygotsky (1978) — optimal challenge ≈ 0.5–1.5 SD above learner baseline.',
+   metrics:[
+     {id:'L10.1',val:'+0.3',unit:'z',label:'Lexical challenge (z)',pct:53,color:'#0D9488'},
+     {id:'L10.2',val:'+0.1',unit:'z',label:'Syntactic challenge (z)',pct:51,color:'#0D9488'},
+     {id:'L10.5',val:'+0.4',unit:'z',label:'Global difficulty (z)',pct:54,color:'#0D9488'},
+     {id:'L10.6',val:'0.82',unit:'ZPD',label:'ZPD proximity index',pct:82,color:'#059669'},
+   ],
+   interp:'Essay is well-targeted to the learner\'s current level. Global z-score of +0.4 is within the ZPD window (0.5–1.5 SD above baseline). ZPD proximity of 0.82 (target >0.5) indicates the text is appropriately challenging without being inaccessible. Recommended scaffold: argumentation support.',
+   chartData:[79,85,74,80]},
+];
+
+const SCORE_CLS = s => s>=75?'score-hi':s>=60?'score-mid':'score-lo';
+let activeLayer=0;
+let radarChart=null;
+
+function toggleChip(el){el.classList.toggle('on')}
+function triggerSample(){loadSample()}
+function loadSample(){
+  document.getElementById('essay-text').value='The relationship between artificial intelligence and higher education has evolved significantly over the past decade. AI systems now permeate every aspect of learning, from adaptive tutoring platforms to automated essay evaluation. However, the pedagogical implications of this transformation remain poorly understood.\n\nResearchers have begun to investigate whether AI-enhanced environments improve learning outcomes. Some evidence suggests that personalized learning systems can reduce achievement gaps among diverse student populations. These systems adapt content difficulty based on real-time performance data.\n\nNevertheless, concerns about over-reliance on automated feedback persist. Students may develop surface strategies rather than deep learning approaches. The motivational effects of AI tutoring systems represent a critical but understudied dimension of this problem.\n\nFrom a cognitive science perspective, effective learning requires productive struggle and meaningful feedback. AI systems must balance challenge with support to maintain learner engagement. This balance defines the pedagogical value of any intelligent tutoring intervention.\n\nInstitutions adopting AI tools must therefore establish clear frameworks for evaluating their educational impact. These frameworks should integrate learning analytics with established theories of cognitive development. Only then can AI serve as a genuine amplifier of human learning potential.';
+  document.getElementById('prompt-text').value='Discuss the pedagogical implications of AI in higher education (800–1000 words).';
+}
+function startAnalysis(){
+  showScreen('process');
+  document.getElementById('btn-process').style.cssText='opacity:1;pointer-events:auto';
+  runProcessing();
+}
+
+const PROC_LAYERS=[
+  {id:'L0',name:'Surface & structural','time':280},
+  {id:'L1',name:'Lexical sophistication','time':900},
+  {id:'L2',name:'Syntactic complexity','time':500},
+  {id:'L3',name:'Referential cohesion','time':700},
+  {id:'L4',name:'Semantic cohesion','time':800},
+  {id:'L5',name:'Situation model (LLM)','time':1400},
+  {id:'L6',name:'RST structure','time':1800},
+  {id:'L7',name:'Argumentation (LLM)','time':1600},
+  {id:'L8',name:'Pragmatic stance','time':800},
+  {id:'L9',name:'Affective trajectory','time':1200},
+  {id:'L10',name:'Reader-adaptive','time':600},
+];
+const LOGS=[
+  'spaCy en_core_web_trf loaded (312ms)',
+  'coreferee pipeline attached',
+  'SBERT all-mpnet-base-v2 ready',
+  'LLM client initialized · claude-sonnet-4',
+  'Tokenized 847 tokens, 38 sentences',
+  'UD dependency parse complete',
+  'Coreference: 11 chains detected',
+  'SBERT embeddings: 38 × 768 matrix',
+  'LLM causal extraction: 18 pairs (conf>0.6)',
+  'DMRST parse complete · depth=6',
+  'Argument mining: 5 claims, 6 premises',
+  'VAD trajectory computed',
+  'LRS profile fetched · student_4821',
+  'L10 z-scores computed',
+  'Analysis complete · 6.4s total',
+];
+
+function runProcessing(){
+  const container=document.getElementById('layer-rows');
+  container.innerHTML='';
+  const rows={};
+  PROC_LAYERS.forEach(l=>{
+    const row=document.createElement('div');row.className='layer-row';
+    row.innerHTML=`<span class="lr-badge">${l.id}</span><span class="lr-label">${l.name}</span><div class="lr-bar-bg"><div class="lr-bar" id="bar-${l.id}"></div></div><span class="lr-status" id="st-${l.id}">—</span>`;
+    container.appendChild(row);rows[l.id]=row;
+  });
+  const logEl=document.getElementById('proc-log');
+  let logIdx=0;
+  const addLog=()=>{if(logIdx<LOGS.length){logEl.textContent=LOGS[logIdx++]+'\n'+logEl.textContent;setTimeout(addLog,400);}};
+  addLog();
+  let delay=200;
+  PROC_LAYERS.forEach((l,i)=>{
+    setTimeout(()=>{
+      document.getElementById('proc-title').textContent=`Analyzing ${l.name}…`;
+      document.getElementById(`st-${l.id}`).textContent='⋯';
+      document.getElementById(`st-${l.id}`).className='lr-status active';
+      document.getElementById(`bar-${l.id}`).className='lr-bar active';
+      document.getElementById(`bar-${l.id}`).style.width='60%';
+      setTimeout(()=>{
+        document.getElementById(`bar-${l.id}`).style.width='100%';
+        document.getElementById(`bar-${l.id}`).className='lr-bar done';
+        document.getElementById(`st-${l.id}`).textContent='done';
+        document.getElementById(`st-${l.id}`).className='lr-status done';
+        if(i===PROC_LAYERS.length-1){
+          document.getElementById('spinner').style.display='none';
+          document.getElementById('proc-title').textContent='Analysis complete';
+          document.getElementById('proc-sub').textContent='All 11 layers processed · 6.4 seconds';
+          setTimeout(()=>{
+            document.getElementById('btn-results').style.cssText='opacity:1;pointer-events:auto';
+            showScreen('results');buildResults();
+          },600);
+        }
+      },l.time*0.6);
+    },delay);
+    delay+=l.time;
+  });
+}
+
+function buildResults(){
+  const list=document.getElementById('layer-list');
+  list.innerHTML='';
+  LAYERS.forEach((l,i)=>{
+    const item=document.createElement('div');
+    item.className='layer-item'+(i===activeLayer?' active':'');
+    item.innerHTML=`<span class="li-badge">${l.id}</span><span class="li-name">${l.name}</span><span class="li-score ${SCORE_CLS(l.score)}">${l.score}</span>`;
+    item.onclick=()=>selectLayer(i);
+    list.appendChild(item);
+  });
+  renderCenter(activeLayer);
+  buildRadar();
+}
+
+function selectLayer(i){
+  activeLayer=i;
+  document.querySelectorAll('.layer-item').forEach((el,j)=>el.classList.toggle('active',j===i));
+  renderCenter(i);
+}
+
+function renderCenter(i){
+  const l=LAYERS[i];
+  const bar=(pct,color)=>`<div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${color}"></div></div>`;
+  const cp=document.getElementById('center-panel');
+  cp.innerHTML=`
+    <div class="cp-header">
+      <div class="cp-layer-name">${l.id} — ${l.name}</div>
+      <div class="cp-layer-tag">score: <strong>${l.score}/100</strong></div>
+    </div>
+    <div class="cp-basis">${l.basis}</div>
+    <div class="metrics-grid">
+      ${l.metrics.map(m=>`<div class="metric-card">
+        <div class="mc-id">${m.id}</div>
+        <div class="mc-val">${m.val}<span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400"> ${m.unit}</span></div>
+        <div class="mc-label">${m.label}</div>
+        ${bar(m.pct,m.color)}
+      </div>`).join('')}
+    </div>
+    <div class="chart-wrap"><canvas id="layer-chart"></canvas></div>
+    <div class="interp-box">
+      <div class="interp-label">Interpretation</div>
+      <div class="interp-text">${l.interp}</div>
+    </div>`;
+  setTimeout(()=>{
+    const ctx=document.getElementById('layer-chart');
+    if(!ctx)return;
+    new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:l.metrics.map(m=>m.id),
+        datasets:[{
+          data:l.metrics.map(m=>m.pct),
+          backgroundColor:l.metrics.map(m=>m.color+'33'),
+          borderColor:l.metrics.map(m=>m.color),
+          borderWidth:1.5,borderRadius:3
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          y:{min:0,max:100,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},color:'#94A3B8'}},
+          x:{grid:{display:false},ticks:{font:{size:10},color:'#94A3B8'}}
+        }
+      }
+    });
+  },50);
+}
+
+function buildRadar(){
+  const ctx=document.getElementById('radar-chart');
+  if(!ctx)return;
+  if(radarChart){radarChart.destroy();}
+  radarChart=new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:['F1 Narrativity','F2 Syntax','F3 Lexical','F4 Deep cohesion','F5 Argument','F6 Stance'],
+      datasets:[{
+        label:'Essay',
+        data:[68,74,81,63,54,78],
+        fill:true,
+        backgroundColor:'rgba(13,148,136,0.15)',
+        borderColor:'rgba(13,148,136,0.8)',
+        borderWidth:1.5,
+        pointBackgroundColor:'rgba(13,148,136,0.8)',
+        pointRadius:3,
+      },{
+        label:'Cohort avg',
+        data:[70,70,70,70,70,70],
+        fill:false,
+        borderColor:'rgba(150,150,150,0.4)',
+        borderWidth:1,
+        borderDash:[4,3],
+        pointRadius:0,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{r:{
+        suggestedMin:0,suggestedMax:100,
+        grid:{color:'rgba(128,128,128,0.15)'},
+        angleLines:{color:'rgba(128,128,128,0.15)'},
+        ticks:{display:false}
+      }}
+    }
+  });
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
+    const n=['upload','process','results'][i];
+    b.classList.toggle('active',n===name);
+  });
+}
+</script>
