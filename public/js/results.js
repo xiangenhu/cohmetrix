@@ -62,6 +62,8 @@ const Results = (() => {
     renderSidebar();
     renderCenter(0);
     renderRightPanel();
+    // Setup rubric review tab
+    Rubric.setupForResults(data.id, data);
   }
 
   function renderStatsBar() {

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/css/evidence.css">
   <link rel="stylesheet" href="/css/auth.css">
   <link rel="stylesheet" href="/css/helpchat.css">
+  <link rel="stylesheet" href="/css/rubric.css">
   <link rel="stylesheet" href="/css/processing.css">
   <link rel="stylesheet" href="/css/results.css">
 </head>
@@ -50,6 +51,7 @@
       <button class="nav-btn active">Upload</button>
       <button class="nav-btn" id="btn-process" style="opacity:0.4;pointer-events:none">Analysis</button>
       <button class="nav-btn" id="btn-results" style="opacity:0.4;pointer-events:none">Results</button>
+      <button class="nav-btn" id="btn-review" style="opacity:0.4;pointer-events:none">Review</button>
       <div class="user-bar" id="user-bar" style="display:none"></div>
     </div>
   </div>
@@ -211,6 +213,81 @@
     </div>
   </div>
 
+  <!-- ══ REVIEW SCREEN (Rubric-Based) ══ -->
+  <div class="screen" id="s-review">
+    <!-- Review stats bar -->
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-label">Rubric Score</div><div class="stat-val" id="rv-total-score" style="color:var(--teal)">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Criteria</div><div class="stat-val" id="rv-criteria-count">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Cohesion Score</div><div class="stat-val" id="rv-cohesion-score">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="rv-words">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="rv-time">—</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button class="nav-btn" id="rv-btn-results" style="font-size:11px">← Metrics</button>
+        <button class="nav-btn" id="rv-btn-new" style="font-size:11px">New essay</button>
+      </div>
+    </div>
+    <div class="results-inner" style="grid-template-columns:260px 1fr 260px">
+      <!-- Left: Rubric library + Criterion list -->
+      <div class="sidebar">
+        <div class="sb-header">Rubric Library</div>
+        <div id="rv-rubric-library" style="border-bottom:1px solid var(--border-tertiary)">
+          <div style="padding:8px 12px;display:flex;gap:6px">
+            <button class="lib-upload-btn" id="rubric-lib-upload-btn" style="flex:1"><span>&#8593;</span> Upload</button>
+            <button class="lib-upload-btn" id="rubric-lib-refresh-btn">&#8635;</button>
+            <input type="file" id="rubric-lib-file-input" accept=".txt,.docx,.pdf" hidden>
+          </div>
+          <div id="rv-rubric-list"></div>
+        </div>
+        <div class="sb-header">Criteria Scores</div>
+        <div id="rv-criteria-list"></div>
+      </div>
+      <!-- Center: Rubric input (before eval) or Criterion detail (after eval) -->
+      <div class="center-panel" id="rv-center-panel">
+        <div id="rv-rubric-input-area">
+          <div class="cp-header">
+            <div class="cp-layer-name">Rubric-Based Review</div>
+          </div>
+          <div class="cp-summary" style="border-left-color:var(--amber)">
+            Select a rubric from the library, or paste your rubric criteria below, then click <strong>Evaluate</strong> to generate a rubric-based review of the essay.
+          </div>
+          <div class="rubric-section" style="margin:0">
+            <div class="field-label">Rubric criteria</div>
+            <textarea id="rubric-text" style="height:200px" placeholder="Paste rubric criteria here…&#10;&#10;Example:&#10;Content & Ideas (25 pts): thesis clarity, depth of analysis, relevance to prompt&#10;Argumentation (25 pts): claims supported by evidence, counter-arguments, reasoning&#10;Organization (20 pts): introduction, transitions, paragraph structure, conclusion&#10;Language & Style (20 pts): vocabulary, sentence variety, academic register&#10;Mechanics (10 pts): grammar, spelling, formatting"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+            <button class="rubric-evaluate-btn" id="rubric-evaluate-btn" style="flex:none">Evaluate with Rubric</button>
+            <div class="rubric-evaluate-status" id="rubric-evaluate-status"></div>
+            <span id="rubric-selected-name" style="margin-left:auto;font-size:11px;color:var(--teal);font-weight:500"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Right: Overall assessment -->
+      <div class="right-panel">
+        <div class="overall-score">
+          <div class="os-num" id="rv-score-big">—</div>
+          <div class="os-label">Rubric Score</div>
+          <div class="os-sub" id="rv-score-sub">— / —</div>
+        </div>
+        <div>
+          <div class="rp-section-title">Score by Criterion</div>
+          <div id="rv-score-bars"><div style="font-size:11px;color:var(--text-tertiary);padding:4px 0">Run evaluation to see scores</div></div>
+        </div>
+        <div>
+          <div class="rp-section-title">Overall Assessment</div>
+          <div class="feedback-box" id="rv-overall-narrative">
+            <div class="fb-label">Rubric Review</div>
+            <div id="rv-narrative-text" style="font-size:11px;color:#065F46;line-height:1.6">Select a rubric and click Evaluate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /app-content -->
 
 </div>
@@ -246,6 +323,7 @@
 <script src="/js/processing.js"></script>
 <script src="/js/library.js"></script>
 <script src="/js/history.js"></script>
+<script src="/js/rubric.js"></script>
 <script src="/js/upload.js"></script>
 <script src="/js/app.js"></script>
 

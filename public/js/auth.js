@@ -107,6 +107,7 @@ const Auth = (() => {
     Library.init();
     History.init();
     HelpChat.init();
+    Rubric.init();
   }
 
   function login() {

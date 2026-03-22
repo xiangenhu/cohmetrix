@@ -29,6 +29,7 @@ app.use('/api/results', requireAuth, require('./routes/results'));
 app.use('/api/interpret', requireAuth, require('./routes/interpret'));
 app.use('/api/documents', requireAuth, require('./routes/documents'));
 app.use('/api/help', requireAuth, require('./routes/help'));
+app.use('/api/rubrics', requireAuth, require('./routes/rubric'));
 
 // SPA fallback
 app.get('*', (req, res) => {

@@ -1,0 +1,94 @@
+═══════════════════════════════════════════════════════════════
+ACADEMIC ESSAY ASSESSMENT RUBRIC
+Undergraduate Level · Argumentative/Expository Writing
+═══════════════════════════════════════════════════════════════
+
+1. THESIS & CONTENT (25 points)
+───────────────────────────────
+25-22  Excellent: Clear, arguable thesis. Demonstrates deep understanding of the topic. All content directly supports the central argument. Original insights present.
+21-18  Good: Clear thesis with adequate depth. Most content is relevant and well-developed. Some original thinking evident.
+17-13  Developing: Thesis is vague or overly broad. Content is relevant but lacks depth or specificity. Limited analysis beyond surface-level observations.
+12-0   Inadequate: No clear thesis. Content is off-topic, superficial, or largely unsupported. Little evidence of engagement with the topic.
+
+2. ARGUMENTATION & EVIDENCE (25 points)
+───────────────────────────────────────
+25-22  Excellent: Claims are well-supported with 2+ premises each. Warrants explicitly connect evidence to claims. Counter-arguments are acknowledged and addressed. No logical fallacies.
+21-18  Good: Most claims have supporting evidence. Some warrants present. At least one counter-argument acknowledged. Minor reasoning gaps.
+17-13  Developing: Several claims lack evidence. Warrants are mostly absent. No counter-arguments addressed. Some unsupported assertions.
+12-0   Inadequate: Most claims are unsupported opinions. No engagement with opposing views. Frequent logical fallacies or circular reasoning.
+
+3. ORGANIZATION & COHERENCE (20 points)
+───────────────────────────────────────
+20-18  Excellent: Clear introduction–body–conclusion structure. Smooth paragraph transitions. Each paragraph has a clear purpose. Ideas flow logically from one to the next. Introduction and conclusion are aligned.
+17-14  Good: Adequate structure with minor organizational issues. Most transitions are effective. Occasional lapses in paragraph focus.
+13-10  Developing: Structure is present but uneven. Some paragraphs lack focus or topic sentences. Abrupt transitions. Topic drift evident in places.
+9-0    Inadequate: No discernible organizational structure. Paragraphs are disjointed. No clear introduction or conclusion. Significant topic drift.
+
+4. LANGUAGE & ACADEMIC REGISTER (15 points)
+───────────────────────────────────────────
+15-13  Excellent: Sophisticated, varied vocabulary appropriate to academic context. Good use of discipline-specific terminology. Sentences vary in length and structure. Appropriate hedging and boosting. Formal, impersonal tone maintained.
+12-10  Good: Generally appropriate academic vocabulary. Some sentence variety. Mostly formal tone with minor lapses. Adequate hedging.
+9-7    Developing: Limited vocabulary range. Repetitive sentence structures. Informal tone intrudes. Over-reliance on simple sentences. Hedging or boosting imbalance.
+6-0    Inadequate: Vocabulary is basic or inappropriate. Sentences are uniformly simple. Informal or conversational tone throughout. No awareness of academic register.
+
+5. COHESION & REFERENTIAL CLARITY (10 points)
+──────────────────────────────────────────────
+10-9   Excellent: Entities are clearly introduced and consistently referenced throughout. Pronouns have clear antecedents. Lexical chains maintain topic threads across paragraphs. Connectives effectively signal relationships.
+8-7    Good: Generally clear referencing with occasional ambiguity. Most entities are maintained. Adequate use of connectives.
+6-4    Developing: Frequent unclear pronoun references. Entities introduced but not sustained. Limited use of connectives. Reader must infer connections.
+3-0    Inadequate: Persistent referential ambiguity. Entities appear and disappear. No connective use. Text reads as disconnected sentences.
+
+6. CRITICAL THINKING & DEPTH (5 points)
+────────────────────────────────────────
+5      Excellent: Demonstrates nuanced understanding. Considers multiple perspectives. Identifies implications and limitations. Moves beyond description to analysis and evaluation.
+4      Good: Shows analytical thinking. Considers at least two perspectives. Some evaluation beyond description.
+3-2    Developing: Mostly descriptive. Limited analysis. Single perspective dominates. Few implications discussed.
+1-0    Inadequate: Entirely descriptive or opinion-based. No analytical depth. No consideration of alternative viewpoints.
+
+═══════════════════════════════════════════════════════════════
+TOTAL: 100 points
+
+Grading Scale:
+  A   90-100    Outstanding
+  A-  85-89     Excellent
+  B+  80-84     Very Good
+  B   75-79     Good
+  B-  70-74     Above Average
+  C+  65-69     Average
+  C   60-64     Below Average
+  D   50-59     Poor
+  F   0-49      Failing
+
+═══════════════════════════════════════════════════════════════
+METRIC-TO-CRITERION ALIGNMENT NOTES (for instructors)
+
+This rubric is designed to align with Neo-Coh-Metrix analysis layers:
+
+  Criterion 1 (Thesis & Content)
+    → L4 Semantic Cohesion (topic coherence, on-topic score)
+    → L5 Situation Model (causal depth, temporal grounding)
+
+  Criterion 2 (Argumentation & Evidence)
+    → L7 Argumentation (claims, premises/claim, rebuttals)
+    → L6 Rhetorical Structure (evidence relations)
+    → L8 Pragmatic Stance (evidentiality score)
+
+  Criterion 3 (Organization & Coherence)
+    → L0 Surface (paragraph structure, intro/body/conclusion ratio)
+    → L4 Semantic Cohesion (topic drift, paragraph cohesion, intro-conclusion alignment)
+    → L6 Rhetorical Structure (tree depth, diversity)
+
+  Criterion 4 (Language & Academic Register)
+    → L1 Lexical Sophistication (surprisal, AWL density, AoA)
+    → L2 Syntactic Complexity (MDD, subordination, NP elaboration)
+    → L8 Pragmatic Stance (hedging, hedge-to-boost ratio)
+
+  Criterion 5 (Cohesion & Referential Clarity)
+    → L3 Referential Cohesion (argument overlap, coreference chains)
+    → L4 Semantic Cohesion (local overlap, coherence variance)
+
+  Criterion 6 (Critical Thinking & Depth)
+    → L7 Argumentation (counter-arguments, argument depth)
+    → L5 Situation Model (causal chain length)
+    → L6 Rhetorical Structure (contrast/concession ratio)
+═══════════════════════════════════════════════════════════════
