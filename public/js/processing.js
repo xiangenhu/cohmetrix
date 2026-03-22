@@ -155,6 +155,8 @@ const Processing = (() => {
       const data = await resp.json();
       Results.show(data);
       App.showScreen('results');
+      // Refresh history panel so new result appears
+      History.refresh();
     } catch (err) {
       console.error('Failed to fetch results:', err);
     }

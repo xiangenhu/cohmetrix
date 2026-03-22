@@ -120,6 +120,12 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
     App.showScreen('process');
     App.enableNav('btn-process');
 
+    // Save to library if checkbox is checked and a file was uploaded
+    const saveToLib = document.getElementById('save-to-library')?.checked;
+    if (saveToLib && selectedFile) {
+      Library.saveFileToLibrary(selectedFile);
+    }
+
     // Build form data
     const formData = new FormData();
     if (selectedFile) {

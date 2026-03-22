@@ -1,0 +1,196 @@
+/* ═══ Document Library ═══ */
+.library-panel {
+  width: 100%;
+  max-width: 640px;
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.library-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 0.5px solid var(--border-tertiary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.library-header:hover { background: var(--bg-secondary); }
+
+.library-icon { font-size: 14px; }
+
+.library-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.library-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+}
+
+.library-chevron {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s;
+}
+
+.library-panel.open .library-chevron { transform: rotate(90deg); }
+
+.library-body {
+  display: none;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.library-panel.open .library-body { display: block; }
+
+.library-empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.library-loading {
+  padding: 16px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* File list items */
+.lib-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 0.5px solid var(--border-tertiary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.lib-file:last-child { border-bottom: none; }
+.lib-file:hover { background: var(--bg-secondary); }
+.lib-file.selected { background: var(--teal-light); }
+
+.lib-file-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.lib-file.selected .lib-file-icon { background: rgba(13, 148, 136, 0.15); }
+
+.lib-file-info { flex: 1; min-width: 0; }
+
+.lib-file-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lib-file-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.lib-file-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.lib-file:hover .lib-file-actions { opacity: 1; }
+
+.lib-action-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lib-action-btn:hover { background: var(--bg-tertiary); color: var(--text-secondary); }
+.lib-action-btn.delete:hover { background: var(--coral-light); color: var(--coral); }
+
+/* Library toolbar */
+.library-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 0.5px solid var(--border-tertiary);
+  background: var(--bg-secondary);
+}
+
+.lib-upload-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border: 0.5px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lib-upload-btn:hover { background: var(--teal-light); border-color: var(--teal); }
+
+.lib-refresh-btn {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.lib-refresh-btn:hover { color: var(--text-secondary); background: var(--bg-primary); }
+
+/* Save to library checkbox in upload card */
+.save-to-lib-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 20px 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.save-to-lib-row input[type="checkbox"] {
+  accent-color: var(--teal);
+}

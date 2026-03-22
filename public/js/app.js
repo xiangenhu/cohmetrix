@@ -51,4 +51,6 @@ const App = (() => {
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
   Upload.init();
+  Library.init();
+  History.init();
 });

@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/topbar.css">
   <link rel="stylesheet" href="/css/upload.css">
+  <link rel="stylesheet" href="/css/library.css">
+  <link rel="stylesheet" href="/css/history.css">
   <link rel="stylesheet" href="/css/processing.css">
   <link rel="stylesheet" href="/css/results.css">
 </head>
@@ -33,6 +35,29 @@
         <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis</div>
         <div style="font-size:13px;color:var(--text-secondary)">11-layer deep text analysis for essay grading · L0 – L10</div>
       </div>
+      <!-- Document Library -->
+      <div class="library-panel" id="library-panel">
+        <div class="library-header" id="library-header">
+          <span class="library-icon">&#128193;</span>
+          <span class="library-title">Document Library</span>
+          <span class="library-badge" id="library-badge">…</span>
+          <span class="library-chevron">&#9654;</span>
+        </div>
+        <div class="library-body" id="library-body"></div>
+        <input type="file" id="lib-file-input" accept=".txt,.docx,.pdf" hidden>
+      </div>
+
+      <!-- Results History -->
+      <div class="history-panel" id="history-panel">
+        <div class="history-header" id="history-header">
+          <span class="history-icon">&#128202;</span>
+          <span class="history-title">Past Analyses</span>
+          <span class="history-badge" id="history-badge">…</span>
+          <span class="history-chevron">&#9654;</span>
+        </div>
+        <div class="history-body" id="history-body"></div>
+      </div>
+
       <div class="upload-card">
         <div class="drop-zone" id="drop-zone">
           <div class="drop-icon">&#128196;</div>
@@ -65,6 +90,10 @@
             <input type="text" id="learner-id" placeholder="student_4821">
             <span class="learner-id-hint">pulls UALS/LRS profile</span>
           </div>
+        </div>
+        <div class="save-to-lib-row">
+          <input type="checkbox" id="save-to-library" checked>
+          <label for="save-to-library">Save uploaded file to document library</label>
         </div>
         <button class="run-btn" id="run-btn">Run Neo-Coh-Metrix Analysis →</button>
       </div>
@@ -152,6 +181,8 @@
 <script src="/js/charts.js"></script>
 <script src="/js/results.js"></script>
 <script src="/js/processing.js"></script>
+<script src="/js/library.js"></script>
+<script src="/js/history.js"></script>
 <script src="/js/upload.js"></script>
 <script src="/js/app.js"></script>
 

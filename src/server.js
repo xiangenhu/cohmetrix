@@ -17,6 +17,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/api/analyze', require('./routes/analyze'));
 app.use('/api/results', require('./routes/results'));
 app.use('/api/interpret', require('./routes/interpret'));
+app.use('/api/documents', require('./routes/documents'));
 
 // Health check (Cloud Run)
 app.get('/health', (req, res) => {
