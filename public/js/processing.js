@@ -3,17 +3,18 @@
  */
 const Processing = (() => {
   const LAYER_INFO = [
-    { id: 'L0', name: 'Surface & structural' },
+    { id: 'L0', name: 'Descriptive & structural' },
     { id: 'L1', name: 'Lexical sophistication' },
     { id: 'L2', name: 'Syntactic complexity' },
     { id: 'L3', name: 'Referential cohesion' },
     { id: 'L4', name: 'Semantic cohesion' },
-    { id: 'L5', name: 'Situation model (LLM)' },
-    { id: 'L6', name: 'RST structure' },
-    { id: 'L7', name: 'Argumentation (LLM)' },
-    { id: 'L8', name: 'Pragmatic stance' },
-    { id: 'L9', name: 'Affective trajectory' },
-    { id: 'L10', name: 'Reader-adaptive' },
+    { id: 'L5', name: 'Connective & deep cohesion' },
+    { id: 'L6', name: 'Situation model (LLM)' },
+    { id: 'L7', name: 'Rhetorical structure (LLM)' },
+    { id: 'L8', name: 'Argumentation (LLM)' },
+    { id: 'L9', name: 'Pragmatic stance' },
+    { id: 'L10', name: 'Affective & engagement' },
+    { id: 'L11', name: 'Reader-adaptive' },
   ];
 
   function initUI() {

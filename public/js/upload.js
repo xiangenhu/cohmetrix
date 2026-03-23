@@ -85,15 +85,14 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
   }
 
   function getEnabledLayers() {
-    const layerIds = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10'];
-    const chipLabels = ['L0–L5 Core', 'L6 RST', 'L7 Argumentation', 'L8 Stance', 'L9 Affect', 'L10 Reader-adaptive'];
+    const chipLabels = ['L0–L5 Core', 'L6 Situation', 'L7 RST', 'L8 Argumentation', 'L9 Stance', 'L10 Affect', 'L11 Reader-adaptive'];
     const chips = document.querySelectorAll('.opt-chip');
     const enabled = new Set();
 
     chips.forEach((chip, i) => {
       if (chip.classList.contains('on')) {
         if (i === 0) {
-          // L0-L5 Core
+          // L0-L5 Core (Surface, Lexical, Syntactic, Referential, Semantic, Connective)
           ['L0', 'L1', 'L2', 'L3', 'L4', 'L5'].forEach(id => enabled.add(id));
         } else {
           const id = chipLabels[i].split(' ')[0];

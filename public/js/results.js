@@ -8,17 +8,18 @@ const Results = (() => {
 
   // Theoretical basis descriptions (shown under "Technical details" toggle)
   const LAYER_BASIS = {
-    L0: 'Surface metrics serve as confound controls and normalization denominators for all higher layers. MATTR is preferred over raw TTR for length-invariant vocabulary diversity.',
-    L1: 'Per-token LLM surprisal replaces MRC frequency norms. Higher surprisal = lower predictability = higher processing cost, grounded in information theory (Hale 2001; Levy 2008).',
-    L2: 'Dependency Locality Theory (Gibson 2000): integration cost grows with distance between dependent and head. Universal Dependencies provides cross-lingual, validated syntactic representation.',
-    L3: 'Tracks entity re-introduction across sentences (Givón 1983 topic continuity scale). Neural coreference resolution replaces surface argument overlap.',
-    L4: 'SBERT contextual embeddings replace LSA. Resolves polysemy collapse, word-order blindness, and negation failures of the original Coh-Metrix semantic layer.',
-    L5: 'Kintsch (1998) Construction-Integration model: deep comprehension requires building a mental simulation. LLMs extract causal chains and event structures directly.',
-    L6: 'RST (Mann & Thompson 1988) captures intentional discourse organization. LLM-based analysis enables full-document rhetorical structure assessment.',
-    L7: 'Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal. LLM-based argument mining classifies roles at sentence level.',
-    L8: 'Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969). Epistemic calibration is critical for academic register.',
-    L9: 'Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay reveals tonal consistency and emotional engagement.',
-    L10: 'All L0–L9 metrics re-scored relative to learner profile from UALS/LRS. ZPD proximity operationalizes Vygotsky (1978) — optimal challenge ≈ 0.5–1.5 SD above learner baseline.',
+    L0: 'Baseline text statistics for normalization and structural assessment. MATTR and MTLD preferred over raw TTR for length-invariant vocabulary diversity (Covington & McFall 2010; McCarthy & Jarvis 2010). Flesch-Kincaid provides traditional readability.',
+    L1: 'Per-token LLM surprisal replaces MRC frequency norms. Higher surprisal = lower predictability = higher processing cost (Smith & Levy 2013). Psycholinguistic norms from Kuperman (2012; AoA) and Brysbaert (2014; concreteness).',
+    L2: 'Dependency Locality Theory (Gibson 2000): integration cost grows with distance between dependent and head. Universal Dependencies provides cross-lingual, validated syntactic representation. Syntactic pattern density (Biber 1988).',
+    L3: 'Tracks entity re-introduction across sentences (Givón 1983 topic continuity). Coh-Metrix CRF binary overlap measures for local and global argument/noun overlap. Coreference chain analysis for entity tracking.',
+    L4: 'SBERT contextual embeddings replace LSA (Reimers & Gurevych 2019). Resolves polysemy collapse, word-order blindness, and negation failures. Given/new ratio measures information progression.',
+    L5: 'Connectives are the explicit "glue" of the textbase (Halliday & Hasan 1976). Causal, temporal, adversative, additive, and logical connective incidence per 1000 words. Coh-Metrix CNC indices.',
+    L6: 'Kintsch (1998) Construction-Integration model: deep comprehension requires building a mental simulation. Zwaan & Radvansky (1998) event-indexing: causation, intentionality, time, space, protagonist.',
+    L7: 'RST (Mann & Thompson 1988) captures intentional discourse organization. Evidence, contrast/concession, and elaboration relation ratios. Rhetorical diversity via Shannon entropy.',
+    L8: 'Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal. LLM-based argument mining classifies roles at sentence level. Evidence diversity and logical fallacy detection.',
+    L9: 'Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969). Epistemic calibration via hedge-to-boost ratio (Hyland 2005). Critical for academic register.',
+    L10: 'Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay reveals tonal consistency and emotional engagement. Affect-argument alignment measures strategic emotional placement.',
+    L11: 'All L0–L10 metrics re-scored relative to learner profile. ZPD proximity operationalizes Vygotsky (1978) — optimal challenge ≈ 0.5–1.5 SD above learner baseline.',
   };
 
   function scoreCls(s) {
@@ -271,7 +272,7 @@ const Results = (() => {
         <div class="reader-row"><span class="reader-label">Difficulty z-score</span><span class="reader-val">${rp.difficultyZScore > 0 ? '+' : ''}${rp.difficultyZScore}</span></div>
         <div class="reader-row"><span class="reader-label">Scaffold type</span><span class="reader-val" style="color:var(--amber)">${rp.scaffoldType}</span></div>`;
     } else {
-      readerCard.innerHTML = '<div class="reader-row"><span class="reader-label">L10 not enabled</span></div>';
+      readerCard.innerHTML = '<div class="reader-row"><span class="reader-label">L11 not enabled</span></div>';
     }
 
     const fbBox = document.getElementById('feedback-items');
