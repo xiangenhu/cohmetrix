@@ -133,11 +133,12 @@ Answer clearly and helpfully. Keep it concise (2-4 sentences). ${audience === 's
 });
 
 /**
- * POST /api/help/summary — Generate a full-analysis dimensional summary + FAQs about the document.
+ * POST /api/help/detect — Detect genre and reading level from analysis metrics.
+ * Returns suggestions the user can confirm or override before generating summary.
  */
-router.post('/summary', async (req, res) => {
+router.post('/detect', async (req, res) => {
   try {
-    const { layers, overallScore, compositeScores, feedback, document: doc } = req.body;
+    const { layers, document: doc } = req.body;
     const audience = req.body.audience || config.targetAudience;
     const persona = AUDIENCE_PERSONA[audience] || AUDIENCE_PERSONA.general;
 
@@ -145,11 +146,133 @@ router.post('/summary', async (req, res) => {
       return res.status(400).json({ error: 'Missing layers data.' });
     }
 
-    // Genre-aware context
-    const genreId = doc?.genre || '';
+    // Extract key metrics for genre/level detection
+    const l0 = layers.find(l => l.layerId === 'L0') || {};
+    const l1 = layers.find(l => l.layerId === 'L1') || {};
+    const l2 = layers.find(l => l.layerId === 'L2') || {};
+    const l8 = layers.find(l => l.layerId === 'L8') || {};
+    const l9 = layers.find(l => l.layerId === 'L9') || {};
+    const l10 = layers.find(l => l.layerId === 'L10') || {};
+
+    const m = (layer, id) => layer.metrics?.[id]?.value ?? '?';
+
+    // Compute reading level from Flesch-Kincaid
+    const fkGrade = parseFloat(m(l0, 'L0.14'));
+    const fre = parseFloat(m(l0, 'L0.13'));
+    let suggestedLevel = 'college';
+    let suggestedLevelLabel = 'College (undergraduate)';
+    if (!isNaN(fkGrade)) {
+      if (fkGrade <= 5) { suggestedLevel = 'elementary'; suggestedLevelLabel = 'Elementary (grades 3-5)'; }
+      else if (fkGrade <= 8) { suggestedLevel = 'middle-school'; suggestedLevelLabel = 'Middle School (grades 6-8)'; }
+      else if (fkGrade <= 12) { suggestedLevel = 'high-school'; suggestedLevelLabel = 'High School (grades 9-12)'; }
+      else if (fkGrade <= 16) { suggestedLevel = 'college'; suggestedLevelLabel = 'College (undergraduate)'; }
+      else { suggestedLevel = 'graduate'; suggestedLevelLabel = 'Graduate / Professional'; }
+    }
+
+    // Build a compact metric profile for LLM genre detection
+    const metricProfile = [
+      `Words: ${m(l0, 'L0.1')}, Sentences: ${m(l0, 'L0.2')}, Paragraphs: ${m(l0, 'L0.3')}`,
+      `Mean sentence length: ${m(l0, 'L0.5')} words, Flesch-Kincaid: ${m(l0, 'L0.14')}, Flesch RE: ${m(l0, 'L0.13')}`,
+      `MATTR: ${m(l0, 'L0.10')}, Academic word density: ${m(l1, 'L1.8')}`,
+      `Mean dependency distance: ${m(l2, 'L2.1')}, Subordination ratio: ${m(l2, 'L2.5')}, Passive voice: ${m(l2, 'L2.6')}`,
+      `Main claims: ${m(l8, 'L8.1')}, Premises/claim: ${m(l8, 'L8.2')}, Counter-argument: ${m(l8, 'L8.4')}`,
+      `Hedging: ${m(l9, 'L9.3')}, Boosting: ${m(l9, 'L9.4')}, Evidentiality: ${m(l9, 'L9.6')}`,
+      `Valence: ${m(l10, 'L10.1')}, Arousal: ${m(l10, 'L10.2')}, Engagement: ${m(l10, 'L10.8')}`,
+    ].join('\n');
+
+    // First 200 chars of text for context
+    const textSnippet = (doc?.text || '').substring(0, 300).replace(/\n/g, ' ');
+
+    // Get available genre categories for the prompt
+    const { GENRE_CATEGORIES } = require('../services/genres');
+    const genreList = GENRE_CATEGORIES.map(c =>
+      `${c.category}: ${c.genres.map(g => g.id).join(', ')}`
+    ).join('\n');
+
+    const detectPrompt = `Analyze this text's metrics and opening passage to determine its most likely genre.
+
+Text opening: "${textSnippet}..."
+
+Metric profile:
+${metricProfile}
+
+Available genres (pick ONE genre ID from this list):
+${genreList}
+
+Respond with EXACTLY two lines:
+GENRE: [genre-id]
+REASON: [one sentence explaining why]
+
+Do not add any other text.`;
+
+    const result = await llm.complete(detectPrompt, {
+      systemPrompt: 'You are a text classification expert. Respond with exactly the format requested.',
+      maxTokens: 100,
+    });
+
+    // Parse response
+    let suggestedGenre = '';
+    let genreReason = '';
+    const lines = result.trim().split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('GENRE:')) suggestedGenre = trimmed.substring(6).trim();
+      if (trimmed.startsWith('REASON:')) genreReason = trimmed.substring(7).trim();
+    }
+
+    // Validate genre ID exists
+    const genreInfo = suggestedGenre ? getGenre(suggestedGenre) : null;
+    if (!genreInfo) suggestedGenre = '';
+
+    const session = llm.getSessionTracker().getSummary();
+    res.json({
+      suggestedGenre,
+      suggestedGenreLabel: genreInfo ? genreInfo.name : '',
+      suggestedGenreCategory: genreInfo ? genreInfo.category : '',
+      genreReason,
+      suggestedLevel,
+      suggestedLevelLabel,
+      fkGrade: isNaN(fkGrade) ? null : fkGrade,
+      fleschReadingEase: isNaN(fre) ? null : fre,
+      tokenUsage: session,
+    });
+  } catch (err) {
+    console.error('[POST /api/help/detect]', err);
+    res.status(500).json({ error: 'Failed to detect genre/level.' });
+  }
+});
+
+/**
+ * POST /api/help/summary — Generate a full-analysis dimensional summary + FAQs about the document.
+ */
+router.post('/summary', async (req, res) => {
+  try {
+    const { layers, overallScore, compositeScores, feedback, document: doc, readingLevel } = req.body;
+    const audience = req.body.audience || config.targetAudience;
+    const persona = AUDIENCE_PERSONA[audience] || AUDIENCE_PERSONA.general;
+
+    if (!layers || !layers.length) {
+      return res.status(400).json({ error: 'Missing layers data.' });
+    }
+
+    // Genre-aware context (use override from user, fall back to document)
+    const genreId = req.body.genre || doc?.genre || '';
     const genreInfo = genreId ? getGenre(genreId) : null;
     const genreContext = genreId ? getGenreContext(genreId) : '';
     const genreLabel = genreInfo ? genreInfo.name : 'general academic essay';
+
+    // Reading level context
+    const LEVEL_LABELS = {
+      'elementary': 'Elementary (grades 3-5)',
+      'middle-school': 'Middle School (grades 6-8)',
+      'high-school': 'High School (grades 9-12)',
+      'college': 'College (undergraduate)',
+      'graduate': 'Graduate / Professional',
+    };
+    const levelLabel = LEVEL_LABELS[readingLevel] || readingLevel || '';
+    const readingLevelContext = levelLabel
+      ? `The INTENDED reading level is: ${levelLabel}. Evaluate whether this text is appropriate for that audience — is it too simple, too complex, or well-matched? Comment on readability relative to this target level.`
+      : '';
 
     // Build a compact snapshot of every layer
     const layerSnapshot = layers.map(l => {
@@ -169,6 +292,7 @@ router.post('/summary', async (req, res) => {
 You are summarizing a complete text analysis for a ${audience}. The document is a **${genreLabel}**. It has ${doc?.wordCount || '?'} words, ${doc?.sentenceCount || '?'} sentences, and ${doc?.paragraphCount || '?'} paragraphs. Overall cohesion score: ${overallScore}/100.
 
 ${genreContext ? `GENRE-SPECIFIC EVALUATION CRITERIA:\n${genreContext}\n` : ''}
+${readingLevelContext ? `READING LEVEL TARGET:\n${readingLevelContext}\n` : ''}
 Layer-by-layer results:
 ${layerSnapshot}
 
@@ -184,7 +308,7 @@ Write a dimensional summary of this analysis, EVALUATED AGAINST THE EXPECTATIONS
 
 For dimensions NOT relevant to this genre (per the genre criteria above), briefly note that they are less applicable rather than flagging low scores as weaknesses.
 
-End with 1-2 sentences of overall assessment for a ${genreLabel}.
+End with 1-2 sentences of overall assessment for a ${genreLabel}.${levelLabel ? ` Include whether the text is well-matched to the ${levelLabel} reading level.` : ''}
 
 Use plain language. Do NOT use metric IDs or abbreviations. Do NOT use bullet points — write flowing prose with clear paragraph breaks between dimensions. Keep each dimension to 2-3 sentences max.`;
 
@@ -194,6 +318,7 @@ Use plain language. Do NOT use metric IDs or abbreviations. Do NOT use bullet po
 You are generating frequently asked questions a ${audience} might have about this specific ${genreLabel}, based on its analysis results.
 
 ${genreContext ? `GENRE CONTEXT:\n${genreContext}\n` : ''}
+${readingLevelContext ? `READING LEVEL:\n${readingLevelContext}\n` : ''}
 Document stats: ${doc?.wordCount || '?'} words, overall score ${overallScore}/100.
 
 Layer results:

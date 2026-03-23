@@ -60,6 +60,8 @@ const Results = (() => {
     analysisData = data;
     activeLayerIdx = 0;
     cachedSummary = null;
+    confirmedGenre = null;
+    confirmedLevel = null;
     renderStatsBar();
     renderSidebar();
     renderCenter(0);
@@ -143,6 +145,8 @@ const Results = (() => {
   // ─── Analysis Summary & FAQs ─────────────────────────────────────────
 
   let cachedSummary = null;
+  let confirmedGenre = null;
+  let confirmedLevel = null;
 
   async function showSummary() {
     // Deselect layers, highlight summary button
@@ -152,19 +156,128 @@ const Results = (() => {
 
     const cp = document.getElementById('center-panel');
 
-    // Show loading state
+    // If already confirmed and cached, show directly
+    if (cachedSummary && confirmedGenre && confirmedLevel) {
+      renderSummaryContent(cp, cachedSummary);
+      return;
+    }
+
+    // Step 1: Detect genre and reading level
     cp.innerHTML = `
       <div class="cp-header">
         <div class="cp-layer-name">Analysis Summary</div>
         <div class="cp-layer-tag">all dimensions</div>
       </div>
-      <div class="summary-loading">Generating dimensional summary and FAQs...</div>`;
+      <div class="summary-loading">Detecting genre and reading level...</div>`;
 
-    // Use cache if available
-    if (cachedSummary) {
-      renderSummaryContent(cp, cachedSummary);
-      return;
+    try {
+      // Fetch genres and detect in parallel
+      const [, resp] = await Promise.all([
+        ensureGenreCache(),
+        Auth.apiFetch('/api/help/detect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            layers: analysisData.layers,
+            document: analysisData.document,
+          }),
+        }),
+      ]);
+
+      if (!resp.ok) throw new Error('Detection failed');
+      const detected = await resp.json();
+      TokenFooter.onApiResponse(detected);
+
+      renderDetectStep(cp, detected);
+    } catch (err) {
+      await ensureGenreCache();
+      // Fallback: show configure step without suggestions
+      renderDetectStep(cp, {});
     }
+  }
+
+  function renderDetectStep(cp, detected) {
+    const genreOptions = buildGenreOptions(detected.suggestedGenre || '');
+    const levelOptions = [
+      { value: 'elementary', label: 'Elementary (grades 3-5)' },
+      { value: 'middle-school', label: 'Middle School (grades 6-8)' },
+      { value: 'high-school', label: 'High School (grades 9-12)' },
+      { value: 'college', label: 'College (undergraduate)' },
+      { value: 'graduate', label: 'Graduate / Professional' },
+    ].map(o => `<option value="${o.value}"${o.value === (detected.suggestedLevel || '') ? ' selected' : ''}>${o.label}</option>`).join('');
+
+    const fkInfo = detected.fkGrade != null
+      ? `<span class="detect-metric">Flesch-Kincaid grade: <strong>${detected.fkGrade.toFixed(1)}</strong></span>`
+      : '';
+    const freInfo = detected.fleschReadingEase != null
+      ? `<span class="detect-metric">Flesch Reading Ease: <strong>${detected.fleschReadingEase.toFixed(1)}</strong></span>`
+      : '';
+    const genreReason = detected.genreReason
+      ? `<div class="detect-reason">${escapeHtml(detected.genreReason)}</div>`
+      : '';
+
+    cp.innerHTML = `
+      <div class="cp-header">
+        <div class="cp-layer-name">Analysis Summary</div>
+        <div class="cp-layer-tag">configure</div>
+      </div>
+      <div class="detect-card">
+        <div class="detect-section">
+          <div class="detect-label">Detected Genre</div>
+          ${genreReason}
+          <select id="summary-genre" class="detect-select">${genreOptions}</select>
+        </div>
+        <div class="detect-section">
+          <div class="detect-label">Reading Level</div>
+          <div class="detect-metrics">${fkInfo}${freInfo}</div>
+          <select id="summary-level" class="detect-select">${levelOptions}</select>
+        </div>
+        <button class="run-btn detect-generate-btn" id="generate-summary-btn">Generate Summary</button>
+      </div>`;
+
+    document.getElementById('generate-summary-btn').addEventListener('click', () => {
+      confirmedGenre = document.getElementById('summary-genre').value;
+      confirmedLevel = document.getElementById('summary-level').value;
+      cachedSummary = null; // reset cache since params changed
+      generateSummary();
+    });
+  }
+
+  // Pre-fetch genres on first load
+  function ensureGenreCache() {
+    if (window._genreCache) return Promise.resolve();
+    return fetch('/api/genres').then(r => r.json()).then(data => {
+      window._genreCache = data.categories || [];
+    }).catch(() => { window._genreCache = []; });
+  }
+
+  function buildGenreOptions(selectedId) {
+    if (window._genreCache) return buildGenreOptHtml(window._genreCache, selectedId);
+    return `<option value="">Select genre...</option>` +
+      (selectedId ? `<option value="${selectedId}" selected>${selectedId.replace(/-/g, ' ')}</option>` : '');
+  }
+
+  function buildGenreOptHtml(categories, selectedId) {
+    let html = '<option value="">Select genre...</option>';
+    (categories || []).forEach(cat => {
+      html += `<optgroup label="${escapeHtml(cat.category)}">`;
+      cat.genres.forEach(g => {
+        html += `<option value="${g.id}"${g.id === selectedId ? ' selected' : ''}>${escapeHtml(g.name)}</option>`;
+      });
+      html += '</optgroup>';
+    });
+    return html;
+  }
+
+  async function generateSummary() {
+    const cp = document.getElementById('center-panel');
+
+    cp.innerHTML = `
+      <div class="cp-header">
+        <div class="cp-layer-name">Analysis Summary</div>
+        <div class="cp-layer-tag">generating...</div>
+      </div>
+      <div class="summary-loading">Generating genre-aware dimensional summary and FAQs...</div>`;
 
     try {
       const resp = await Auth.apiFetch('/api/help/summary', {
@@ -176,6 +289,8 @@ const Results = (() => {
           compositeScores: analysisData.compositeScores,
           feedback: analysisData.feedback,
           document: analysisData.document,
+          genre: confirmedGenre,
+          readingLevel: confirmedLevel,
         }),
       });
 
@@ -189,7 +304,7 @@ const Results = (() => {
       cp.innerHTML = `
         <div class="cp-header">
           <div class="cp-layer-name">Analysis Summary</div>
-          <div class="cp-layer-tag">all dimensions</div>
+          <div class="cp-layer-tag">error</div>
         </div>
         <div class="summary-error">Failed to generate summary. Please try again.</div>`;
     }
@@ -240,13 +355,16 @@ const Results = (() => {
     const summaryParas = (data.summary || '').split(/\n\n+/).filter(p => p.trim());
     const summaryHtml = summaryParas.map(p => `<p class="summary-para">${escapeHtml(p.trim())}</p>`).join('');
 
-    const genreLabel = analysisData.document?.genre
-      ? `<span class="summary-genre-badge">${escapeHtml(analysisData.document.genre.replace(/-/g, ' '))}</span>`
+    const genreBadge = confirmedGenre
+      ? `<span class="summary-genre-badge">${escapeHtml(confirmedGenre.replace(/-/g, ' '))}</span>`
+      : '';
+    const levelBadge = confirmedLevel
+      ? `<span class="summary-level-badge">${escapeHtml(confirmedLevel.replace(/-/g, ' '))}</span>`
       : '';
 
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary ${genreLabel}</div>
+        <div class="cp-layer-name">Analysis Summary ${genreBadge}${levelBadge}</div>
         <div class="cp-layer-tag">overall: <strong>${analysisData.overallScore}/100</strong></div>
       </div>
       <div class="summary-dimensions">${dimCardsHtml}</div>

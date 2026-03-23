@@ -166,17 +166,86 @@
 }
 .summary-para:last-child { margin-bottom: 0; }
 
-.summary-genre-badge {
+.summary-genre-badge, .summary-level-badge {
   display: inline-block;
   font-size: 9px;
   font-weight: 600;
   text-transform: capitalize;
   padding: 2px 8px;
   border-radius: 10px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.summary-genre-badge {
   background: var(--teal-light);
   color: var(--teal);
-  margin-left: 8px;
-  vertical-align: middle;
+}
+.summary-level-badge {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+
+/* ── Detect / Configure Step ── */
+.detect-card {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 20px 24px;
+  max-width: 480px;
+}
+.detect-section {
+  margin-bottom: 18px;
+}
+.detect-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+.detect-reason {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: var(--teal-light);
+  border-radius: 6px;
+  border-left: 3px solid var(--teal);
+}
+.detect-metrics {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.detect-metric {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  background: #EFF6FF;
+  border-radius: 4px;
+}
+.detect-metric strong {
+  color: #2563EB;
+}
+.detect-select {
+  width: 100%;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+.detect-select:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.detect-generate-btn {
+  margin-top: 6px;
+  width: 100%;
 }
 
 /* FAQ Accordion */
