@@ -84,7 +84,22 @@ const HelpChat = (() => {
       indexCard.innerHTML = `<div class="help-def-label">What does this measure?</div>${escapeHtml(data.indexExplanation || data.explanation || '')}`;
       msgArea.appendChild(indexCard);
 
-      // Card 2: What does my score mean? (only if score data present)
+      // Card 2: Best/worst cases from the literature (if available)
+      if (data.benchmarks && (data.benchmarks.bestCase || data.benchmarks.worstCase)) {
+        const benchCard = document.createElement('div');
+        benchCard.className = 'help-def-card help-bench-card';
+        let benchHtml = '<div class="help-def-label">From the research</div>';
+        if (data.benchmarks.bestCase) {
+          benchHtml += `<div class="help-bench-row"><span class="help-bench-icon best">&#9650;</span> <strong>Best case:</strong> ${escapeHtml(data.benchmarks.bestCase)}</div>`;
+        }
+        if (data.benchmarks.worstCase) {
+          benchHtml += `<div class="help-bench-row"><span class="help-bench-icon worst">&#9660;</span> <strong>Worst case:</strong> ${escapeHtml(data.benchmarks.worstCase)}</div>`;
+        }
+        benchCard.innerHTML = benchHtml;
+        msgArea.appendChild(benchCard);
+      }
+
+      // Card 3: What does my score mean? (only if score data present)
       if (data.scoreExplanation) {
         const scoreCard = document.createElement('div');
         scoreCard.className = 'help-def-card help-score-card';

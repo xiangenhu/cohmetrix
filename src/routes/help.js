@@ -42,6 +42,11 @@ ${def.why ? `Why it matters: ${def.why}` : ''}
 
 Write a clear, ${audience === 'student' ? '3-4' : '2-3'} sentence explanation of what this ${isLayer ? 'layer' : 'index'} IS and what it captures about writing. ${audience === 'student' ? 'Use an analogy or example if helpful.' : ''} Do NOT use metric IDs or technical abbreviations. Do NOT start with "This metric..." — vary your openings.`;
 
+    // Build benchmark card data (best/worst cases from the literature)
+    const benchmarks = {};
+    if (def.bestCase) benchmarks.bestCase = def.bestCase;
+    if (def.worstCase) benchmarks.worstCase = def.worstCase;
+
     // Part 2: Explain the score (if we have one)
     let scoreExplanation = null;
     if (hasScore) {
@@ -68,6 +73,7 @@ Write 2-3 sentences. Be specific about THIS score — do not re-explain what the
         scoreExplanation: scoreResult.trim(),
         explanation: indexResult.trim(), // backward compat
         definition: def,
+        benchmarks: Object.keys(benchmarks).length > 0 ? benchmarks : undefined,
         score: { value: context.value, unit: context.unit || '', layerScore: context.layerScore },
         tokenUsage: session,
       });
@@ -80,7 +86,7 @@ Write 2-3 sentences. Be specific about THIS score — do not re-explain what the
     });
 
     const session = llm.getSessionTracker().getSummary();
-    res.json({ id, indexExplanation: indexExplanation.trim(), explanation: indexExplanation.trim(), definition: def, tokenUsage: session });
+    res.json({ id, indexExplanation: indexExplanation.trim(), explanation: indexExplanation.trim(), definition: def, benchmarks: Object.keys(benchmarks).length > 0 ? benchmarks : undefined, tokenUsage: session });
   } catch (err) {
     console.error('[POST /api/help/explain]', err);
     res.status(500).json({ error: 'Failed to generate explanation.' });

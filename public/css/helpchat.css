@@ -212,6 +212,33 @@
   margin-left: 4px;
 }
 
+/* Benchmark card (best/worst from the literature) */
+.help-bench-card {
+  background: #FFFBEB;
+  border-left-color: #D97706;
+  color: #78350F;
+  margin-top: 8px;
+}
+.help-bench-card .help-def-label {
+  color: #D97706;
+}
+.help-bench-row {
+  margin-top: 6px;
+  padding: 4px 0;
+  line-height: 1.5;
+}
+.help-bench-row + .help-bench-row {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(217, 119, 6, 0.15);
+}
+.help-bench-icon {
+  font-size: 9px;
+  margin-right: 2px;
+}
+.help-bench-icon.best { color: #059669; }
+.help-bench-icon.worst { color: #DC2626; }
+
 /* Chat input area */
 .help-input-area {
   display: flex;
