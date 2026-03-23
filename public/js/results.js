@@ -197,6 +197,13 @@ const Results = (() => {
   }
 
   function renderDetectStep(cp, detected) {
+    // Clear the center panel while modal is open
+    cp.innerHTML = `
+      <div class="cp-header">
+        <div class="cp-layer-name">Analysis Summary</div>
+        <div class="cp-layer-tag">configure genre & reading level</div>
+      </div>`;
+
     const genreOptions = buildGenreOptions(detected.suggestedGenre || '');
     const levelOptions = [
       { value: 'elementary', label: 'Elementary (grades 3-5)' },
@@ -206,39 +213,83 @@ const Results = (() => {
       { value: 'graduate', label: 'Graduate / Professional' },
     ].map(o => `<option value="${o.value}"${o.value === (detected.suggestedLevel || '') ? ' selected' : ''}>${o.label}</option>`).join('');
 
-    const fkInfo = detected.fkGrade != null
-      ? `<span class="detect-metric">Flesch-Kincaid grade: <strong>${detected.fkGrade.toFixed(1)}</strong></span>`
-      : '';
-    const freInfo = detected.fleschReadingEase != null
-      ? `<span class="detect-metric">Flesch Reading Ease: <strong>${detected.fleschReadingEase.toFixed(1)}</strong></span>`
-      : '';
-    const genreReason = detected.genreReason
-      ? `<div class="detect-reason">${escapeHtml(detected.genreReason)}</div>`
-      : '';
+    const fkDisplay = detected.fkGrade != null ? detected.fkGrade.toFixed(1) : '—';
+    const freDisplay = detected.fleschReadingEase != null ? detected.fleschReadingEase.toFixed(1) : '—';
+    const suggestedGenreLabel = detected.suggestedGenreLabel || '';
+    const suggestedGenreCat = detected.suggestedGenreCategory || '';
+    const suggestedLevelLabel = detected.suggestedLevelLabel || '';
 
-    cp.innerHTML = `
-      <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary</div>
-        <div class="cp-layer-tag">configure</div>
-      </div>
-      <div class="detect-card">
-        <div class="detect-section">
-          <div class="detect-label">Detected Genre</div>
-          ${genreReason}
-          <select id="summary-genre" class="detect-select">${genreOptions}</select>
+    // Build the suggestion block
+    const hasSuggestion = suggestedGenreLabel || suggestedLevelLabel;
+    const suggestionHtml = hasSuggestion ? `
+      <div class="modal-suggest">
+        <div class="modal-suggest-header">Based on my reading, I suggest:</div>
+        <div class="modal-suggest-row">
+          <div class="modal-suggest-item">
+            <span class="modal-suggest-label">Genre</span>
+            <span class="modal-suggest-value">${escapeHtml(suggestedGenreLabel)}${suggestedGenreCat ? ` <span class="modal-suggest-cat">${escapeHtml(suggestedGenreCat)}</span>` : ''}</span>
+          </div>
+          <div class="modal-suggest-item">
+            <span class="modal-suggest-label">Reading Level</span>
+            <span class="modal-suggest-value">${escapeHtml(suggestedLevelLabel)}</span>
+          </div>
         </div>
-        <div class="detect-section">
-          <div class="detect-label">Reading Level</div>
-          <div class="detect-metrics">${fkInfo}${freInfo}</div>
-          <select id="summary-level" class="detect-select">${levelOptions}</select>
+        ${detected.genreReason ? `<div class="modal-suggest-reason">${escapeHtml(detected.genreReason)}</div>` : ''}
+        <div class="modal-suggest-metrics">
+          <span class="detect-metric">FK Grade: <strong>${fkDisplay}</strong></span>
+          <span class="detect-metric">Flesch RE: <strong>${freDisplay}</strong></span>
         </div>
-        <button class="run-btn detect-generate-btn" id="generate-summary-btn">Generate Summary</button>
+      </div>` : '';
+
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'summary-modal-overlay';
+    overlay.className = 'summary-modal-overlay';
+    overlay.innerHTML = `
+      <div class="summary-modal">
+        <div class="summary-modal-header">
+          <div class="summary-modal-title">Configure Summary</div>
+          <button class="summary-modal-close" id="summary-modal-close">&times;</button>
+        </div>
+        ${suggestionHtml}
+        <div class="summary-modal-body">
+          <div class="modal-field">
+            <label class="modal-field-label" for="summary-genre">Genre</label>
+            <select id="summary-genre" class="detect-select">${genreOptions}</select>
+          </div>
+          <div class="modal-field">
+            <label class="modal-field-label" for="summary-level">Intended Reading Level</label>
+            <select id="summary-level" class="detect-select">${levelOptions}</select>
+          </div>
+        </div>
+        <div class="summary-modal-footer">
+          <button class="summary-modal-cancel" id="summary-modal-cancel">Cancel</button>
+          <button class="run-btn summary-modal-generate" id="generate-summary-btn">Generate Summary</button>
+        </div>
       </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Force reflow for animation
+    requestAnimationFrame(() => overlay.classList.add('open'));
+
+    // Close handlers
+    const closeModal = () => {
+      overlay.classList.remove('open');
+      setTimeout(() => overlay.remove(), 200);
+    };
+
+    document.getElementById('summary-modal-close').addEventListener('click', closeModal);
+    document.getElementById('summary-modal-cancel').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
 
     document.getElementById('generate-summary-btn').addEventListener('click', () => {
       confirmedGenre = document.getElementById('summary-genre').value;
       confirmedLevel = document.getElementById('summary-level').value;
-      cachedSummary = null; // reset cache since params changed
+      cachedSummary = null;
+      closeModal();
       generateSummary();
     });
   }
