@@ -59,6 +59,7 @@ const Results = (() => {
   function show(data) {
     analysisData = data;
     activeLayerIdx = 0;
+    cachedSummary = null;
     renderStatsBar();
     renderSidebar();
     renderCenter(0);
@@ -120,6 +121,13 @@ const Results = (() => {
       });
       list.appendChild(item);
     });
+
+    // Summary button below layer list
+    const summaryBtn = document.createElement('div');
+    summaryBtn.className = 'sidebar-summary-btn';
+    summaryBtn.innerHTML = '<span class="sidebar-summary-icon">&#9670;</span> Analysis Summary & FAQs';
+    summaryBtn.addEventListener('click', () => showSummary());
+    list.appendChild(summaryBtn);
   }
 
   function selectLayer(i) {
@@ -127,7 +135,125 @@ const Results = (() => {
     document.querySelectorAll('.layer-item').forEach((el, j) => {
       el.classList.toggle('active', j === i);
     });
+    const summaryBtn = document.querySelector('.sidebar-summary-btn');
+    if (summaryBtn) summaryBtn.classList.remove('active');
     renderCenter(i);
+  }
+
+  // ─── Analysis Summary & FAQs ─────────────────────────────────────────
+
+  let cachedSummary = null;
+
+  async function showSummary() {
+    // Deselect layers, highlight summary button
+    document.querySelectorAll('.layer-item').forEach(el => el.classList.remove('active'));
+    const summaryBtn = document.querySelector('.sidebar-summary-btn');
+    if (summaryBtn) summaryBtn.classList.add('active');
+
+    const cp = document.getElementById('center-panel');
+
+    // Show loading state
+    cp.innerHTML = `
+      <div class="cp-header">
+        <div class="cp-layer-name">Analysis Summary</div>
+        <div class="cp-layer-tag">all dimensions</div>
+      </div>
+      <div class="summary-loading">Generating dimensional summary and FAQs...</div>`;
+
+    // Use cache if available
+    if (cachedSummary) {
+      renderSummaryContent(cp, cachedSummary);
+      return;
+    }
+
+    try {
+      const resp = await Auth.apiFetch('/api/help/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          layers: analysisData.layers,
+          overallScore: analysisData.overallScore,
+          compositeScores: analysisData.compositeScores,
+          feedback: analysisData.feedback,
+          document: analysisData.document,
+        }),
+      });
+
+      if (!resp.ok) throw new Error('Failed to generate summary');
+      const data = await resp.json();
+      cachedSummary = data;
+
+      TokenFooter.onApiResponse(data);
+      renderSummaryContent(cp, data);
+    } catch (err) {
+      cp.innerHTML = `
+        <div class="cp-header">
+          <div class="cp-layer-name">Analysis Summary</div>
+          <div class="cp-layer-tag">all dimensions</div>
+        </div>
+        <div class="summary-error">Failed to generate summary. Please try again.</div>`;
+    }
+  }
+
+  function renderSummaryContent(cp, data) {
+    // Build dimension cards from the layers
+    const dimensions = [
+      { label: 'Surface & Vocabulary', layers: ['L0', 'L1'], color: '#0D9488' },
+      { label: 'Syntactic Complexity', layers: ['L2'], color: '#2563EB' },
+      { label: 'Cohesion & Coherence', layers: ['L3', 'L4', 'L5'], color: '#7C3AED' },
+      { label: 'Situation Model', layers: ['L6'], color: '#D97706' },
+      { label: 'Rhetoric & Argumentation', layers: ['L7', 'L8'], color: '#DC2626' },
+      { label: 'Stance & Tone', layers: ['L9', 'L10'], color: '#059669' },
+    ];
+
+    const dimCardsHtml = dimensions.map(dim => {
+      const dimLayers = analysisData.layers.filter(l => dim.layers.includes(l.layerId));
+      const avgScore = dimLayers.length > 0
+        ? Math.round(dimLayers.reduce((sum, l) => sum + l.score, 0) / dimLayers.length)
+        : null;
+      const layerBadges = dimLayers.map(l =>
+        `<span class="dim-layer-badge ${scoreCls(l.score)}">${l.layerId}: ${l.score}</span>`
+      ).join('');
+      return `
+        <div class="dim-card" style="border-left-color:${dim.color}">
+          <div class="dim-card-header">
+            <span class="dim-card-title">${dim.label}</span>
+            ${avgScore !== null ? `<span class="dim-card-score ${scoreCls(avgScore)}">${avgScore}</span>` : ''}
+          </div>
+          <div class="dim-layer-badges">${layerBadges}</div>
+        </div>`;
+    }).join('');
+
+    // Build FAQ accordion
+    const faqsHtml = (data.faqs || []).map((faq, i) => `
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+          <span class="faq-q-icon">Q</span>
+          <span class="faq-q-text">${escapeHtml(faq.question)}</span>
+          <span class="faq-chevron">&#9654;</span>
+        </button>
+        <div class="faq-answer">${escapeHtml(faq.answer)}</div>
+      </div>
+    `).join('');
+
+    // Split summary into paragraphs
+    const summaryParas = (data.summary || '').split(/\n\n+/).filter(p => p.trim());
+    const summaryHtml = summaryParas.map(p => `<p class="summary-para">${escapeHtml(p.trim())}</p>`).join('');
+
+    cp.innerHTML = `
+      <div class="cp-header">
+        <div class="cp-layer-name">Analysis Summary</div>
+        <div class="cp-layer-tag">overall: <strong>${analysisData.overallScore}/100</strong></div>
+      </div>
+      <div class="summary-dimensions">${dimCardsHtml}</div>
+      <div class="summary-section">
+        <div class="summary-section-title">Dimensional Summary</div>
+        <div class="summary-text">${summaryHtml}</div>
+      </div>
+      <div class="summary-section">
+        <div class="summary-section-title">Frequently Asked Questions</div>
+        <div class="faq-list">${faqsHtml || '<div class="summary-text">No FAQs generated.</div>'}</div>
+      </div>`;
   }
 
   // ─── Distribution rendering helper ──────────────────────────────────────

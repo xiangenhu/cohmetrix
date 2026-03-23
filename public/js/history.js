@@ -125,7 +125,7 @@ const History = (() => {
     if (!r) return;
 
     try {
-      const resp = await fetch(`/api/results/${r.id}`);
+      const resp = await Auth.apiFetch(`/api/results/${r.id}`);
       if (!resp.ok) throw new Error('Failed to load result');
       const data = await resp.json();
 
@@ -144,7 +144,7 @@ const History = (() => {
     if (!confirm(`Delete analysis ${r.id.substring(0, 8)}…?`)) return;
 
     try {
-      const resp = await fetch(`/api/results/${r.id}`, { method: 'DELETE' });
+      const resp = await Auth.apiFetch(`/api/results/${r.id}`, { method: 'DELETE' });
       if (!resp.ok) throw new Error('Delete failed');
       await loadResults();
     } catch (err) {
