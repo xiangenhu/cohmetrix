@@ -1,12 +1,12 @@
 /**
- * L5 — Situation Model
+ * L6 — Situation Model
  *
  * Kintsch (1998) Construction-Integration model: deep comprehension requires
  * building a mental simulation. LLMs extract causal chains and event structures.
  */
 const llm = require('../services/llm');
 
-const LAYER_ID = 'L5';
+const LAYER_ID = 'L6';
 const LAYER_NAME = 'Situation Model';
 
 async function analyze(doc) {
@@ -37,14 +37,14 @@ Text: ${doc.text.substring(0, 3000)}`);
   }
 
   const metrics = {
-    'L5.1': { value: round(sitData.causal_cohesion_ratio, 2), unit: 'ratio', label: 'Causal cohesion ratio' },
-    'L5.2': { value: round(sitData.causal_chain_density, 1), unit: '/100w', label: 'Causal chain density' },
-    'L5.3': { value: round(sitData.mean_causal_chain_length, 1), unit: 'events', label: 'Mean causal chain length' },
-    'L5.4': { value: round(sitData.intentional_action_density, 1), unit: '/100w', label: 'Intentional action density' },
-    'L5.5': { value: round(sitData.temporal_grounding_score, 2), unit: 'ratio', label: 'Temporal grounding score' },
-    'L5.6': { value: round(sitData.temporal_coherence, 2), unit: 'ratio', label: 'Temporal coherence' },
-    'L5.7': { value: round(sitData.spatial_grounding_score, 2), unit: 'ratio', label: 'Spatial grounding score' },
-    'L5.8': { value: round(sitData.protagonist_continuity, 2), unit: 'ratio', label: 'Protagonist continuity' },
+    'L6.1': { value: round(sitData.causal_cohesion_ratio, 2), unit: 'ratio', label: 'Causal cohesion ratio' },
+    'L6.2': { value: round(sitData.causal_chain_density, 1), unit: '/100w', label: 'Causal chain density' },
+    'L6.3': { value: round(sitData.mean_causal_chain_length, 1), unit: 'events', label: 'Mean causal chain length' },
+    'L6.4': { value: round(sitData.intentional_action_density, 1), unit: '/100w', label: 'Intentional action density' },
+    'L6.5': { value: round(sitData.temporal_grounding_score, 2), unit: 'ratio', label: 'Temporal grounding score' },
+    'L6.6': { value: round(sitData.temporal_coherence, 2), unit: 'ratio', label: 'Temporal coherence' },
+    'L6.7': { value: round(sitData.spatial_grounding_score, 2), unit: 'ratio', label: 'Spatial grounding score' },
+    'L6.8': { value: round(sitData.protagonist_continuity, 2), unit: 'ratio', label: 'Protagonist continuity' },
   };
 
   const causalScore = normalizeToScore(sitData.causal_chain_density, 1.5, 3.5, 0.3, 5.0);

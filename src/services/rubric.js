@@ -1,7 +1,7 @@
 /**
  * Rubric Evaluation Service
  *
- * Maps Neo-Coh-Metrix L0–L10 metrics to rubric criteria and generates
+ * Maps Neo-Coh-Metrix L0–L11 metrics to rubric criteria and generates
  * structured reviews using LLM, grounded in actual metric evidence.
  *
  * Flow:
@@ -16,26 +16,26 @@ const config = require('../config');
 // ─── Metric-to-rubric mapping hints ──────────────────────────────────────────
 // These help the LLM know which metrics are relevant to common rubric dimensions.
 const METRIC_MAPPING_HINTS = {
-  'content': ['L4.1', 'L4.4', 'L4.7', 'L4.8', 'L5.1', 'L5.2', 'L7.1', 'L7.2'],
-  'argument': ['L7.1', 'L7.2', 'L7.3', 'L7.4', 'L7.7', 'L6.4', 'L6.5'],
-  'organization': ['L0.8', 'L0.9', 'L4.4', 'L4.6', 'L4.7', 'L6.1', 'L6.8'],
-  'structure': ['L0.8', 'L0.9', 'L4.6', 'L6.1', 'L6.8'],
-  'coherence': ['L3.1', 'L3.5', 'L4.1', 'L4.3', 'L4.4', 'L4.6'],
-  'cohesion': ['L3.1', 'L3.4', 'L3.5', 'L3.8', 'L4.1', 'L4.3'],
-  'vocabulary': ['L1.1', 'L1.3', 'L1.5', 'L1.6', 'L0.7'],
-  'language': ['L1.1', 'L1.5', 'L2.1', 'L2.4', 'L8.3', 'L8.5'],
-  'grammar': ['L2.1', 'L2.4', 'L2.5', 'L2.6'],
-  'syntax': ['L2.1', 'L2.2', 'L2.3', 'L2.4', 'L2.6'],
-  'evidence': ['L7.2', 'L7.3', 'L7.7', 'L6.4', 'L8.6'],
-  'critical thinking': ['L7.1', 'L7.2', 'L7.4', 'L7.5', 'L6.5', 'L5.2'],
-  'analysis': ['L5.2', 'L5.3', 'L7.2', 'L7.6', 'L6.4'],
-  'voice': ['L8.3', 'L8.5', 'L8.8', 'L9.1', 'L9.4'],
-  'tone': ['L9.1', 'L9.2', 'L9.4', 'L9.5', 'L8.3'],
-  'engagement': ['L9.1', 'L9.5', 'L9.8', 'L1.1'],
-  'mechanics': ['L0.4', 'L0.5', 'L0.7'],
-  'citation': ['L8.6', 'L7.2', 'L7.3'],
-  'complexity': ['L2.1', 'L2.4', 'L2.3', 'L1.1', 'L1.3'],
-  'readability': ['L0.4', 'L0.5', 'L0.7', 'L2.1', 'L10.6'],
+  'content': ['L4.1', 'L4.6', 'L4.7', 'L4.8', 'L6.2', 'L6.3', 'L8.1', 'L8.2'],
+  'argument': ['L8.1', 'L8.2', 'L8.3', 'L8.4', 'L8.7', 'L7.4', 'L7.5'],
+  'organization': ['L0.7', 'L0.12', 'L4.6', 'L4.7', 'L7.1', 'L7.8'],
+  'structure': ['L0.7', 'L0.12', 'L4.4', 'L7.1', 'L7.8'],
+  'coherence': ['L3.1', 'L3.6', 'L4.1', 'L4.2', 'L4.6', 'L5.1'],
+  'cohesion': ['L3.1', 'L3.5', 'L3.6', 'L3.8', 'L4.1', 'L5.2', 'L5.4'],
+  'vocabulary': ['L1.1', 'L1.4', 'L1.8', 'L1.9', 'L0.10'],
+  'language': ['L1.1', 'L1.8', 'L2.1', 'L2.5', 'L9.3', 'L9.5'],
+  'grammar': ['L2.1', 'L2.4', 'L2.5', 'L2.6', 'L2.7'],
+  'syntax': ['L2.1', 'L2.2', 'L2.3', 'L2.4', 'L2.7', 'L2.8'],
+  'evidence': ['L8.2', 'L8.3', 'L8.7', 'L8.9', 'L7.4', 'L9.6'],
+  'critical thinking': ['L8.1', 'L8.2', 'L8.4', 'L8.5', 'L7.5', 'L6.2'],
+  'analysis': ['L6.2', 'L6.3', 'L8.2', 'L8.6', 'L7.4'],
+  'voice': ['L9.3', 'L9.5', 'L9.8', 'L10.1', 'L10.3'],
+  'tone': ['L10.1', 'L10.2', 'L10.3', 'L10.5', 'L9.3'],
+  'engagement': ['L10.1', 'L10.5', 'L10.8', 'L1.1'],
+  'mechanics': ['L0.5', 'L0.6', 'L0.10'],
+  'citation': ['L9.6', 'L8.2', 'L8.3'],
+  'complexity': ['L2.1', 'L2.4', 'L2.3', 'L1.1', 'L1.4'],
+  'readability': ['L0.5', 'L0.13', 'L0.14', 'L0.10', 'L2.1', 'L11.6'],
 };
 
 /**
@@ -64,7 +64,7 @@ async function evaluateWithRubric(rubricText, layers, document, options = {}) {
   const prompt = `You are an expert essay grader. You have two inputs:
 
 1. A RUBRIC provided by the instructor
-2. DETAILED METRIC ANALYSIS of a student essay (from an 11-layer NLP analysis system)
+2. DETAILED METRIC ANALYSIS of a student essay (from a 12-layer NLP analysis system)
 
 Your task: For each criterion in the rubric, produce a structured evaluation that maps the relevant metrics to that criterion and provides a justified score.
 

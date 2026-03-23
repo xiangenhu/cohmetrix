@@ -1,13 +1,13 @@
 /**
- * L7 — Argumentation Structure
+ * L8 — Argumentation Quality
  *
  * Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal.
  * LLM-based argument mining classifies roles at sentence level.
  */
 const llm = require('../services/llm');
 
-const LAYER_ID = 'L7';
-const LAYER_NAME = 'Argumentation';
+const LAYER_ID = 'L8';
+const LAYER_NAME = 'Argumentation Quality';
 
 async function analyze(doc) {
   let argData;
@@ -41,14 +41,14 @@ Text: ${doc.text.substring(0, 3000)}`);
   }
 
   const metrics = {
-    'L7.1': { value: argData.claim_count, unit: 'claims', label: 'Main claim count' },
-    'L7.2': { value: round(argData.premise_to_claim_ratio, 1), unit: 'per claim', label: 'Premises per claim' },
-    'L7.3': { value: round(argData.warrant_completeness, 2), unit: 'ratio', label: 'Warrant completeness' },
-    'L7.4': { value: argData.rebuttal_present, unit: 'binary', label: 'Counter-argument present' },
-    'L7.5': { value: round(argData.rebuttal_quality, 2), unit: 'score', label: 'Rebuttal quality' },
-    'L7.6': { value: argData.argument_depth, unit: 'levels', label: 'Argument depth' },
-    'L7.7': { value: round(argData.unsupported_claim_ratio, 2), unit: 'ratio', label: 'Unsupported claim ratio' },
-    'L7.8': { value: round(argData.logical_fallacy_density, 1), unit: '/500w', label: 'Logical fallacy density' },
+    'L8.1': { value: argData.claim_count, unit: 'claims', label: 'Main claim count' },
+    'L8.2': { value: round(argData.premise_to_claim_ratio, 1), unit: 'per claim', label: 'Premises per claim' },
+    'L8.3': { value: round(argData.warrant_completeness, 2), unit: 'ratio', label: 'Warrant completeness' },
+    'L8.4': { value: argData.rebuttal_present, unit: 'binary', label: 'Counter-argument present' },
+    'L8.5': { value: round(argData.rebuttal_quality, 2), unit: 'score', label: 'Rebuttal quality' },
+    'L8.6': { value: argData.argument_depth, unit: 'levels', label: 'Argument depth' },
+    'L8.7': { value: round(argData.unsupported_claim_ratio, 2), unit: 'ratio', label: 'Unsupported claim ratio' },
+    'L8.8': { value: round(argData.logical_fallacy_density, 1), unit: '/500w', label: 'Logical fallacy density' },
   };
 
   // Score heavily penalizes low premise ratio and high unsupported claims

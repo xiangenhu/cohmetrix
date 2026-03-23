@@ -48,10 +48,16 @@ module.exports = {
   },
 
   weights: {
-    f1Narrativity: parseFloat(process.env.WEIGHT_F1_NARRATIVITY) || 0.15,
-    f2Syntax: parseFloat(process.env.WEIGHT_F2_SYNTAX) || 0.15,
-    f3Lexical: parseFloat(process.env.WEIGHT_F3_LEXICAL) || 0.20,
-    f4DeepCohesion: parseFloat(process.env.WEIGHT_F4_DEEP_COHESION) || 0.20,
+    f1Narrativity: parseFloat(process.env.WEIGHT_F1_NARRATIVITY) || 0.10,
+    f2Syntax: parseFloat(process.env.WEIGHT_F2_SYNTAX) || 0.10,
+    f3Lexical: parseFloat(process.env.WEIGHT_F3_LEXICAL) || 0.10,
+    f4ReferentialCohesion: parseFloat(process.env.WEIGHT_F4_REFERENTIAL_COHESION) || 0.15,
+    f5DeepCohesion: parseFloat(process.env.WEIGHT_F5_DEEP_COHESION) || 0.15,
+    f6Argument: parseFloat(process.env.WEIGHT_F6_ARGUMENT) || 0.20,
+    f7Stance: parseFloat(process.env.WEIGHT_F7_STANCE) || 0.10,
+    f8Engagement: parseFloat(process.env.WEIGHT_F8_ENGAGEMENT) || 0.10,
+    // Backward compat aliases (used by pipeline.js fallback)
+    f4DeepCohesion: parseFloat(process.env.WEIGHT_F4_DEEP_COHESION) || 0.15,
     f5Argument: parseFloat(process.env.WEIGHT_F5_ARGUMENT) || 0.20,
     f6Stance: parseFloat(process.env.WEIGHT_F6_STANCE) || 0.10,
   },
@@ -59,10 +65,10 @@ module.exports = {
   llmLayerWeight: parseFloat(process.env.LLM_LAYER_WEIGHT) || 0.7,
 
   l10Defaults: {
-    vocabLevel: process.env.L10_DEFAULT_VOCAB_LEVEL || 'B2',
-    domainExpertise: process.env.L10_DEFAULT_DOMAIN_EXPERTISE || 'Intermediate',
-    zpdOptimalMin: parseFloat(process.env.L10_ZPD_OPTIMAL_MIN) || 0.5,
-    zpdOptimalMax: parseFloat(process.env.L10_ZPD_OPTIMAL_MAX) || 1.5,
+    vocabLevel: process.env.L11_DEFAULT_VOCAB_LEVEL || process.env.L10_DEFAULT_VOCAB_LEVEL || 'B2',
+    domainExpertise: process.env.L11_DEFAULT_DOMAIN_EXPERTISE || process.env.L10_DEFAULT_DOMAIN_EXPERTISE || 'Intermediate',
+    zpdOptimalMin: parseFloat(process.env.L11_ZPD_OPTIMAL_MIN || process.env.L10_ZPD_OPTIMAL_MIN) || 0.5,
+    zpdOptimalMax: parseFloat(process.env.L11_ZPD_OPTIMAL_MAX || process.env.L10_ZPD_OPTIMAL_MAX) || 1.5,
   },
 
   thresholds: {

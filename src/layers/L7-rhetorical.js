@@ -1,12 +1,12 @@
 /**
- * L6 — Rhetorical Structure (RST)
+ * L7 — Rhetorical Structure (RST)
  *
  * RST (Mann & Thompson 1988) captures intentional discourse organization.
  * LLM-based analysis replaces DMRST parser for portability.
  */
 const llm = require('../services/llm');
 
-const LAYER_ID = 'L6';
+const LAYER_ID = 'L7';
 const LAYER_NAME = 'Rhetorical Structure';
 
 async function analyze(doc) {
@@ -37,14 +37,14 @@ Text: ${doc.text.substring(0, 3000)}`);
   }
 
   const metrics = {
-    'L6.1': { value: rstData.rst_tree_depth, unit: 'levels', label: 'RST tree depth' },
-    'L6.2': { value: round(rstData.nucleus_density, 2), unit: 'ratio', label: 'Nucleus density' },
-    'L6.3': { value: round(rstData.satellite_chaining, 1), unit: 'depth', label: 'Satellite chaining' },
-    'L6.4': { value: round(rstData.evidence_relation_ratio, 2), unit: 'ratio', label: 'Evidence relation ratio' },
-    'L6.5': { value: round(rstData.contrast_concession_ratio, 2), unit: 'ratio', label: 'Contrast/Concession ratio' },
-    'L6.6': { value: round(rstData.elaboration_ratio, 2), unit: 'ratio', label: 'Elaboration ratio' },
-    'L6.7': { value: round(rstData.rst_coherence_score, 2), unit: 'score', label: 'RST coherence score' },
-    'L6.8': { value: round(rstData.rhetorical_diversity_index, 2), unit: 'bits', label: 'Rhetorical diversity index' },
+    'L7.1': { value: rstData.rst_tree_depth, unit: 'levels', label: 'RST tree depth' },
+    'L7.2': { value: round(rstData.nucleus_density, 2), unit: 'ratio', label: 'Nucleus density' },
+    'L7.3': { value: round(rstData.satellite_chaining, 1), unit: 'depth', label: 'Satellite chaining' },
+    'L7.4': { value: round(rstData.evidence_relation_ratio, 2), unit: 'ratio', label: 'Evidence relation ratio' },
+    'L7.5': { value: round(rstData.contrast_concession_ratio, 2), unit: 'ratio', label: 'Contrast/Concession ratio' },
+    'L7.6': { value: round(rstData.elaboration_ratio, 2), unit: 'ratio', label: 'Elaboration ratio' },
+    'L7.7': { value: round(rstData.rst_coherence_score, 2), unit: 'score', label: 'RST coherence score' },
+    'L7.8': { value: round(rstData.rhetorical_diversity_index, 2), unit: 'bits', label: 'Rhetorical diversity index' },
   };
 
   const depthScore = normalizeToScore(rstData.rst_tree_depth, 4, 7, 1, 10);

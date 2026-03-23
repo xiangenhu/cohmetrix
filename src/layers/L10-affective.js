@@ -1,5 +1,5 @@
 /**
- * L9 — Affective Trajectory
+ * L10 — Affective & Engagement
  *
  * Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay
  * reveals tonal consistency and emotional engagement. LLM-rated per sentence.
@@ -7,8 +7,8 @@
 const llm = require('../services/llm');
 const { mean, stdev } = require('../utils/nlp');
 
-const LAYER_ID = 'L9';
-const LAYER_NAME = 'Affective Trajectory';
+const LAYER_ID = 'L10';
+const LAYER_NAME = 'Affective & Engagement';
 
 async function analyze(doc) {
   let vadData;
@@ -42,14 +42,14 @@ Text: ${doc.text.substring(0, 3000)}`);
   }
 
   const metrics = {
-    'L9.1': { value: round(vadData.mean_valence, 1), unit: '/9', label: 'Mean valence' },
-    'L9.2': { value: round(vadData.valence_variability, 1), unit: 'SD', label: 'Valence variability' },
-    'L9.3': { value: round(vadData.mean_arousal, 1), unit: '/9', label: 'Mean arousal' },
-    'L9.4': { value: round(vadData.mean_dominance, 1), unit: '/9', label: 'Mean dominance' },
-    'L9.5': { value: round(vadData.valence_arc_slope, 2), unit: 'slope', label: 'Valence arc (intro→concl)' },
-    'L9.6': { value: round(vadData.affect_argument_alignment, 2), unit: 'corr', label: 'Affect-argument alignment' },
-    'L9.7': { value: round(vadData.emotional_intrusion_index, 2), unit: 'ratio', label: 'Emotional intrusion index' },
-    'L9.8': { value: round(vadData.engagement_prediction, 2), unit: 'score', label: 'Engagement prediction' },
+    'L10.1': { value: round(vadData.mean_valence, 1), unit: '/9', label: 'Mean valence' },
+    'L10.2': { value: round(vadData.valence_variability, 1), unit: 'SD', label: 'Valence variability' },
+    'L10.3': { value: round(vadData.mean_arousal, 1), unit: '/9', label: 'Mean arousal' },
+    'L10.4': { value: round(vadData.mean_dominance, 1), unit: '/9', label: 'Mean dominance' },
+    'L10.5': { value: round(vadData.valence_arc_slope, 2), unit: 'slope', label: 'Valence arc (intro→concl)' },
+    'L10.6': { value: round(vadData.affect_argument_alignment, 2), unit: 'corr', label: 'Affect-argument alignment' },
+    'L10.7': { value: round(vadData.emotional_intrusion_index, 2), unit: 'ratio', label: 'Emotional intrusion index' },
+    'L10.8': { value: round(vadData.engagement_prediction, 2), unit: 'score', label: 'Engagement prediction' },
   };
 
   // Academic writing should have moderate valence (4-6.5), low variability, moderate dominance

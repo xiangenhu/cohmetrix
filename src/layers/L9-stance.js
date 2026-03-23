@@ -1,12 +1,12 @@
 /**
- * L8 — Pragmatic Stance
+ * L9 — Pragmatic Stance
  *
  * Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969).
  * Epistemic calibration critical for academic register.
  */
 const llm = require('../services/llm');
 
-const LAYER_ID = 'L8';
+const LAYER_ID = 'L9';
 const LAYER_NAME = 'Pragmatic Stance';
 
 // Surface-level hedge/boost markers
@@ -74,14 +74,14 @@ Text: ${doc.text.substring(0, 3000)}`);
   const evidentialityScore = evidCount / Math.max(doc.sentenceCount, 1);
 
   const metrics = {
-    'L8.1': { value: JSON.stringify(stanceData.speech_act_distribution), unit: 'dist', label: 'Speech act distribution' },
-    'L8.2': { value: round(stanceData.assert_dominance, 2), unit: 'ratio', label: 'Assert dominance' },
-    'L8.3': { value: round(hedgeDensity, 1), unit: '/100w', label: 'Hedging density' },
-    'L8.4': { value: round(boostDensity, 1), unit: '/100w', label: 'Boosting density' },
-    'L8.5': { value: round(hedgeBoostRatio, 1), unit: 'ratio', label: 'Hedge-to-boost ratio' },
-    'L8.6': { value: round(evidentialityScore, 2), unit: 'ratio', label: 'Evidentiality score' },
-    'L8.7': { value: round(stanceData.presupposition_load, 1), unit: '/sent', label: 'Presupposition load' },
-    'L8.8': { value: round(stanceData.first_person_ratio, 2), unit: 'ratio', label: 'First-person stance shift' },
+    'L9.1': { value: JSON.stringify(stanceData.speech_act_distribution), unit: 'dist', label: 'Speech act distribution' },
+    'L9.2': { value: round(stanceData.assert_dominance, 2), unit: 'ratio', label: 'Assert dominance' },
+    'L9.3': { value: round(hedgeDensity, 1), unit: '/100w', label: 'Hedging density' },
+    'L9.4': { value: round(boostDensity, 1), unit: '/100w', label: 'Boosting density' },
+    'L9.5': { value: round(hedgeBoostRatio, 1), unit: 'ratio', label: 'Hedge-to-boost ratio' },
+    'L9.6': { value: round(evidentialityScore, 2), unit: 'ratio', label: 'Evidentiality score' },
+    'L9.7': { value: round(stanceData.presupposition_load, 1), unit: '/sent', label: 'Presupposition load' },
+    'L9.8': { value: round(stanceData.first_person_ratio, 2), unit: 'ratio', label: 'First-person stance shift' },
   };
 
   const hedgeScore = normalizeToScore(hedgeDensity, 1.0, 3.0, 0.0, 6.0);
