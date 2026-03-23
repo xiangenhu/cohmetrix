@@ -25,6 +25,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     let text = req.body.text || '';
     const promptText = req.body.promptText || '';
     const learnerId = req.body.learnerId || '';
+    const genre = req.body.genre || '';
     let enabledLayers;
     try {
       enabledLayers = JSON.parse(req.body.enabledLayers || '[]');
@@ -58,6 +59,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     runAnalysis(text, {
       promptText,
       learnerId,
+      genre,
       enabledLayers,
       onProgress: (event) => {
         const events = analysisProgress.get(analysisId) || [];

@@ -30,13 +30,14 @@ const ALL_LAYER_IDS = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9
 /**
  * Run full analysis pipeline.
  * @param {string} text - Essay text
- * @param {object} options - { promptText, learnerId, enabledLayers, onProgress }
+ * @param {object} options - { promptText, learnerId, genre, enabledLayers, onProgress }
  * @returns {object} Full analysis result
  */
 async function runAnalysis(text, options = {}) {
   const {
     promptText = '',
     learnerId = '',
+    genre = '',
     enabledLayers = ALL_LAYER_IDS,
     onProgress = () => {},
   } = options;
@@ -156,6 +157,7 @@ async function runAnalysis(text, options = {}) {
       paragraphCount: doc.paragraphCount,
       text: doc.text,
       promptText,
+      genre,
     },
     tokenUsage,
     llmProvider: llm.getProviderInfo(),

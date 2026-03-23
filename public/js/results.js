@@ -240,9 +240,13 @@ const Results = (() => {
     const summaryParas = (data.summary || '').split(/\n\n+/).filter(p => p.trim());
     const summaryHtml = summaryParas.map(p => `<p class="summary-para">${escapeHtml(p.trim())}</p>`).join('');
 
+    const genreLabel = analysisData.document?.genre
+      ? `<span class="summary-genre-badge">${escapeHtml(analysisData.document.genre.replace(/-/g, ' '))}</span>`
+      : '';
+
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary</div>
+        <div class="cp-layer-name">Analysis Summary ${genreLabel}</div>
         <div class="cp-layer-tag">overall: <strong>${analysisData.overallScore}/100</strong></div>
       </div>
       <div class="summary-dimensions">${dimCardsHtml}</div>

@@ -62,6 +62,31 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
 
     // Sample link
     document.getElementById('sample-link').addEventListener('click', loadSample);
+
+    // Populate genre dropdown
+    populateGenres();
+  }
+
+  async function populateGenres() {
+    const select = document.getElementById('genre-select');
+    if (!select) return;
+    try {
+      const resp = await fetch('/api/genres');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      (data.categories || []).forEach(cat => {
+        const group = document.createElement('optgroup');
+        group.label = cat.category;
+        cat.genres.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.textContent = g.name;
+          opt.title = g.description;
+          group.appendChild(opt);
+        });
+        select.appendChild(group);
+      });
+    } catch { /* silently fail — genre is optional */ }
   }
 
   function handleFile(file) {
@@ -134,6 +159,7 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
     formData.append('promptText', promptText);
     formData.append('learnerId', learnerId);
     formData.append('enabledLayers', JSON.stringify(enabledLayers));
+    formData.append('genre', document.getElementById('genre-select')?.value || '');
 
     Processing.start(formData);
   }

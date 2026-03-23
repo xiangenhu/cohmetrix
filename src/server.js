@@ -17,6 +17,12 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── Public routes (no auth) ─────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 
+// Genre taxonomy (static, no auth needed)
+app.get('/api/genres', (req, res) => {
+  const { GENRE_CATEGORIES } = require('./services/genres');
+  res.json({ categories: GENRE_CATEGORIES });
+});
+
 // Health check (Cloud Run)
 app.get('/health', (req, res) => {
   const llm = require('./services/llm');

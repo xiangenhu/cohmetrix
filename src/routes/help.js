@@ -2,6 +2,7 @@ const express = require('express');
 const llm = require('../services/llm');
 const config = require('../config');
 const { getDefinition, LAYER_DEFINITIONS, METRIC_DEFINITIONS } = require('../services/definitions');
+const { getGenreContext, getGenre } = require('../services/genres');
 
 const router = express.Router();
 
@@ -144,6 +145,12 @@ router.post('/summary', async (req, res) => {
       return res.status(400).json({ error: 'Missing layers data.' });
     }
 
+    // Genre-aware context
+    const genreId = doc?.genre || '';
+    const genreInfo = genreId ? getGenre(genreId) : null;
+    const genreContext = genreId ? getGenreContext(genreId) : '';
+    const genreLabel = genreInfo ? genreInfo.name : 'general academic essay';
+
     // Build a compact snapshot of every layer
     const layerSnapshot = layers.map(l => {
       const topMetrics = Object.entries(l.metrics || {})
@@ -159,45 +166,50 @@ router.post('/summary', async (req, res) => {
     // Part 1: Dimensional summary
     const summaryPrompt = `${persona}
 
-You are summarizing a complete essay analysis for a ${audience}. The essay has ${doc?.wordCount || '?'} words, ${doc?.sentenceCount || '?'} sentences, and ${doc?.paragraphCount || '?'} paragraphs. Overall cohesion score: ${overallScore}/100.
+You are summarizing a complete text analysis for a ${audience}. The document is a **${genreLabel}**. It has ${doc?.wordCount || '?'} words, ${doc?.sentenceCount || '?'} sentences, and ${doc?.paragraphCount || '?'} paragraphs. Overall cohesion score: ${overallScore}/100.
 
+${genreContext ? `GENRE-SPECIFIC EVALUATION CRITERIA:\n${genreContext}\n` : ''}
 Layer-by-layer results:
 ${layerSnapshot}
 
 ${feedbackStr ? `AI tutor feedback: ${feedbackStr}` : ''}
 
-Write a dimensional summary of this analysis. For each major dimension, write 1-2 sentences covering:
-1. Surface & Vocabulary (L0-L1): readability, vocabulary sophistication
-2. Syntax (L2): sentence complexity and variety
-3. Cohesion & Coherence (L3-L5): how well ideas connect
-4. Deeper Meaning (L6): situation model / mental simulation
-5. Rhetoric & Argumentation (L7-L8): organization and argument quality
-6. Stance & Tone (L9-L10): voice, hedging, emotional control
+Write a dimensional summary of this analysis, EVALUATED AGAINST THE EXPECTATIONS OF THE ${genreLabel.toUpperCase()} GENRE. For each major dimension, write 1-2 sentences covering:
+1. Surface & Vocabulary (L0-L1): readability, vocabulary sophistication — appropriate for this genre?
+2. Syntax (L2): sentence complexity and variety — matching genre expectations?
+3. Cohesion & Coherence (L3-L5): how well ideas connect — genre-appropriate level?
+4. Deeper Meaning (L6): situation model — relevant for this genre?
+5. Rhetoric & Argumentation (L7-L8): organization and argument quality — expected in this genre?
+6. Stance & Tone (L9-L10): voice, hedging, emotional control — matching genre norms?
 
-End with 1-2 sentences of overall assessment.
+For dimensions NOT relevant to this genre (per the genre criteria above), briefly note that they are less applicable rather than flagging low scores as weaknesses.
+
+End with 1-2 sentences of overall assessment for a ${genreLabel}.
 
 Use plain language. Do NOT use metric IDs or abbreviations. Do NOT use bullet points — write flowing prose with clear paragraph breaks between dimensions. Keep each dimension to 2-3 sentences max.`;
 
     // Part 2: FAQs about the document
     const faqPrompt = `${persona}
 
-You are generating frequently asked questions a ${audience} might have about this specific essay, based on its analysis results.
+You are generating frequently asked questions a ${audience} might have about this specific ${genreLabel}, based on its analysis results.
 
-Essay stats: ${doc?.wordCount || '?'} words, overall score ${overallScore}/100.
+${genreContext ? `GENRE CONTEXT:\n${genreContext}\n` : ''}
+Document stats: ${doc?.wordCount || '?'} words, overall score ${overallScore}/100.
 
 Layer results:
 ${layerSnapshot}
 
 ${feedbackStr ? `AI tutor feedback: ${feedbackStr}` : ''}
 
-Generate exactly 5 questions and answers that a ${audience} would likely ask about THIS specific document. Questions should be practical and actionable, like:
-- "Why is my cohesion score low?"
-- "How can I improve my argumentation?"
-- "Is my vocabulary appropriate for this level?"
+Generate exactly 5 questions and answers that a ${audience} would likely ask about THIS specific ${genreLabel}. Questions should be practical, actionable, and GENRE-AWARE. For example:
+${genreInfo ? `- "Is my ${genreLabel.toLowerCase()} meeting genre conventions?"` : ''}
+- "What are the strongest aspects of this writing?"
+- "What should I prioritize improving?"
+- "How does this compare to typical ${genreLabel.toLowerCase()} quality?"
 
 Format each as:
 Q: [question]
-A: [2-3 sentence answer referencing specific findings from the analysis]
+A: [2-3 sentence answer referencing specific findings from the analysis, interpreted through the lens of ${genreLabel} conventions]
 
 Make questions specific to the actual scores and findings — not generic.`;
 
