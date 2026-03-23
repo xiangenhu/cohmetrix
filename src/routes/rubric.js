@@ -140,6 +140,8 @@ router.post('/evaluate', async (req, res) => {
       await storage.saveResult(analysisId, result);
     }
 
+    const llm = require('../services/llm');
+    evaluation.tokenUsage = llm.getSessionTracker().getSummary();
     res.json(evaluation);
   } catch (err) {
     console.error('[POST /api/rubrics/evaluate]', err);

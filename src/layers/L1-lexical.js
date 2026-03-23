@@ -5,7 +5,7 @@
  * Higher surprisal = lower predictability = higher processing cost.
  */
 const llm = require('../services/llm');
-const { mean } = require('../utils/nlp');
+const { mean, descriptiveStats } = require('../utils/nlp');
 
 const LAYER_ID = 'L1';
 const LAYER_NAME = 'Lexical Sophistication';
@@ -41,7 +41,7 @@ async function analyze(doc) {
   const words = doc.tokens.filter(t => /^\w+$/.test(t));
   const contentWords = words.filter(w => w.length > 2);
 
-  // Use LLM to assess lexical sophistication
+  // Use LLM to assess lexical sophistication with per-sentence distributions
   let surprisalData;
   try {
     surprisalData = await llm.completeJSON(`
@@ -54,7 +54,12 @@ Analyze the lexical sophistication of this text. For the text below, estimate:
 6. morphological_complexity: mean morphemes per content word (1-4)
 7. register_consistency: how consistent the register is throughout (0-1, where 1=perfectly consistent)
 
-Return JSON: {"mean_surprisal": float, "surprisal_sd": float, "mean_aoa": float, "mean_concreteness": float, "rare_word_ratio": float, "morphological_complexity": float, "register_consistency": float}
+Also provide per-sentence estimates for key metrics:
+8. per_sentence_surprisal: array of per-sentence mean surprisal values (one float per sentence)
+9. per_sentence_aoa: array of per-sentence mean age-of-acquisition values
+10. per_sentence_concreteness: array of per-sentence mean concreteness values
+
+Return JSON: {"mean_surprisal": float, "surprisal_sd": float, "mean_aoa": float, "mean_concreteness": float, "rare_word_ratio": float, "morphological_complexity": float, "register_consistency": float, "per_sentence_surprisal": [float, ...], "per_sentence_aoa": [float, ...], "per_sentence_concreteness": [float, ...]}
 
 Text: ${doc.text.substring(0, 3000)}`);
   } catch {
@@ -62,18 +67,24 @@ Text: ${doc.text.substring(0, 3000)}`);
       mean_surprisal: 7.0, surprisal_sd: 2.5, mean_aoa: 7.5,
       mean_concreteness: 2.8, rare_word_ratio: 0.08,
       morphological_complexity: 1.6, register_consistency: 0.75,
+      per_sentence_surprisal: [], per_sentence_aoa: [], per_sentence_concreteness: [],
     };
   }
+
+  // Compute distributions from per-sentence arrays
+  const surprisalDist = descriptiveStats(surprisalData.per_sentence_surprisal || [], 2);
+  const aoaDist = descriptiveStats(surprisalData.per_sentence_aoa || [], 2);
+  const concDist = descriptiveStats(surprisalData.per_sentence_concreteness || [], 2);
 
   // AWL density
   const awlCount = contentWords.filter(w => AWL_SAMPLE.has(w.toLowerCase())).length;
   const awlDensity = awlCount / Math.max(contentWords.length, 1);
 
   const metrics = {
-    'L1.1': { value: round(surprisalData.mean_surprisal, 1), unit: 'bits', label: 'Mean token surprisal' },
+    'L1.1': { value: round(surprisalData.mean_surprisal, 1), unit: 'bits', label: 'Mean token surprisal', distribution: surprisalDist },
     'L1.2': { value: round(surprisalData.surprisal_sd, 1), unit: 'SD', label: 'Surprisal standard deviation' },
-    'L1.3': { value: round(surprisalData.mean_aoa, 1), unit: 'years', label: 'Mean age of acquisition' },
-    'L1.4': { value: round(surprisalData.mean_concreteness, 1), unit: '/5', label: 'Mean concreteness' },
+    'L1.3': { value: round(surprisalData.mean_aoa, 1), unit: 'years', label: 'Mean age of acquisition', distribution: aoaDist },
+    'L1.4': { value: round(surprisalData.mean_concreteness, 1), unit: '/5', label: 'Mean concreteness', distribution: concDist },
     'L1.5': { value: round(awlDensity, 2), unit: 'AWL%', label: 'Academic word density' },
     'L1.6': { value: round(surprisalData.rare_word_ratio, 2), unit: 'ratio', label: 'Rare word ratio' },
     'L1.7': { value: round(surprisalData.register_consistency, 2), unit: 'score', label: 'Register consistency' },

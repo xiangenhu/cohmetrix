@@ -73,11 +73,24 @@ Text: ${doc.text.substring(0, 3000)}`);
   const hedgeBoostRatio = hedgeCount / Math.max(boostCount, 1);
   const evidentialityScore = evidCount / Math.max(doc.sentenceCount, 1);
 
+  // Per-sentence hedge/boost counts for distributions
+  const perSentHedge = doc.sentences.map(s => {
+    const sl = s.toLowerCase();
+    return HEDGE_MARKERS.reduce((c, m) => c + (sl.match(new RegExp(`\\b${m}\\b`, 'g')) || []).length, 0);
+  });
+  const perSentBoost = doc.sentences.map(s => {
+    const sl = s.toLowerCase();
+    return BOOST_MARKERS.reduce((c, m) => c + (sl.match(new RegExp(`\\b${m}\\b`, 'g')) || []).length, 0);
+  });
+  const { descriptiveStats } = require('../utils/nlp');
+  const hedgeDist = descriptiveStats(perSentHedge, 2);
+  const boostDist = descriptiveStats(perSentBoost, 2);
+
   const metrics = {
     'L9.1': { value: JSON.stringify(stanceData.speech_act_distribution), unit: 'dist', label: 'Speech act distribution' },
     'L9.2': { value: round(stanceData.assert_dominance, 2), unit: 'ratio', label: 'Assert dominance' },
-    'L9.3': { value: round(hedgeDensity, 1), unit: '/100w', label: 'Hedging density' },
-    'L9.4': { value: round(boostDensity, 1), unit: '/100w', label: 'Boosting density' },
+    'L9.3': { value: round(hedgeDensity, 1), unit: '/100w', label: 'Hedging density', distribution: hedgeDist ? { ...hedgeDist, note: 'Per-sentence hedge marker count' } : null },
+    'L9.4': { value: round(boostDensity, 1), unit: '/100w', label: 'Boosting density', distribution: boostDist ? { ...boostDist, note: 'Per-sentence boost marker count' } : null },
     'L9.5': { value: round(hedgeBoostRatio, 1), unit: 'ratio', label: 'Hedge-to-boost ratio' },
     'L9.6': { value: round(evidentialityScore, 2), unit: 'ratio', label: 'Evidentiality score' },
     'L9.7': { value: round(stanceData.presupposition_load, 1), unit: '/sent', label: 'Presupposition load' },

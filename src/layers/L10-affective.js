@@ -5,7 +5,7 @@
  * reveals tonal consistency and emotional engagement. LLM-rated per sentence.
  */
 const llm = require('../services/llm');
-const { mean, stdev } = require('../utils/nlp');
+const { mean, stdev, descriptiveStats } = require('../utils/nlp');
 
 const LAYER_ID = 'L10';
 const LAYER_NAME = 'Affective & Engagement';
@@ -41,11 +41,17 @@ Text: ${doc.text.substring(0, 3000)}`);
     };
   }
 
+  // Compute distributions from per-paragraph VAD data
+  const paraVad = vadData.paragraph_vad || [];
+  const valenceDist = descriptiveStats(paraVad.map(p => p.V).filter(v => typeof v === 'number'), 2);
+  const arousalDist = descriptiveStats(paraVad.map(p => p.A).filter(v => typeof v === 'number'), 2);
+  const dominanceDist = descriptiveStats(paraVad.map(p => p.D).filter(v => typeof v === 'number'), 2);
+
   const metrics = {
-    'L10.1': { value: round(vadData.mean_valence, 1), unit: '/9', label: 'Mean valence' },
+    'L10.1': { value: round(vadData.mean_valence, 1), unit: '/9', label: 'Mean valence', distribution: valenceDist },
     'L10.2': { value: round(vadData.valence_variability, 1), unit: 'SD', label: 'Valence variability' },
-    'L10.3': { value: round(vadData.mean_arousal, 1), unit: '/9', label: 'Mean arousal' },
-    'L10.4': { value: round(vadData.mean_dominance, 1), unit: '/9', label: 'Mean dominance' },
+    'L10.3': { value: round(vadData.mean_arousal, 1), unit: '/9', label: 'Mean arousal', distribution: arousalDist },
+    'L10.4': { value: round(vadData.mean_dominance, 1), unit: '/9', label: 'Mean dominance', distribution: dominanceDist },
     'L10.5': { value: round(vadData.valence_arc_slope, 2), unit: 'slope', label: 'Valence arc (intro→concl)' },
     'L10.6': { value: round(vadData.affect_argument_alignment, 2), unit: 'corr', label: 'Affect-argument alignment' },
     'L10.7': { value: round(vadData.emotional_intrusion_index, 2), unit: 'ratio', label: 'Emotional intrusion index' },

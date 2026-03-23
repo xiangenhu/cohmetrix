@@ -216,6 +216,7 @@ const Rubric = (() => {
         renderReviewResults();
         if (status) status.textContent = '';
         if (evalBtn) evalBtn.textContent = 'Re-evaluate';
+        TokenFooter.onApiResponse(result);
       } else {
         throw new Error(result.error);
       }

@@ -193,6 +193,25 @@
   margin-bottom: 4px;
 }
 
+/* Score explanation card */
+.help-score-card {
+  background: #EFF6FF;
+  border-left-color: #3B82F6;
+  color: #1E3A5F;
+  margin-top: 8px;
+}
+.help-score-card .help-def-label {
+  color: #3B82F6;
+}
+.help-score-value {
+  font-weight: 700;
+  font-size: 11px;
+  background: #DBEAFE;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
 /* Chat input area */
 .help-input-area {
   display: flex;

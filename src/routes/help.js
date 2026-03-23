@@ -27,29 +27,60 @@ router.post('/explain', async (req, res) => {
     }
 
     const persona = AUDIENCE_PERSONA[audience] || AUDIENCE_PERSONA.general;
-    const contextNote = context
-      ? `\n\nThe student's essay scored: ${context.value} ${context.unit || ''} on this metric (layer score: ${context.layerScore}/100).`
-      : '';
+    const isLayer = !id.includes('.');
+    const hasScore = context && context.value !== undefined && context.value !== null;
 
-    const prompt = `${persona}
+    // Part 1: Explain the index itself
+    const indexPrompt = `${persona}
 
-A ${audience} clicked the help button on "${def.label || def.name}" (${id}) in an essay analysis tool. Explain what this measures and why it matters.
+A ${audience} clicked the help button on "${def.label || def.name}" (${id}) in an essay analysis tool. Explain what this ${isLayer ? 'layer' : 'index'} measures and why it matters for writing quality.
 
 Here is the correct technical definition:
 ${def.definition}
 
-${def.interpretation ? `Interpretation guide: ${def.interpretation}` : ''}
 ${def.why ? `Why it matters: ${def.why}` : ''}
-${contextNote}
 
-Write a clear, ${audience === 'student' ? '3-4' : '2-3'} sentence explanation. ${audience === 'student' ? 'Use an analogy or example if helpful.' : ''} Do NOT use metric IDs or technical abbreviations. Do NOT start with "This metric..." — vary your openings.`;
+Write a clear, ${audience === 'student' ? '3-4' : '2-3'} sentence explanation of what this ${isLayer ? 'layer' : 'index'} IS and what it captures about writing. ${audience === 'student' ? 'Use an analogy or example if helpful.' : ''} Do NOT use metric IDs or technical abbreviations. Do NOT start with "This metric..." — vary your openings.`;
 
-    const explanation = await llm.complete(prompt, {
+    // Part 2: Explain the score (if we have one)
+    let scoreExplanation = null;
+    if (hasScore) {
+      const scorePrompt = `${persona}
+
+A ${audience} is looking at their essay analysis results. For the ${isLayer ? 'layer' : 'metric'} "${def.label || def.name}" (${id}), their essay scored: ${context.value} ${context.unit || ''}${context.layerScore !== undefined ? ` (layer score: ${context.layerScore}/100)` : ''}.
+
+Technical definition: ${def.definition}
+${def.interpretation ? `Interpretation guide: ${def.interpretation}` : ''}
+
+Explain what this specific score means in practical terms. Is it high, low, or typical? What does it suggest about the writing? Give concrete, actionable insight.
+
+Write 2-3 sentences. Be specific about THIS score — do not re-explain what the index is. ${audience === 'student' ? 'Be encouraging and constructive.' : ''} Do NOT use metric IDs or technical abbreviations.`;
+
+      const [indexResult, scoreResult] = await Promise.all([
+        llm.complete(indexPrompt, { systemPrompt: persona, maxTokens: 250 }),
+        llm.complete(scorePrompt, { systemPrompt: persona, maxTokens: 250 }),
+      ]);
+
+      const session = llm.getSessionTracker().getSummary();
+      res.json({
+        id,
+        indexExplanation: indexResult.trim(),
+        scoreExplanation: scoreResult.trim(),
+        explanation: indexResult.trim(), // backward compat
+        definition: def,
+        score: { value: context.value, unit: context.unit || '', layerScore: context.layerScore },
+        tokenUsage: session,
+      });
+      return;
+    }
+
+    const indexExplanation = await llm.complete(indexPrompt, {
       systemPrompt: persona,
       maxTokens: 250,
     });
 
-    res.json({ id, explanation: explanation.trim(), definition: def });
+    const session = llm.getSessionTracker().getSummary();
+    res.json({ id, indexExplanation: indexExplanation.trim(), explanation: indexExplanation.trim(), definition: def, tokenUsage: session });
   } catch (err) {
     console.error('[POST /api/help/explain]', err);
     res.status(500).json({ error: 'Failed to generate explanation.' });
@@ -86,7 +117,8 @@ Answer clearly and helpfully. Keep it concise (2-4 sentences). ${audience === 's
       maxTokens: 300,
     });
 
-    res.json({ answer: answer.trim() });
+    const session = llm.getSessionTracker().getSummary();
+    res.json({ answer: answer.trim(), tokenUsage: session });
   } catch (err) {
     console.error('[POST /api/help/chat]', err);
     res.status(500).json({ error: 'Failed to generate response.' });

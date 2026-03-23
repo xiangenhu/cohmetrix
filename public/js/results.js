@@ -65,6 +65,11 @@ const Results = (() => {
     renderRightPanel();
     // Setup rubric review tab
     Rubric.setupForResults(data.id, data);
+    // Snapshot analysis tokens into footer
+    if (data.tokenUsage) {
+      TokenFooter.setAnalysisTokens(data.tokenUsage);
+      TokenFooter.refresh();
+    }
   }
 
   function renderStatsBar() {
@@ -125,6 +130,34 @@ const Results = (() => {
     renderCenter(i);
   }
 
+  // ─── Distribution rendering helper ──────────────────────────────────────
+
+  function renderDistribution(id, dist) {
+    if (!dist || !dist.n || dist.n < 2) return '';
+    const uid = `dist-${id.replace('.', '-')}`;
+    const noteHtml = dist.note ? `<div class="mc-dist-note">${escapeHtml(dist.note)}</div>` : '';
+    return `
+      <button class="mc-dist-toggle" onclick="this.classList.toggle('open');document.getElementById('${uid}').classList.toggle('open')">
+        <span class="chevron">&#9654;</span> Distribution (n=${dist.n})
+      </button>
+      <div class="mc-dist-panel" id="${uid}">
+        ${noteHtml}
+        <div class="mc-dist-grid">
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">n</span><span class="mc-dist-cell-val">${dist.n}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Mean</span><span class="mc-dist-cell-val">${dist.mean}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">SD</span><span class="mc-dist-cell-val">${dist.sd}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Min</span><span class="mc-dist-cell-val">${dist.min}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Max</span><span class="mc-dist-cell-val">${dist.max}</span></div>
+        </div>
+        <div class="mc-dist-row2">
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Median</span><span class="mc-dist-cell-val">${dist.median}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Q1</span><span class="mc-dist-cell-val">${dist.q1}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Q3</span><span class="mc-dist-cell-val">${dist.q3}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Skew</span><span class="mc-dist-cell-val">${dist.skewness}</span></div>
+        </div>
+      </div>`;
+  }
+
   // ─── Center panel rendering with evidence ───────────────────────────────
 
   function renderCenter(i) {
@@ -135,10 +168,9 @@ const Results = (() => {
     const technicalBasis = LAYER_BASIS[l.layerId] || '';
     const hasLayerSummary = l.layerSummary && l.layerSummary.length > 0;
 
-    // Filter displayable metrics
+    // Filter displayable metrics (show all for researchers)
     const displayMetrics = Object.entries(l.metrics)
-      .filter(([, m]) => typeof m.value !== 'string' || !m.value.startsWith('{'))
-      .slice(0, 4);
+      .filter(([, m]) => typeof m.value !== 'string' || !m.value.startsWith('{'));
 
     const metricsHtml = displayMetrics.map(([id, m]) => {
       const pct = metricPct(m);
@@ -162,12 +194,16 @@ const Results = (() => {
           <div class="mc-evidence-list" id="${uid}">${quotes}</div>`;
       }
 
+      // Distribution statistics section
+      const distHtml = renderDistribution(id, m.distribution);
+
       return `<div class="metric-card">
         <div class="mc-id">${id}<button class="help-btn" data-help-id="${id}" title="What is ${m.label}?">?</button>${verdictHtml}</div>
         <div class="mc-val">${m.value}<span style="font-size:11px;color:var(--text-tertiary);font-weight:400"> ${m.unit}</span></div>
         <div class="mc-label">${m.label}</div>
         ${hasPlain ? `<div class="mc-plain">${escapeHtml(m.plainDescription)}</div>` : ''}
         <div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${color}"></div></div>
+        ${distHtml}
         ${evidenceHtml}
       </div>`;
     }).join('');
@@ -249,6 +285,7 @@ const Results = (() => {
             summaryEl.style.fontStyle = '';
           }
         }
+        TokenFooter.onApiResponse(data);
       }
     } catch {
       // keep fallback

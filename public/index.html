@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/css/rubric.css">
   <link rel="stylesheet" href="/css/processing.css">
   <link rel="stylesheet" href="/css/results.css">
+  <link rel="stylesheet" href="/css/token-footer.css">
 </head>
 <body>
 <div class="app">
@@ -313,11 +314,54 @@
   </div>
 </div>
 
+<!-- ══ TOKEN USAGE FOOTER ══ -->
+<div class="token-footer" id="token-footer">
+  <div class="tf-section">
+    <span class="tf-label">Session</span>
+    <span class="tf-group">
+      <span class="tf-item">Calls: <strong id="tf-session-calls">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Prompt: <strong id="tf-session-prompt">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Completion: <strong id="tf-session-completion">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Total: <strong id="tf-session-total" class="tf-highlight">0</strong></span>
+    </span>
+  </div>
+  <div class="tf-divider"></div>
+  <div class="tf-section">
+    <span class="tf-label">Analysis</span>
+    <span class="tf-group">
+      <span class="tf-item">Calls: <strong id="tf-analysis-calls">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Prompt: <strong id="tf-analysis-prompt">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Completion: <strong id="tf-analysis-completion">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Total: <strong id="tf-analysis-total" class="tf-highlight">0</strong></span>
+    </span>
+  </div>
+  <div class="tf-divider"></div>
+  <div class="tf-section">
+    <span class="tf-label">Post-analysis</span>
+    <span class="tf-group">
+      <span class="tf-item">Calls: <strong id="tf-post-calls">0</strong></span>
+      <span class="tf-sep">|</span>
+      <span class="tf-item">Total: <strong id="tf-post-total" class="tf-highlight">0</strong></span>
+    </span>
+  </div>
+  <div class="tf-actions">
+    <span class="tf-provider" id="tf-provider"></span>
+    <button class="tf-reset-btn" id="tf-reset-btn" title="Reset session counters">Reset</button>
+  </div>
+</div>
+
 <!-- Chart.js CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <!-- Modular JS -->
 <script src="/js/auth.js"></script>
+<script src="/js/token-footer.js"></script>
 <script src="/js/helpchat.js"></script>
 <script src="/js/charts.js"></script>
 <script src="/js/results.js"></script>

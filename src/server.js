@@ -31,6 +31,20 @@ app.use('/api/documents', requireAuth, require('./routes/documents'));
 app.use('/api/help', requireAuth, require('./routes/help'));
 app.use('/api/rubrics', requireAuth, require('./routes/rubric'));
 
+// ─── Session token usage endpoint ───────────────────────────────────────────
+app.get('/api/tokens', requireAuth, (req, res) => {
+  const llm = require('./services/llm');
+  const session = llm.getSessionTracker().getSummary();
+  const analysis = llm.getActiveTracker().getSummary();
+  res.json({ session, analysis });
+});
+
+app.post('/api/tokens/reset', requireAuth, (req, res) => {
+  const llm = require('./services/llm');
+  llm.resetSessionTracker();
+  res.json({ ok: true });
+});
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));

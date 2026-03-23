@@ -5,7 +5,7 @@
  * Neural coreference resolution replaces surface argument overlap.
  */
 const llm = require('../services/llm');
-const { mean } = require('../utils/nlp');
+const { mean, descriptiveStats } = require('../utils/nlp');
 
 const LAYER_ID = 'L3';
 const LAYER_NAME = 'Referential Cohesion';
@@ -47,8 +47,10 @@ Text: ${doc.text.substring(0, 3000)}`);
     };
   }
 
+  const overlapDist = descriptiveStats(localOverlaps, 2);
+
   const metrics = {
-    'L3.1': { value: round(localArgOverlap, 2), unit: 'ratio', label: 'Local argument overlap' },
+    'L3.1': { value: round(localArgOverlap, 2), unit: 'ratio', label: 'Local argument overlap', distribution: overlapDist },
     'L3.2': { value: round(corefData.global_argument_overlap, 2), unit: 'ratio', label: 'Global argument overlap' },
     'L3.4': { value: corefData.coreference_chain_count, unit: 'chains', label: 'Coreference chain count' },
     'L3.5': { value: round(corefData.mean_chain_length, 1), unit: 'mentions', label: 'Mean coreference chain length' },

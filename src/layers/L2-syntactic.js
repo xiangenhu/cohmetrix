@@ -5,7 +5,7 @@
  * distance between dependent and head. UD provides cross-lingual representation.
  */
 const llm = require('../services/llm');
-const { mean } = require('../utils/nlp');
+const { mean, descriptiveStats } = require('../utils/nlp');
 
 const LAYER_ID = 'L2';
 const LAYER_NAME = 'Syntactic Complexity';
@@ -24,7 +24,11 @@ Analyze the syntactic complexity of this text. Provide:
 6. np_elaboration: mean number of modifiers per noun phrase (0-4)
 7. left_branching_ratio: proportion of left-branching dependency arcs (0-1)
 
-Return JSON: {"mean_dependency_distance": float, "mdd_sd": float, "mean_clause_depth": float, "subordination_ratio": float, "passive_voice_ratio": float, "np_elaboration": float, "left_branching_ratio": float}
+Also provide per-sentence estimates:
+8. per_sentence_mdd: array of per-sentence mean dependency distances (one float per sentence)
+9. per_sentence_clause_depth: array of per-sentence max clause depth values
+
+Return JSON: {"mean_dependency_distance": float, "mdd_sd": float, "mean_clause_depth": float, "subordination_ratio": float, "passive_voice_ratio": float, "np_elaboration": float, "left_branching_ratio": float, "per_sentence_mdd": [float, ...], "per_sentence_clause_depth": [float, ...]}
 
 Text: ${doc.text.substring(0, 3000)}`);
   } catch {
@@ -32,13 +36,17 @@ Text: ${doc.text.substring(0, 3000)}`);
       mean_dependency_distance: 3.0, mdd_sd: 1.5, mean_clause_depth: 2.0,
       subordination_ratio: 0.35, passive_voice_ratio: 0.10,
       np_elaboration: 1.5, left_branching_ratio: 0.25,
+      per_sentence_mdd: [], per_sentence_clause_depth: [],
     };
   }
 
+  const mddDist = descriptiveStats(syntaxData.per_sentence_mdd || [], 2);
+  const depthDist = descriptiveStats(syntaxData.per_sentence_clause_depth || [], 2);
+
   const metrics = {
-    'L2.1': { value: round(syntaxData.mean_dependency_distance, 2), unit: 'tokens', label: 'Mean dependency distance' },
+    'L2.1': { value: round(syntaxData.mean_dependency_distance, 2), unit: 'tokens', label: 'Mean dependency distance', distribution: mddDist },
     'L2.2': { value: round(syntaxData.mdd_sd, 2), unit: 'SD', label: 'MDD standard deviation' },
-    'L2.3': { value: round(syntaxData.mean_clause_depth, 1), unit: 'levels', label: 'Mean clause depth' },
+    'L2.3': { value: round(syntaxData.mean_clause_depth, 1), unit: 'levels', label: 'Mean clause depth', distribution: depthDist },
     'L2.4': { value: round(syntaxData.subordination_ratio, 2), unit: 'ratio', label: 'Subordination ratio' },
     'L2.5': { value: round(syntaxData.passive_voice_ratio, 2), unit: 'ratio', label: 'Passive voice ratio' },
     'L2.6': { value: round(syntaxData.np_elaboration, 1), unit: 'mods', label: 'NP elaboration (modifiers)' },

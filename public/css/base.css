@@ -32,13 +32,16 @@ body {
   background: var(--bg-tertiary);
   color: var(--text-primary);
   min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  min-height: 600px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── SCREENS ─────────────────────── */

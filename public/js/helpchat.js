@@ -75,18 +75,33 @@ const HelpChat = (() => {
       document.getElementById('help-header-title').textContent = label;
       document.getElementById('help-header-sub').textContent = id;
 
-      // Show definition card + explanation
+      // Show two-part help: index explanation + score explanation
       msgArea.innerHTML = '';
 
-      // Definition card
-      const defCard = document.createElement('div');
-      defCard.className = 'help-def-card';
-      defCard.innerHTML = `<div class="help-def-label">Definition</div>${escapeHtml(data.definition?.definition || '')}`;
-      msgArea.appendChild(defCard);
+      // Card 1: What is this index?
+      const indexCard = document.createElement('div');
+      indexCard.className = 'help-def-card';
+      indexCard.innerHTML = `<div class="help-def-label">What does this measure?</div>${escapeHtml(data.indexExplanation || data.explanation || '')}`;
+      msgArea.appendChild(indexCard);
 
-      // LLM explanation
-      addMessage('assistant', data.explanation);
-      history.push({ role: 'assistant', text: data.explanation });
+      // Card 2: What does my score mean? (only if score data present)
+      if (data.scoreExplanation) {
+        const scoreCard = document.createElement('div');
+        scoreCard.className = 'help-def-card help-score-card';
+        const scoreDisplay = data.score
+          ? `<span class="help-score-value">${data.score.value}${data.score.unit ? ' ' + data.score.unit : ''}</span>`
+          : '';
+        scoreCard.innerHTML = `<div class="help-def-label">Your score ${scoreDisplay}</div>${escapeHtml(data.scoreExplanation)}`;
+        msgArea.appendChild(scoreCard);
+      }
+
+      // Seed conversation history with the combined explanation
+      const combinedText = (data.indexExplanation || data.explanation || '') +
+        (data.scoreExplanation ? '\n\n' + data.scoreExplanation : '');
+      history.push({ role: 'assistant', text: combinedText });
+
+      // Update token footer
+      TokenFooter.onApiResponse(data);
 
     } catch (err) {
       msgArea.innerHTML = '';
@@ -127,6 +142,9 @@ const HelpChat = (() => {
       loadingEl.textContent = data.answer;
       loadingEl.classList.remove('loading');
       history.push({ role: 'assistant', text: data.answer });
+
+      // Update token footer
+      TokenFooter.onApiResponse(data);
 
     } catch {
       loadingEl.textContent = 'Sorry, I couldn\'t generate a response. Please try again.';

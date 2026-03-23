@@ -39,6 +39,10 @@ class TokenTracker {
 // Global tracker for current analysis run
 let activeTracker = new TokenTracker();
 
+// Session-level tracker: accumulates ALL token usage across every LLM call
+// (analysis, interpretation, help chat, rubric evaluation, etc.)
+const sessionTracker = new TokenTracker();
+
 function createTracker() {
   const tracker = new TokenTracker();
   activeTracker = tracker;
@@ -47,6 +51,14 @@ function createTracker() {
 
 function getActiveTracker() {
   return activeTracker;
+}
+
+function getSessionTracker() {
+  return sessionTracker;
+}
+
+function resetSessionTracker() {
+  sessionTracker.reset();
 }
 
 // ─── Provider implementations ────────────────────────────────────────────────
@@ -69,9 +81,10 @@ const providers = {
           system: systemPrompt || 'You are an expert NLP analyst. Return only valid JSON unless instructed otherwise.',
           messages: [{ role: 'user', content: prompt }],
         });
-        // Track tokens
+        // Track tokens (both per-analysis and session-wide)
         const usage = response.usage || {};
         activeTracker.record(usage.input_tokens, usage.output_tokens);
+        sessionTracker.record(usage.input_tokens, usage.output_tokens);
         return response.content[0].text;
       },
     };
@@ -100,9 +113,10 @@ const providers = {
         });
         const data = await resp.json();
         if (data.error) throw new Error(`OpenAI: ${data.error.message}`);
-        // Track tokens
+        // Track tokens (both per-analysis and session-wide)
         const usage = data.usage || {};
         activeTracker.record(usage.prompt_tokens, usage.completion_tokens);
+        sessionTracker.record(usage.prompt_tokens, usage.completion_tokens);
         return data.choices[0].message.content;
       },
     };
@@ -131,9 +145,10 @@ const providers = {
         });
         const data = await resp.json();
         if (data.error) throw new Error(`Azure: ${data.error.message}`);
-        // Track tokens
+        // Track tokens (both per-analysis and session-wide)
         const usage = data.usage || {};
         activeTracker.record(usage.prompt_tokens, usage.completion_tokens);
+        sessionTracker.record(usage.prompt_tokens, usage.completion_tokens);
         return data.choices[0].message.content;
       },
     };
@@ -180,5 +195,5 @@ function getProviderInfo() {
 
 module.exports = {
   complete, completeJSON, batchProcess, getProviderInfo,
-  createTracker, getActiveTracker, TokenTracker,
+  createTracker, getActiveTracker, getSessionTracker, resetSessionTracker, TokenTracker,
 };

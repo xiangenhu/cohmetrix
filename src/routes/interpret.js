@@ -45,12 +45,18 @@ Write a 2-3 sentence interpretation. Mention specific findings. Highlight one st
 
 Return only the interpretation text.`;
 
+    const beforeCalls = llm.getSessionTracker().calls;
+    const beforeTokens = llm.getSessionTracker().totalTokens;
+
     const interpretation = await llm.complete(prompt, {
       systemPrompt: `You are an expert writing assessment analyst providing feedback to a ${audience}. ${tone}`,
       maxTokens: 300,
     });
 
-    res.json({ interpretation: interpretation.trim() });
+    const session = llm.getSessionTracker().getSummary();
+    const tokensUsed = session.totalTokens - beforeTokens;
+
+    res.json({ interpretation: interpretation.trim(), tokenUsage: session, tokensUsed });
   } catch (err) {
     console.error('[POST /api/interpret]', err);
     res.status(500).json({ error: 'Interpretation failed' });

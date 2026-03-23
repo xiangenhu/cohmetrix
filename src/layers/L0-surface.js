@@ -4,7 +4,7 @@
  * Theoretical basis: Surface metrics as confound controls and normalization
  * denominators. MATTR preferred over raw TTR for length-invariant diversity.
  */
-const { mean, stdev } = require('../utils/nlp');
+const { mean, stdev, descriptiveStats } = require('../utils/nlp');
 
 const LAYER_ID = 'L0';
 const LAYER_NAME = 'Surface & Structural';
@@ -47,15 +47,43 @@ async function analyze(doc) {
   const meanParaLen = doc.sentenceCount / Math.max(doc.paragraphCount, 1);
   const ibcRatio = introBodyConclusionRatio(doc.paragraphs);
 
+  // Compute word lengths for distribution
+  const wordLengths = words.map(w => w.length);
+
+  // Compute per-paragraph sentence counts for distribution
+  const paraSentCounts = doc.paragraphs.map(p => {
+    const sents = p.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    return sents.length;
+  });
+
+  // MATTR window ratios for distribution
+  const mattrRatios = [];
+  const window = 50;
+  if (words.length <= window) {
+    const unique = new Set(words.map(w => w.toLowerCase()));
+    mattrRatios.push(unique.size / words.length);
+  } else {
+    for (let i = 0; i <= words.length - window; i++) {
+      const windowWords = words.slice(i, i + window).map(w => w.toLowerCase());
+      const unique = new Set(windowWords);
+      mattrRatios.push(unique.size / window);
+    }
+  }
+
+  const sentLenDist = descriptiveStats(sentLengths, 1);
+  const wordLenDist = descriptiveStats(wordLengths, 2);
+  const paraLenDist = descriptiveStats(paraSentCounts, 1);
+  const mattrDist = descriptiveStats(mattrRatios, 3);
+
   const metrics = {
     'L0.1': { value: doc.wordCount, unit: 'tokens', label: 'Token count' },
     'L0.2': { value: doc.sentenceCount, unit: 'sents', label: 'Sentence count' },
     'L0.3': { value: doc.paragraphCount, unit: 'paras', label: 'Paragraph count' },
-    'L0.4': { value: round(msl, 1), unit: 'tokens', label: 'Mean sentence length' },
+    'L0.4': { value: round(msl, 1), unit: 'tokens', label: 'Mean sentence length', distribution: sentLenDist },
     'L0.5': { value: round(mslSD, 1), unit: 'SD', label: 'Sentence length variance' },
-    'L0.6': { value: round(ttr, 2), unit: 'TTR', label: 'Type-Token Ratio' },
-    'L0.7': { value: round(mattr, 2), unit: 'MATTR', label: 'Moving-avg type-token ratio' },
-    'L0.8': { value: round(meanParaLen, 1), unit: 'sents', label: 'Mean paragraph length' },
+    'L0.6': { value: round(ttr, 2), unit: 'TTR', label: 'Type-Token Ratio', distribution: wordLenDist ? { ...wordLenDist, note: 'Word length distribution (chars)' } : null },
+    'L0.7': { value: round(mattr, 2), unit: 'MATTR', label: 'Moving-avg type-token ratio', distribution: mattrDist },
+    'L0.8': { value: round(meanParaLen, 1), unit: 'sents', label: 'Mean paragraph length', distribution: paraLenDist },
     'L0.9': { value: `${round(ibcRatio.intro * 100)}/${round(ibcRatio.body * 100)}/${round(ibcRatio.conclusion * 100)}`, unit: '%', label: 'Intro/body/conclusion ratio' },
   };
 

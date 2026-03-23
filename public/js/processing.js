@@ -116,7 +116,10 @@ const Processing = (() => {
           case 'layer_done':
             updateLayer(data.layerId, 'done');
             addLog(data.message);
-            if (data.tokenUsage) updateTokenDisplay(data.tokenUsage);
+            if (data.tokenUsage) {
+              updateTokenDisplay(data.tokenUsage);
+              TokenFooter.refresh();
+            }
             break;
 
           case 'layer_error':
@@ -130,7 +133,11 @@ const Processing = (() => {
             document.getElementById('proc-title').textContent = 'Analysis complete';
             document.getElementById('proc-sub').textContent = data.message;
             addLog(data.message);
-            if (data.tokenUsage) updateTokenDisplay(data.tokenUsage);
+            if (data.tokenUsage) {
+              updateTokenDisplay(data.tokenUsage);
+              TokenFooter.setAnalysisTokens(data.tokenUsage);
+              TokenFooter.refresh();
+            }
 
             // Fetch results and show
             setTimeout(() => {

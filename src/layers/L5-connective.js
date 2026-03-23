@@ -10,7 +10,7 @@
  * - Graesser et al. (2011): connective incidence as difficulty predictor
  * - Coh-Metrix CNC indices (9 connective measures)
  */
-const { mean } = require('../utils/nlp');
+const { mean, descriptiveStats } = require('../utils/nlp');
 
 const LAYER_ID = 'L5';
 const LAYER_NAME = 'Connective & Deep Cohesion';
@@ -114,9 +114,22 @@ async function analyze(doc) {
   const positiveRatio = totalCount > 0 ? positiveCount / totalCount : 0.5;
   const negativeRatio = totalCount > 0 ? negativeCount / totalCount : 0.5;
 
+  // Per-sentence connective counts for distributions
+  const perSentConnectives = doc.sentences.map(s => {
+    const sl = s.toLowerCase();
+    return countConnectives(sl, CAUSAL_CONNECTIVES) +
+           countConnectives(sl, TEMPORAL_CONNECTIVES) +
+           countConnectives(sl, ADVERSATIVE_CONNECTIVES) +
+           countConnectives(sl, ADDITIVE_CONNECTIVES) +
+           countConnectives(sl, LOGICAL_CONNECTIVES);
+  });
+  const perSentCausal = doc.sentences.map(s => countConnectives(s.toLowerCase(), CAUSAL_CONNECTIVES));
+  const connDist = descriptiveStats(perSentConnectives, 2);
+  const causalDist = descriptiveStats(perSentCausal, 2);
+
   const metrics = {
-    'L5.1': { value: round(allIncidence, 1),           unit: '/1000w', label: 'All connectives incidence' },
-    'L5.2': { value: round(causalIncidence, 1),         unit: '/1000w', label: 'Causal connectives' },
+    'L5.1': { value: round(allIncidence, 1),           unit: '/1000w', label: 'All connectives incidence', distribution: connDist ? { ...connDist, note: 'Per-sentence connective count' } : null },
+    'L5.2': { value: round(causalIncidence, 1),         unit: '/1000w', label: 'Causal connectives', distribution: causalDist ? { ...causalDist, note: 'Per-sentence causal connective count' } : null },
     'L5.3': { value: round(temporalIncidence, 1),       unit: '/1000w', label: 'Temporal connectives' },
     'L5.4': { value: round(adversativeIncidence, 1),    unit: '/1000w', label: 'Adversative connectives' },
     'L5.5': { value: round(additiveIncidence, 1),       unit: '/1000w', label: 'Additive connectives' },

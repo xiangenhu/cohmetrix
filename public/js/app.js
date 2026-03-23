@@ -53,4 +53,5 @@ const App = (() => {
 
 document.addEventListener('DOMContentLoaded', () => {
   Auth.init();
+  TokenFooter.init();
 });
