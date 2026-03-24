@@ -44,46 +44,120 @@
     </div>
   </div>
 
-  <!-- ══ UPLOAD SCREEN (3-step workflow) ══ -->
+  <!-- ══ UPLOAD SCREEN ══ -->
   <div class="screen active" id="s-upload">
     <div style="width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:2rem 1rem">
+      <div style="text-align:center;margin-bottom:4px">
+        <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis</div>
+        <div style="font-size:13px;color:var(--text-secondary)">12-layer deep text analysis for essay grading · L0 – L11</div>
+      </div>
+      <!-- Projects -->
+      <div class="projects-panel" id="projects-panel">
+        <div class="projects-header" id="projects-header">
+          <span class="projects-icon">&#128218;</span>
+          <span class="projects-title">Projects</span>
+          <span class="projects-badge" id="projects-badge">…</span>
+          <span class="projects-chevron">&#9654;</span>
+        </div>
+        <div class="projects-body" id="projects-body"></div>
+      </div>
 
-      <!-- ── STEP 1: Select Project ── -->
-      <div id="upload-step1">
-        <div style="text-align:center;margin-bottom:12px">
-          <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis <button class="info-btn" data-info="why-projects">?</button></div>
-          <div style="font-size:13px;color:var(--text-secondary)">Select a project or create a new one to get started</div>
+      <!-- Sections hidden after document load -->
+      <div id="upload-browse-section">
+      <!-- Document Library -->
+      <div class="library-panel" id="library-panel">
+        <div class="library-header" id="library-header">
+          <span class="library-icon">&#128193;</span>
+          <span class="library-title">Document Library</span>
+          <span class="library-badge" id="library-badge">…</span>
+          <span class="library-chevron">&#9654;</span>
         </div>
-        <div class="projects-panel open" id="projects-panel">
-          <div class="projects-header" id="projects-header">
-            <span class="projects-icon">&#128218;</span>
-            <span class="projects-title">Projects</span>
-            <span class="projects-badge" id="projects-badge">…</span>
-            <span class="projects-chevron">&#9654;</span>
-          </div>
-          <div class="projects-body" id="projects-body"></div>
+        <div class="library-body" id="library-body"></div>
+        <input type="file" id="lib-file-input" accept=".txt,.docx,.pdf" hidden>
+      </div>
+
+      <!-- Results History -->
+      <div class="history-panel" id="history-panel">
+        <div class="history-header" id="history-header">
+          <span class="history-icon">&#128202;</span>
+          <span class="history-title">Past Analyses</span>
+          <span class="history-badge" id="history-badge">…</span>
+          <span class="history-chevron">&#9654;</span>
         </div>
-        <!-- hidden elements needed by other modules -->
-        <div style="display:none">
-          <div id="library-panel"><div id="library-header"></div><div id="library-body"></div><input id="lib-file-input" hidden></div>
-          <div id="history-panel"><div id="history-header"></div><div id="history-body"></div></div>
+        <div class="history-body" id="history-body"></div>
+      </div>
+
+      <div class="upload-card">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon">&#128196;</div>
+          <div class="drop-title" id="drop-title">Drop your essay here</div>
+          <div class="drop-sub" id="drop-sub">.txt · .docx · .pdf supported · max 50 pages</div>
+          <button class="browse-btn" id="browse-btn">Browse file</button>
           <input type="file" id="file-input" accept=".txt,.docx,.pdf" hidden>
-          <textarea id="essay-text"></textarea>
-          <input type="text" id="prompt-text">
-          <select id="genre-select"><option value="">Select genre...</option></select>
-          <input type="text" id="learner-id">
-          <input type="checkbox" id="save-to-library">
-          <button id="run-btn"></button>
-          <div class="opt-chip on" data-label="L0–L5 Core"><div class="opt-dot"></div>L0–L5 Core</div>
-          <div class="opt-chip on" data-label="L6 Situation"><div class="opt-dot"></div>L6 Situation</div>
-          <div class="opt-chip on" data-label="L7 RST"><div class="opt-dot"></div>L7 RST</div>
-          <div class="opt-chip on" data-label="L8 Argumentation"><div class="opt-dot"></div>L8 Argumentation</div>
-          <div class="opt-chip on" data-label="L9 Stance"><div class="opt-dot"></div>L9 Stance</div>
-          <div class="opt-chip on" data-label="L10 Affect"><div class="opt-dot"></div>L10 Affect</div>
-          <div class="opt-chip" data-label="L11 Reader-adaptive"><div class="opt-dot"></div>L11 Reader-adaptive</div>
+        </div>
+        <div class="or-row" id="or-row">or paste text directly</div>
+        <div class="paste-area" id="paste-area">
+          <div class="field-label">Essay text</div>
+          <textarea id="essay-text" placeholder="Paste essay content here...&#10;&#10;Example: The relationship between technology and education has evolved significantly over the past decade. Artificial intelligence, once confined to research laboratories, now permeates every aspect of learning..."></textarea>
+        </div>
+      </div><!-- /upload-card -->
+      </div><!-- /upload-browse-section -->
+
+      <!-- Document loaded state (hidden initially) -->
+      <div id="upload-ready-section" style="display:none">
+        <div class="upload-card" style="text-align:center;padding:32px 24px">
+          <div style="font-size:32px;margin-bottom:12px">&#9989;</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:4px" id="ready-filename">Document loaded</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:24px" id="ready-fileinfo"></div>
+          <div class="prompt-area" style="text-align:left;margin-bottom:12px">
+            <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
+            <input type="text" id="ready-prompt" placeholder="e.g. Discuss the impact of AI on higher education in 800–1000 words.">
+          </div>
+          <div class="genre-area" style="text-align:left;margin-bottom:20px">
+            <div class="field-label">Document genre <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
+            <select id="ready-genre"><option value="">Select genre...</option></select>
+          </div>
+          <button class="run-btn" id="ready-run-btn" style="width:100%">Run Analysis &rarr;</button>
+          <div style="margin-top:12px"><span class="sample-link" id="ready-change-btn">Change document</span></div>
         </div>
       </div>
 
+      <!-- Original options (hidden after doc load) -->
+      <div id="upload-options-section">
+        <div class="upload-card">
+        <div class="prompt-area">
+          <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional — enables L4.8 on-topic scoring)</span></div>
+          <input type="text" id="prompt-text" placeholder="e.g. Discuss the impact of AI on higher education in 800–1000 words.">
+        </div>
+        <div class="genre-area">
+          <div class="field-label">Document genre <span style="font-weight:400;color:var(--text-tertiary)">(shapes summary evaluation criteria)</span></div>
+          <select id="genre-select"><option value="">Select genre...</option></select>
+        </div>
+        <div class="upload-section-label">Analysis options</div>
+        <div class="options-row">
+          <div class="opt-chip on"><div class="opt-dot"></div>L0–L5 Core</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L6 Situation</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L7 RST</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L8 Argumentation</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L9 Stance</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L10 Affect</div>
+          <div class="opt-chip"><div class="opt-dot"></div>L11 Reader-adaptive</div>
+        </div>
+        <div style="padding:4px 20px 14px">
+          <div class="learner-id-row">
+            <span>Learner ID (L11):</span>
+            <input type="text" id="learner-id" placeholder="student_4821">
+            <span class="learner-id-hint">pulls UALS/LRS profile</span>
+          </div>
+        </div>
+        <div class="save-to-lib-row">
+          <input type="checkbox" id="save-to-library" checked>
+          <label for="save-to-library">Save uploaded file to document library</label>
+        </div>
+        <button class="run-btn" id="run-btn">Run Neo-Coh-Metrix Analysis →</button>
+      </div>
+      </div><!-- /upload-options-section -->
+      <div style="text-align:center"><span class="sample-link" id="sample-link">Load sample essay</span></div>
     </div>
   </div>
 
@@ -360,9 +434,9 @@
 <script>
   // New essay button
   document.getElementById('btn-new-essay').addEventListener('click', () => {
+    Upload.showBrowseState();
     App.showScreen('upload');
     App.resetNavigation();
-    Projects.loadProjects();
   });
 </script>
 </body>

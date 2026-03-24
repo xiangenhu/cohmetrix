@@ -3,7 +3,7 @@
  * Manages screen navigation and global state.
  */
 const App = (() => {
-  const SCREENS = ['upload', 'process', 'results', 'review'];
+  const SCREENS = ['upload', 'project', 'process', 'results', 'review'];
   let currentScreen = 'upload';
 
   function showScreen(name) {

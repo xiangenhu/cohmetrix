@@ -217,7 +217,225 @@ async function deleteDocument(filePath) {
   return memoryStore.delete(key);
 }
 
+// ─── Project-scoped Storage ─────────────────────────────────────────────────
+
+function getUserId(user) {
+  return (user.email || 'anonymous').replace(/@/g, '-at-').replace(/\./g, '-');
+}
+
+function projectPath(userId, projectId, ...parts) {
+  return ['users', userId, 'projects', projectId, ...parts].join('/');
+}
+
+async function listProjects(userId) {
+  initStorage();
+  const prefix = `users/${userId}/projects/`;
+
+  if (bucket) {
+    const [files] = await bucket.getFiles({ prefix, matchGlob: '**/meta.json' });
+    const projects = [];
+    for (const f of files) {
+      if (!f.name.endsWith('/meta.json')) continue;
+      try {
+        const [contents] = await f.download();
+        projects.push(JSON.parse(contents.toString()));
+      } catch { /* skip corrupt */ }
+    }
+    return projects.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+  }
+
+  // Memory fallback
+  return Array.from(memoryStore.entries())
+    .filter(([k]) => k.startsWith(`proj:${userId}:`) && k.endsWith(':meta'))
+    .map(([, v]) => JSON.parse(v))
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+}
+
+async function getProject(userId, projectId) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'meta.json'));
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString());
+  }
+  const data = memoryStore.get(`proj:${userId}:${projectId}:meta`);
+  return data ? JSON.parse(data) : null;
+}
+
+async function saveProject(userId, projectId, meta) {
+  initStorage();
+  const payload = JSON.stringify(meta);
+  if (bucket) {
+    await bucket.file(projectPath(userId, projectId, 'meta.json')).save(payload, { contentType: 'application/json' });
+  } else {
+    memoryStore.set(`proj:${userId}:${projectId}:meta`, payload);
+  }
+}
+
+async function deleteProject(userId, projectId) {
+  initStorage();
+  if (bucket) {
+    const prefix = projectPath(userId, projectId) + '/';
+    const [files] = await bucket.getFiles({ prefix });
+    if (files.length === 0) return false;
+    await Promise.all(files.map(f => f.delete()));
+    return true;
+  }
+  const prefix = `proj:${userId}:${projectId}:`;
+  const keys = Array.from(memoryStore.keys()).filter(k => k.startsWith(prefix));
+  keys.forEach(k => memoryStore.delete(k));
+  return keys.length > 0;
+}
+
+async function listProjectFiles(userId, projectId) {
+  initStorage();
+  const prefix = projectPath(userId, projectId, 'files') + '/';
+  if (bucket) {
+    const [files] = await bucket.getFiles({ prefix });
+    return files.filter(f => !f.name.endsWith('/') && !f.name.endsWith('.meta.json')).map(f => ({
+      name: f.name.split('/').pop(),
+      path: f.name,
+      size: parseInt(f.metadata.size, 10) || 0,
+      updated: f.metadata.updated || f.metadata.timeCreated,
+      contentType: f.metadata.contentType || 'application/octet-stream',
+    }));
+  }
+  const pfx = `proj:${userId}:${projectId}:file:`;
+  return Array.from(memoryStore.entries())
+    .filter(([k]) => k.startsWith(pfx))
+    .map(([k, v]) => {
+      const entry = typeof v === 'string' ? JSON.parse(v) : v;
+      return { name: k.replace(pfx, ''), size: entry.buffer ? entry.buffer.length : 0, updated: entry.updated || new Date().toISOString(), contentType: entry.contentType || 'application/octet-stream' };
+    });
+}
+
+async function saveProjectFile(userId, projectId, filename, buffer, contentType) {
+  initStorage();
+  const filePath = projectPath(userId, projectId, 'files', filename);
+  if (bucket) {
+    await bucket.file(filePath).save(buffer, { contentType: contentType || 'application/octet-stream' });
+    return filePath;
+  }
+  memoryStore.set(`proj:${userId}:${projectId}:file:${filename}`, { buffer, contentType, updated: new Date().toISOString() });
+  return filePath;
+}
+
+async function loadProjectFile(userId, projectId, filename) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'files', filename));
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [buffer] = await file.download();
+    const [metadata] = await file.getMetadata();
+    return { buffer, contentType: metadata.contentType, name: filename };
+  }
+  const entry = memoryStore.get(`proj:${userId}:${projectId}:file:${filename}`);
+  if (!entry) return null;
+  return { buffer: entry.buffer, contentType: entry.contentType, name: filename };
+}
+
+async function saveProjectFileMeta(userId, projectId, filename, meta) {
+  initStorage();
+  const payload = JSON.stringify(meta);
+  const metaPath = projectPath(userId, projectId, 'files', filename + '.meta.json');
+  if (bucket) {
+    await bucket.file(metaPath).save(payload, { contentType: 'application/json' });
+  } else {
+    memoryStore.set(`proj:${userId}:${projectId}:filemeta:${filename}`, payload);
+  }
+}
+
+async function loadProjectFileMeta(userId, projectId, filename) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'files', filename + '.meta.json'));
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString());
+  }
+  const data = memoryStore.get(`proj:${userId}:${projectId}:filemeta:${filename}`);
+  return data ? JSON.parse(data) : null;
+}
+
+async function deleteProjectFile(userId, projectId, filename) {
+  initStorage();
+  // Also delete metadata file
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'files', filename));
+    const [exists] = await file.exists();
+    if (!exists) return false;
+    await file.delete();
+    const metaFile = bucket.file(projectPath(userId, projectId, 'files', filename + '.meta.json'));
+    const [metaExists] = await metaFile.exists();
+    if (metaExists) await metaFile.delete();
+    return true;
+  }
+  memoryStore.delete(`proj:${userId}:${projectId}:filemeta:${filename}`);
+  return memoryStore.delete(`proj:${userId}:${projectId}:file:${filename}`);
+}
+
+async function listProjectResults(userId, projectId) {
+  initStorage();
+  const prefix = projectPath(userId, projectId, 'results') + '/';
+  if (bucket) {
+    const [files] = await bucket.getFiles({ prefix });
+    return files.filter(f => f.name.endsWith('.json')).map(f => ({
+      id: f.name.split('/').pop().replace('.json', ''),
+      size: parseInt(f.metadata.size, 10) || 0,
+      updated: f.metadata.updated || f.metadata.timeCreated,
+    })).sort((a, b) => new Date(b.updated) - new Date(a.updated));
+  }
+  const pfx = `proj:${userId}:${projectId}:result:`;
+  return Array.from(memoryStore.keys())
+    .filter(k => k.startsWith(pfx))
+    .map(k => ({ id: k.replace(pfx, ''), size: 0, updated: new Date().toISOString() }));
+}
+
+async function saveProjectResult(userId, projectId, resultId, data) {
+  initStorage();
+  const payload = JSON.stringify(data);
+  if (bucket) {
+    await bucket.file(projectPath(userId, projectId, 'results', `${resultId}.json`)).save(payload, { contentType: 'application/json' });
+  } else {
+    memoryStore.set(`proj:${userId}:${projectId}:result:${resultId}`, payload);
+  }
+}
+
+async function loadProjectResult(userId, projectId, resultId) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'results', `${resultId}.json`));
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString());
+  }
+  const data = memoryStore.get(`proj:${userId}:${projectId}:result:${resultId}`);
+  return data ? JSON.parse(data) : null;
+}
+
+async function deleteProjectResult(userId, projectId, resultId) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'results', `${resultId}.json`));
+    const [exists] = await file.exists();
+    if (!exists) return false;
+    await file.delete();
+    return true;
+  }
+  return memoryStore.delete(`proj:${userId}:${projectId}:result:${resultId}`);
+}
+
 module.exports = {
   saveResult, loadResult, saveUpload, listResults, deleteResult,
   listDocuments, saveDocument, loadDocument, deleteDocument,
+  getUserId,
+  listProjects, getProject, saveProject, deleteProject,
+  listProjectFiles, saveProjectFile, loadProjectFile, deleteProjectFile,
+  saveProjectFileMeta, loadProjectFileMeta,
+  listProjectResults, saveProjectResult, loadProjectResult, deleteProjectResult,
 };

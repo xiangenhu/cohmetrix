@@ -184,5 +184,5 @@ const Processing = (() => {
     }
   }
 
-  return { start };
+  return { start, initUI, updateLayer, updateTokenDisplay, addLog };
 })();

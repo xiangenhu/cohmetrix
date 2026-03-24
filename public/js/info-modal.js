@@ -12,6 +12,15 @@ const InfoModal = (() => {
 
   // Static help entries
   const STATIC = {
+    'why-projects': {
+      title: 'Why Projects?',
+      body: `<p>NeoCohMetrix organizes all your work into <strong>projects</strong>. Here\u2019s why:</p>
+<p><strong>Cost control.</strong> Every analysis uses LLM tokens that cost real money. Projects let you save configurations and results so you never pay twice for the same analysis. You can re-open past results anytime without re-running.</p>
+<p><strong>Batch analysis.</strong> Upload multiple documents to a project and analyze them all with the same settings \u2014 same layers, same genre, same prompt. Consistent evaluation across an entire assignment.</p>
+<p><strong>Organization.</strong> Each project keeps its files, configuration, and results together. Compare essays within a project, track scores over time, or organize by class, semester, or assignment.</p>
+<p><strong>Cost estimation.</strong> Before running any analysis, the system estimates how many tokens it will use and what it will cost. You decide whether to proceed.</p>
+<p><strong>Reusable configurations.</strong> Set up your analysis layers, genre, and prompt once per project. Every file in that project uses the same settings \u2014 no repetitive setup.</p>`,
+    },
     'composite-factors': {
       title: 'Composite Factors',
       body: `<p>Composite factors are high-level dimensions that combine scores from multiple analysis layers into a single interpretable number. They are analogous to the principal component scores (PC1\u2013PC5) in the original Coh-Metrix, extended here to eight factors (F1\u2013F8).</p>

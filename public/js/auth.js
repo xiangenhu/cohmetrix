@@ -109,6 +109,7 @@ const Auth = (() => {
     History.init();
     HelpChat.init();
     Rubric.init();
+    Projects.init();
     TokenFooter.init();
   }
 

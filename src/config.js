@@ -39,6 +39,11 @@ module.exports = {
     provider: process.env.OAUTH_PROVIDER || 'google',
   },
 
+  google: {
+    apiKey: process.env.GOOGLE_API_KEY || '',
+    serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
+  },
+
   targetAudience: process.env.TARGET_AUDIENCE || 'teacher',
 
   analysis: {
