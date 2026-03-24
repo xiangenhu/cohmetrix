@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoCohMetrix — Cohesion Analysis</title>
+
+  <!-- Modular CSS -->
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/topbar.css">
+  <link rel="stylesheet" href="/css/upload.css">
+  <link rel="stylesheet" href="/css/library.css">
+  <link rel="stylesheet" href="/css/history.css">
+  <link rel="stylesheet" href="/css/evidence.css">
+  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="/css/helpchat.css">
+  <link rel="stylesheet" href="/css/rubric.css">
+  <link rel="stylesheet" href="/css/processing.css">
+  <link rel="stylesheet" href="/css/results.css">
+  <link rel="stylesheet" href="/css/info-modal.css">
+  <link rel="stylesheet" href="/css/token-footer.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- No login screen — landing.html handles that -->
+  <div id="s-login" style="display:none"></div>
+
+  <!-- ══ AUTHENTICATED APP ══ -->
+  <div id="app-content" style="display:flex;flex-direction:column;flex:1">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">Neo<span>CohMetrix</span></div>
+    <div class="pill">v0.9 · Beta</div>
+    <div class="topbar-right">
+      <button class="nav-btn active">Upload</button>
+      <button class="nav-btn" id="btn-process" style="opacity:0.4;pointer-events:none">Analysis</button>
+      <button class="nav-btn" id="btn-results" style="opacity:0.4;pointer-events:none">Results</button>
+      <button class="nav-btn" id="btn-review" style="display:none">Review</button>
+      <button class="cost-topbar-btn" id="cost-fab" style="display:none" title="Token usage & cost">$</button>
+      <div class="user-bar" id="user-bar" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ══ UPLOAD SCREEN ══ -->
+  <div class="screen active" id="s-upload">
+    <div style="width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:2rem 1rem">
+      <div style="text-align:center;margin-bottom:4px">
+        <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis</div>
+        <div style="font-size:13px;color:var(--text-secondary)">12-layer deep text analysis for essay grading · L0 – L11</div>
+      </div>
+      <!-- Sections hidden after document load -->
+      <div id="upload-browse-section">
+      <!-- Document Library -->
+      <div class="library-panel" id="library-panel">
+        <div class="library-header" id="library-header">
+          <span class="library-icon">&#128193;</span>
+          <span class="library-title">Document Library</span>
+          <span class="library-badge" id="library-badge">…</span>
+          <span class="library-chevron">&#9654;</span>
+        </div>
+        <div class="library-body" id="library-body"></div>
+        <input type="file" id="lib-file-input" accept=".txt,.docx,.pdf" hidden>
+      </div>
+
+      <!-- Results History -->
+      <div class="history-panel" id="history-panel">
+        <div class="history-header" id="history-header">
+          <span class="history-icon">&#128202;</span>
+          <span class="history-title">Past Analyses</span>
+          <span class="history-badge" id="history-badge">…</span>
+          <span class="history-chevron">&#9654;</span>
+        </div>
+        <div class="history-body" id="history-body"></div>
+      </div>
+
+      <div class="upload-card">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon">&#128196;</div>
+          <div class="drop-title" id="drop-title">Drop your essay here</div>
+          <div class="drop-sub" id="drop-sub">.txt · .docx · .pdf supported · max 50 pages</div>
+          <button class="browse-btn" id="browse-btn">Browse file</button>
+          <input type="file" id="file-input" accept=".txt,.docx,.pdf" hidden>
+        </div>
+        <div class="or-row" id="or-row">or paste text directly</div>
+        <div class="paste-area" id="paste-area">
+          <div class="field-label">Essay text</div>
+          <textarea id="essay-text" placeholder="Paste essay content here...&#10;&#10;Example: The relationship between technology and education has evolved significantly over the past decade. Artificial intelligence, once confined to research laboratories, now permeates every aspect of learning..."></textarea>
+        </div>
+      </div><!-- /upload-card -->
+      </div><!-- /upload-browse-section -->
+
+      <!-- Document loaded state (hidden initially) -->
+      <div id="upload-ready-section" style="display:none">
+        <div class="upload-card" style="text-align:center;padding:32px 24px">
+          <div style="font-size:32px;margin-bottom:12px">&#9989;</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:4px" id="ready-filename">Document loaded</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:24px" id="ready-fileinfo"></div>
+          <div class="prompt-area" style="text-align:left;margin-bottom:12px">
+            <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
+            <input type="text" id="ready-prompt" placeholder="e.g. Discuss the impact of AI on higher education in 800–1000 words.">
+          </div>
+          <div class="genre-area" style="text-align:left;margin-bottom:20px">
+            <div class="field-label">Document genre <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
+            <select id="ready-genre"><option value="">Select genre...</option></select>
+          </div>
+          <button class="run-btn" id="ready-run-btn" style="width:100%">Run Analysis &rarr;</button>
+          <div style="margin-top:12px"><span class="sample-link" id="ready-change-btn">Change document</span></div>
+        </div>
+      </div>
+
+      <!-- Original options (hidden after doc load) -->
+      <div id="upload-options-section">
+        <div class="upload-card">
+        <div class="prompt-area">
+          <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional — enables L4.8 on-topic scoring)</span></div>
+          <input type="text" id="prompt-text" placeholder="e.g. Discuss the impact of AI on higher education in 800–1000 words.">
+        </div>
+        <div class="genre-area">
+          <div class="field-label">Document genre <span style="font-weight:400;color:var(--text-tertiary)">(shapes summary evaluation criteria)</span></div>
+          <select id="genre-select"><option value="">Select genre...</option></select>
+        </div>
+        <div class="upload-section-label">Analysis options</div>
+        <div class="options-row">
+          <div class="opt-chip on"><div class="opt-dot"></div>L0–L5 Core</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L6 Situation</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L7 RST</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L8 Argumentation</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L9 Stance</div>
+          <div class="opt-chip on"><div class="opt-dot"></div>L10 Affect</div>
+          <div class="opt-chip"><div class="opt-dot"></div>L11 Reader-adaptive</div>
+        </div>
+        <div style="padding:4px 20px 14px">
+          <div class="learner-id-row">
+            <span>Learner ID (L11):</span>
+            <input type="text" id="learner-id" placeholder="student_4821">
+            <span class="learner-id-hint">pulls UALS/LRS profile</span>
+          </div>
+        </div>
+        <div class="save-to-lib-row">
+          <input type="checkbox" id="save-to-library" checked>
+          <label for="save-to-library">Save uploaded file to document library</label>
+        </div>
+        <button class="run-btn" id="run-btn">Run Neo-Coh-Metrix Analysis →</button>
+      </div>
+      </div><!-- /upload-options-section -->
+      <div style="text-align:center"><span class="sample-link" id="sample-link">Load sample essay</span></div>
+    </div>
+  </div>
+
+  <!-- ══ PROCESSING SCREEN ══ -->
+  <div class="screen" id="s-process">
+    <div class="proc-card">
+      <div class="proc-header">
+        <div class="proc-spinner" id="spinner"></div>
+        <div>
+          <div class="proc-title" id="proc-title">Initializing NLP pipeline…</div>
+          <div class="proc-sub" id="proc-sub">Preparing analysis modules</div>
+        </div>
+      </div>
+      <div class="layer-rows" id="layer-rows"></div>
+      <div style="display:flex;gap:16px;margin-top:12px;padding:8px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary)">
+        <span>Prompt: <strong id="proc-prompt-tokens" style="color:var(--text-secondary)">0</strong></span>
+        <span>Completion: <strong id="proc-completion-tokens" style="color:var(--text-secondary)">0</strong></span>
+        <span>Total: <strong id="proc-total-tokens" style="color:var(--teal)">0</strong></span>
+        <span style="margin-left:auto">LLM calls: <strong id="proc-llm-calls" style="color:var(--text-secondary)">0</strong></span>
+      </div>
+      <div class="proc-log" id="proc-log"></div>
+    </div>
+  </div>
+
+  <!-- ══ RESULTS SCREEN ══ -->
+  <div class="screen" id="s-results">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="st-words">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Sentences</div><div class="stat-val" id="st-sents">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Paragraphs</div><div class="stat-val" id="st-paras">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Mean sent. len</div><div class="stat-val" id="st-msl">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Type-Token</div><div class="stat-val" id="st-ttr">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">AWL density</div><div class="stat-val" id="st-awl">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="st-time">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Prompt tokens</div><div class="stat-val" id="st-prompt-tokens">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Completion tokens</div><div class="stat-val" id="st-completion-tokens">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Total tokens</div><div class="stat-val" id="st-total-tokens">—</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <span id="st-llm-provider" style="font-size:9px;color:var(--text-tertiary)"></span>
+        <button class="nav-btn" id="btn-new-essay" style="font-size:11px">← New essay</button>
+      </div>
+    </div>
+    <div class="results-inner">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sb-header">Analysis Layers</div>
+        <div id="layer-list"></div>
+      </div>
+      <!-- Center -->
+      <div class="center-panel" id="center-panel"></div>
+      <!-- Right -->
+      <div class="right-panel">
+        <div>
+          <div class="rp-section-title">Composite factors <button class="info-btn" data-info="composite-factors">?</button></div>
+          <div class="factor-chart-wrap"><canvas id="radar-chart"></canvas></div>
+          <div class="factor-scores" id="factor-scores"></div>
+        </div>
+        <div class="overall-score">
+          <div class="os-num" id="overall-score-num">—</div>
+          <div class="os-label">Overall Cohesion Score <button class="info-btn" data-info="overall-score">?</button></div>
+          <div class="os-sub">Weighted composite · 0–100</div>
+        </div>
+        <div>
+          <div class="rp-section-title">Reader profile (L11) <button class="info-btn" data-info="reader-profile">?</button></div>
+          <div class="reader-card" id="reader-profile-card">
+            <div class="reader-row"><span class="reader-label">Awaiting analysis…</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="rp-section-title">Priority feedback <button class="info-btn" data-info="priority-feedback">?</button></div>
+          <div class="feedback-box">
+            <div class="fb-label" id="feedback-count">AI Tutor</div>
+            <div id="feedback-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REVIEW SCREEN (Rubric-Based) ══ -->
+  <div class="screen" id="s-review">
+    <!-- Review stats bar -->
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-label">Rubric Score</div><div class="stat-val" id="rv-total-score" style="color:var(--teal)">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Criteria</div><div class="stat-val" id="rv-criteria-count">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Cohesion Score</div><div class="stat-val" id="rv-cohesion-score">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="rv-words">—</div></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="rv-time">—</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button class="nav-btn" id="rv-btn-results" style="font-size:11px">← Metrics</button>
+        <button class="nav-btn" id="rv-btn-new" style="font-size:11px">New essay</button>
+      </div>
+    </div>
+    <div class="results-inner" style="grid-template-columns:260px 1fr 260px">
+      <!-- Left: Rubric library + Criterion list -->
+      <div class="sidebar">
+        <div class="sb-header">Rubric Library</div>
+        <div id="rv-rubric-library" style="border-bottom:1px solid var(--border-tertiary)">
+          <div style="padding:8px 12px;display:flex;gap:6px">
+            <button class="lib-upload-btn" id="rubric-lib-upload-btn" style="flex:1"><span>&#8593;</span> Upload</button>
+            <button class="lib-upload-btn" id="rubric-lib-refresh-btn">&#8635;</button>
+            <input type="file" id="rubric-lib-file-input" accept=".txt,.docx,.pdf" hidden>
+          </div>
+          <div id="rv-rubric-list"></div>
+        </div>
+        <div class="sb-header">Criteria Scores</div>
+        <div id="rv-criteria-list"></div>
+      </div>
+      <!-- Center: Rubric input (before eval) or Criterion detail (after eval) -->
+      <div class="center-panel" id="rv-center-panel">
+        <div id="rv-rubric-input-area">
+          <div class="cp-header">
+            <div class="cp-layer-name">Rubric-Based Review</div>
+          </div>
+          <div class="cp-summary" style="border-left-color:var(--amber)">
+            Select a rubric from the library, or paste your rubric criteria below, then click <strong>Evaluate</strong> to generate a rubric-based review of the essay.
+          </div>
+          <div class="rubric-section" style="margin:0">
+            <div class="field-label">Rubric criteria</div>
+            <textarea id="rubric-text" style="height:200px" placeholder="Paste rubric criteria here…&#10;&#10;Example:&#10;Content & Ideas (25 pts): thesis clarity, depth of analysis, relevance to prompt&#10;Argumentation (25 pts): claims supported by evidence, counter-arguments, reasoning&#10;Organization (20 pts): introduction, transitions, paragraph structure, conclusion&#10;Language & Style (20 pts): vocabulary, sentence variety, academic register&#10;Mechanics (10 pts): grammar, spelling, formatting"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+            <button class="rubric-evaluate-btn" id="rubric-evaluate-btn" style="flex:none">Evaluate with Rubric</button>
+            <div class="rubric-evaluate-status" id="rubric-evaluate-status"></div>
+            <span id="rubric-selected-name" style="margin-left:auto;font-size:11px;color:var(--teal);font-weight:500"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Right: Overall assessment -->
+      <div class="right-panel">
+        <div class="overall-score">
+          <div class="os-num" id="rv-score-big">—</div>
+          <div class="os-label">Rubric Score</div>
+          <div class="os-sub" id="rv-score-sub">— / —</div>
+        </div>
+        <div>
+          <div class="rp-section-title">Score by Criterion</div>
+          <div id="rv-score-bars"><div style="font-size:11px;color:var(--text-tertiary);padding:4px 0">Run evaluation to see scores</div></div>
+        </div>
+        <div>
+          <div class="rp-section-title">Overall Assessment</div>
+          <div class="feedback-box" id="rv-overall-narrative">
+            <div class="fb-label">Rubric Review</div>
+            <div id="rv-narrative-text" style="font-size:11px;color:#065F46;line-height:1.6">Select a rubric and click Evaluate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /app-content -->
+
+</div>
+
+<!-- Help Chat Panel (overlay) -->
+<div class="help-overlay" id="help-overlay">
+  <div class="help-backdrop" id="help-backdrop"></div>
+  <div class="help-panel">
+    <div class="help-header">
+      <div class="help-header-icon">?</div>
+      <div class="help-header-text">
+        <div class="help-header-title" id="help-header-title">Help</div>
+        <div class="help-header-sub" id="help-header-sub"></div>
+      </div>
+      <button class="help-close-btn" id="help-close-btn">&#10005;</button>
+    </div>
+    <div class="help-messages" id="help-messages"></div>
+    <div class="help-input-area">
+      <input class="help-input" id="help-input" type="text" placeholder="Ask a follow-up question…">
+      <button class="help-send-btn" id="help-send-btn">Ask</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INFO MODAL (shared "?" help + chat) ══ -->
+<div class="info-overlay" id="info-overlay">
+  <div class="info-backdrop" id="info-backdrop"></div>
+  <div class="info-modal">
+    <div class="info-header">
+      <div class="info-header-title" id="info-title"></div>
+      <button class="info-close-btn" id="info-close-btn">&times;</button>
+    </div>
+    <div class="info-body" id="info-body"></div>
+    <div class="info-chat" id="info-chat">
+      <div class="info-chat-messages" id="info-chat-messages"></div>
+      <div class="info-chat-input-row">
+        <input class="info-chat-input" id="info-chat-input" type="text" placeholder="Ask a follow-up question&hellip;">
+        <button class="info-chat-send" id="info-chat-send">Ask</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COST MODAL ══ -->
+<div class="cost-overlay" id="cost-overlay">
+  <div class="cost-backdrop" id="cost-backdrop"></div>
+  <div class="cost-modal">
+    <div class="cost-header">
+      <div class="cost-header-title">Token Usage & Cost</div>
+      <span class="cost-provider" id="tf-provider"></span>
+      <button class="cost-close-btn" id="cost-close-btn">&times;</button>
+    </div>
+    <div class="cost-body">
+      <div class="cost-total-row">
+        <div class="cost-total-amount" id="cost-total-usd">$0.00</div>
+        <div class="cost-total-label">Estimated session cost</div>
+      </div>
+      <div class="cost-grid">
+        <div class="cost-card">
+          <div class="cost-card-label">Session</div>
+          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-session-calls">0</strong></div>
+          <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-session-prompt">0</strong></div>
+          <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-session-completion">0</strong></div>
+          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-session-total">0</strong></div>
+          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-session-usd">$0.00</strong></div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-card-label">Last Analysis</div>
+          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-analysis-calls">0</strong></div>
+          <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-analysis-prompt">0</strong></div>
+          <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-analysis-completion">0</strong></div>
+          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-analysis-total">0</strong></div>
+          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-analysis-usd">$0.00</strong></div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-card-label">Post-Analysis</div>
+          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-post-calls">0</strong></div>
+          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-post-total">0</strong></div>
+          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-post-usd">$0.00</strong></div>
+        </div>
+      </div>
+      <div class="cost-note" id="cost-note">Pricing based on published API rates</div>
+    </div>
+    <div class="cost-footer">
+      <button class="cost-reset-btn" id="tf-reset-btn">Reset session</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<!-- Modular JS -->
+<script src="/js/auth.js"></script>
+<script src="/js/token-footer.js"></script>
+<script src="/js/helpchat.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/results.js"></script>
+<script src="/js/processing.js"></script>
+<script src="/js/library.js"></script>
+<script src="/js/history.js"></script>
+<script src="/js/rubric.js"></script>
+<script src="/js/upload.js"></script>
+<script src="/js/info-modal.js"></script>
+<script src="/js/app.js"></script>
+
+<script>
+  // New essay button
+  document.getElementById('btn-new-essay').addEventListener('click', () => {
+    Upload.showBrowseState();
+    App.showScreen('upload');
+    App.resetNavigation();
+  });
+</script>
+</body>
+</html>

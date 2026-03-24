@@ -11,6 +11,14 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Disable caching in development
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Static files
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -86,9 +94,9 @@ app.post('/api/tokens/reset', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// SPA fallback
+// SPA fallback — serve app.html for unmatched routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'app.html'));
 });
 
 // Start server

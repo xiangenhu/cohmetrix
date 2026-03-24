@@ -80,11 +80,10 @@ const Auth = (() => {
   }
 
   function showLogin() {
-    document.getElementById('s-login').style.display = 'flex';
-    document.getElementById('app-content').style.display = 'none';
-    document.getElementById('user-bar').style.display = 'none';
-    const fab = document.getElementById('cost-fab');
-    if (fab) fab.style.display = 'none';
+    // Redirect to landing page (unless processing OAuth callback)
+    if (!window.location.search.includes('token=')) {
+      window.location.replace('/landing.html');
+    }
   }
 
   function showApp() {
@@ -114,8 +113,8 @@ const Auth = (() => {
   }
 
   function login() {
-    const currentUrl = window.location.origin + window.location.pathname;
-    window.location.href = `/api/auth/login?redirect_uri=${encodeURIComponent(currentUrl)}`;
+    const appUrl = window.location.origin + '/app.html';
+    window.location.href = `/api/auth/login?redirect_uri=${encodeURIComponent(appUrl)}`;
   }
 
   async function logout() {

@@ -57,11 +57,28 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
       chip.addEventListener('click', () => chip.classList.toggle('on'));
     });
 
-    // Run button
+    // Run buttons
     document.getElementById('run-btn').addEventListener('click', startAnalysis);
+    const readyRunBtn = document.getElementById('ready-run-btn');
+    if (readyRunBtn) readyRunBtn.addEventListener('click', startAnalysisFromReady);
+
+    // Change document button
+    const changeBtn = document.getElementById('ready-change-btn');
+    if (changeBtn) changeBtn.addEventListener('click', showBrowseState);
 
     // Sample link
     document.getElementById('sample-link').addEventListener('click', loadSample);
+
+    // Detect text paste — show ready state when user pastes or types enough text
+    if (essayText) {
+      essayText.addEventListener('input', () => {
+        const text = essayText.value.trim();
+        if (text.length > 50 && document.getElementById('upload-ready-section').style.display === 'none') {
+          const wordCount = text.split(/\s+/).length;
+          showReadyState('Pasted Text', `${wordCount} words`);
+        }
+      });
+    }
 
     // Populate genre dropdown
     populateGenres();
@@ -99,14 +116,46 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
     selectedFile = file;
     document.getElementById('drop-title').textContent = file.name;
     document.getElementById('drop-sub').textContent = `${(file.size / 1024).toFixed(1)} KB · Ready to analyze`;
+    showReadyState(file.name, `${(file.size / 1024).toFixed(1)} KB · ${ext.replace('.', '').toUpperCase()}`);
+  }
+
+  function showReadyState(name, info) {
+    const browseEl = document.getElementById('upload-browse-section');
+    const optionsEl = document.getElementById('upload-options-section');
+    const readyEl = document.getElementById('upload-ready-section');
+    if (browseEl) browseEl.style.display = 'none';
+    if (optionsEl) optionsEl.style.display = 'none';
+    if (readyEl) {
+      readyEl.style.display = 'block';
+      document.getElementById('ready-filename').textContent = name;
+      document.getElementById('ready-fileinfo').textContent = info;
+      // Copy genre options to ready section if not already done
+      const readyGenre = document.getElementById('ready-genre');
+      const mainGenre = document.getElementById('genre-select');
+      if (readyGenre && mainGenre && readyGenre.options.length <= 1) {
+        readyGenre.innerHTML = mainGenre.innerHTML;
+      }
+    }
+  }
+
+  function showBrowseState() {
+    const browseEl = document.getElementById('upload-browse-section');
+    const optionsEl = document.getElementById('upload-options-section');
+    const readyEl = document.getElementById('upload-ready-section');
+    if (browseEl) browseEl.style.display = '';
+    if (optionsEl) optionsEl.style.display = '';
+    if (readyEl) readyEl.style.display = 'none';
+    selectedFile = null;
+    document.getElementById('essay-text').value = '';
+    document.getElementById('drop-title').textContent = 'Drop your essay here';
+    document.getElementById('drop-sub').textContent = '.txt · .docx · .pdf supported · max 50 pages';
   }
 
   function loadSample() {
     document.getElementById('essay-text').value = SAMPLE_TEXT;
     document.getElementById('prompt-text').value = SAMPLE_PROMPT;
     selectedFile = null;
-    document.getElementById('drop-title').textContent = 'Drop your essay here';
-    document.getElementById('drop-sub').textContent = '.txt · .docx · .pdf supported · max 50 pages';
+    showReadyState('Sample Essay', 'AI in Higher Education · pasted text');
   }
 
   function getEnabledLayers() {
@@ -127,6 +176,15 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
     });
 
     return [...enabled];
+  }
+
+  function startAnalysisFromReady() {
+    // Copy prompt and genre from ready section to main fields
+    const readyPrompt = document.getElementById('ready-prompt');
+    const readyGenre = document.getElementById('ready-genre');
+    if (readyPrompt) document.getElementById('prompt-text').value = readyPrompt.value;
+    if (readyGenre) document.getElementById('genre-select').value = readyGenre.value;
+    startAnalysis();
   }
 
   async function startAnalysis() {
@@ -164,5 +222,5 @@ Institutions adopting AI tools must therefore establish clear frameworks for eva
     Processing.start(formData);
   }
 
-  return { init, loadSample };
+  return { init, loadSample, showBrowseState };
 })();

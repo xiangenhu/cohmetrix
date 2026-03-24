@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "kill": "lsof -t -i:8080 | xargs kill -9 2>/dev/null; echo 'Server stopped'"
   },
   "engines": {
     "node": ">=18.0.0"
