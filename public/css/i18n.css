@@ -1,0 +1,171 @@
+/* ═══ Internationalization (i18n) ═══ */
+
+/* ── State Classes ────────────────── */
+
+/* Fetch in progress */
+.i18n-translating {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+/* Translated element — click to toggle */
+.i18n-translated {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+/* Hover-replace mode — dashed underline signals interactivity */
+.i18n-hover {
+  border-bottom: 1px dashed var(--text-tertiary);
+  cursor: pointer;
+}
+
+/* Tooltip mode — dotted underline */
+.i18n-has-tooltip {
+  border-bottom: 1px dotted var(--text-tertiary);
+  cursor: help;
+}
+
+/* ── Language Selector Dropdown ───── */
+
+.i18n-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.i18n-current {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.i18n-current:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.i18n-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 1000;
+}
+
+.i18n-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* ── Language List ────────────────── */
+
+.i18n-lang-list {
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px 0;
+  border-bottom: 0.5px solid var(--border-tertiary);
+}
+
+.i18n-lang-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.i18n-lang-list::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 4px;
+}
+
+.i18n-lang-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.i18n-lang-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.i18n-lang-item.active {
+  color: var(--teal);
+  font-weight: 500;
+}
+
+/* ── Mode Switcher ────────────────── */
+
+.i18n-mode-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.i18n-mode-btn {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  padding: 4px 8px;
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.i18n-mode-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.i18n-mode-btn.active {
+  background: var(--teal-light);
+  color: #065F46;
+  border-color: var(--teal);
+}
+
+/* ── RTL Support ──────────────────── */
+
+[dir="rtl"] .i18n-selector {
+  direction: rtl;
+}
+
+[dir="rtl"] .i18n-dropdown {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .i18n-lang-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .i18n-mode-switcher {
+  flex-direction: row-reverse;
+}

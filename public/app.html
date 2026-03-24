@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="/css/projects.css">
   <link rel="stylesheet" href="/css/info-modal.css">
   <link rel="stylesheet" href="/css/token-footer.css">
+  <link rel="stylesheet" href="/css/i18n.css">
 </head>
 <body>
 <div class="app">
@@ -33,55 +34,84 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="logo">Neo<span>CohMetrix</span></div>
-    <div class="pill">v0.9 · Beta</div>
+    <div class="pill"><span data-i18n="69bace6afa6b1359">v0.9 · Beta</span></div>
     <div class="topbar-right">
-      <button class="nav-btn active">Upload</button>
-      <button class="nav-btn" id="btn-process" style="opacity:0.4;pointer-events:none">Analysis</button>
-      <button class="nav-btn" id="btn-results" style="opacity:0.4;pointer-events:none">Results</button>
-      <button class="nav-btn" id="btn-review" style="display:none">Review</button>
+      <button class="nav-btn active"><span data-i18n="865e89de78d94c74_v2">Home</span></button>
+      <button class="nav-btn" id="btn-process" style="opacity:0.4;pointer-events:none"><span data-i18n="e70d8eb9050021ad">Analysis</span></button>
+      <button class="nav-btn" id="btn-results" style="opacity:0.4;pointer-events:none"><span data-i18n="219c4a6c86a716e9">Results</span></button>
+      <button class="nav-btn" id="btn-review" style="display:none"><span data-i18n="aff0766a5290e117">Review</span></button>
       <button class="cost-topbar-btn" id="cost-fab" style="display:none" title="Token usage & cost">$</button>
       <div class="user-bar" id="user-bar" style="display:none"></div>
     </div>
   </div>
 
-  <!-- ══ UPLOAD SCREEN (3-step workflow) ══ -->
+  <!-- ══ HOME / WORKSPACE SCREEN ══ -->
   <div class="screen active" id="s-upload">
-    <div style="width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:2rem 1rem">
+    <div class="home-workspace">
 
-      <!-- ── STEP 1: Select Project ── -->
-      <div id="upload-step1">
-        <div style="text-align:center;margin-bottom:12px">
-          <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis <button class="info-btn" data-info="why-projects">?</button></div>
-          <div style="font-size:13px;color:var(--text-secondary)">Select a project or create a new one to get started</div>
+      <!-- Hero header -->
+      <div class="home-hero">
+        <div class="home-hero-text">
+          <div class="home-title"><span data-i18n="eabaae8e6ecb6e57">Cohesion Analysis</span> <button class="info-btn" data-info="why-projects">?</button></div>
+          <div class="home-subtitle"><span data-i18n="b406211d129a4bc2_v2">Create a project, import documents, and run deep text analysis</span></div>
         </div>
+      </div>
+
+      <!-- Quick-start cards -->
+      <div class="home-quickstart">
+        <div class="home-qs-card" id="home-qs-new">
+          <div class="home-qs-icon">&#128194;</div>
+          <div class="home-qs-title" data-i18n="home_qs_new">New Project</div>
+          <div class="home-qs-desc" data-i18n="home_qs_new_desc">Create a project to organize and batch-analyze documents</div>
+        </div>
+        <div class="home-qs-card" id="home-qs-upload">
+          <div class="home-qs-icon">&#8593;</div>
+          <div class="home-qs-title" data-i18n="home_qs_upload">Upload Files</div>
+          <div class="home-qs-desc" data-i18n="home_qs_upload_desc">PDF, DOCX, or TXT — upload one or many into a project</div>
+        </div>
+        <div class="home-qs-card" id="home-qs-drive">
+          <div class="home-qs-icon">&#9729;</div>
+          <div class="home-qs-title" data-i18n="home_qs_drive">Google Drive</div>
+          <div class="home-qs-desc" data-i18n="home_qs_drive_desc">Import entire folders of essays directly from Drive</div>
+        </div>
+        <div class="home-qs-card" id="home-qs-batch">
+          <div class="home-qs-icon">&#9654;</div>
+          <div class="home-qs-title" data-i18n="home_qs_batch">Batch Analyze</div>
+          <div class="home-qs-desc" data-i18n="home_qs_batch_desc">Select files across a project and analyze them all at once</div>
+        </div>
+      </div>
+
+      <!-- Projects list -->
+      <div class="home-projects-section">
         <div class="projects-panel open" id="projects-panel">
           <div class="projects-header" id="projects-header">
             <span class="projects-icon">&#128218;</span>
-            <span class="projects-title">Projects</span>
-            <span class="projects-badge" id="projects-badge">…</span>
+            <span class="projects-title" data-i18n="04e2a9728af75840">Projects</span>
+            <span class="projects-badge" id="projects-badge">...</span>
             <span class="projects-chevron">&#9654;</span>
           </div>
           <div class="projects-body" id="projects-body"></div>
         </div>
-        <!-- hidden elements needed by other modules -->
-        <div style="display:none">
-          <div id="library-panel"><div id="library-header"></div><div id="library-body"></div><input id="lib-file-input" hidden></div>
-          <div id="history-panel"><div id="history-header"></div><div id="history-body"></div></div>
-          <input type="file" id="file-input" accept=".txt,.docx,.pdf" hidden>
-          <textarea id="essay-text"></textarea>
-          <input type="text" id="prompt-text">
-          <select id="genre-select"><option value="">Select genre...</option></select>
-          <input type="text" id="learner-id">
-          <input type="checkbox" id="save-to-library">
-          <button id="run-btn"></button>
-          <div class="opt-chip on" data-label="L0–L5 Core"><div class="opt-dot"></div>L0–L5 Core</div>
-          <div class="opt-chip on" data-label="L6 Situation"><div class="opt-dot"></div>L6 Situation</div>
-          <div class="opt-chip on" data-label="L7 RST"><div class="opt-dot"></div>L7 RST</div>
-          <div class="opt-chip on" data-label="L8 Argumentation"><div class="opt-dot"></div>L8 Argumentation</div>
-          <div class="opt-chip on" data-label="L9 Stance"><div class="opt-dot"></div>L9 Stance</div>
-          <div class="opt-chip on" data-label="L10 Affect"><div class="opt-dot"></div>L10 Affect</div>
-          <div class="opt-chip" data-label="L11 Reader-adaptive"><div class="opt-dot"></div>L11 Reader-adaptive</div>
-        </div>
+      </div>
+
+      <!-- hidden elements needed by other modules -->
+      <div style="display:none">
+        <div id="library-panel"><div id="library-header"></div><div id="library-body"></div><input id="lib-file-input" hidden></div>
+        <div id="history-panel"><div id="history-header"></div><div id="history-body"></div></div>
+        <input type="file" id="file-input" accept=".txt,.docx,.pdf" hidden>
+        <textarea id="essay-text"></textarea>
+        <input type="text" id="prompt-text">
+        <select id="genre-select"><option value="">Select genre...</option></select>
+        <input type="text" id="learner-id">
+        <input type="checkbox" id="save-to-library">
+        <button id="run-btn"></button>
+        <div class="opt-chip on" data-label="L0–L5 Core"><div class="opt-dot"></div>L0–L5 Core</div>
+        <div class="opt-chip on" data-label="L6 Situation"><div class="opt-dot"></div>L6 Situation</div>
+        <div class="opt-chip on" data-label="L7 RST"><div class="opt-dot"></div>L7 RST</div>
+        <div class="opt-chip on" data-label="L8 Argumentation"><div class="opt-dot"></div>L8 Argumentation</div>
+        <div class="opt-chip on" data-label="L9 Stance"><div class="opt-dot"></div>L9 Stance</div>
+        <div class="opt-chip on" data-label="L10 Affect"><div class="opt-dot"></div>L10 Affect</div>
+        <div class="opt-chip" data-label="L11 Reader-adaptive"><div class="opt-dot"></div>L11 Reader-adaptive</div>
       </div>
 
     </div>
@@ -96,16 +126,16 @@
       <div class="proc-header">
         <div class="proc-spinner" id="spinner"></div>
         <div>
-          <div class="proc-title" id="proc-title">Initializing NLP pipeline…</div>
-          <div class="proc-sub" id="proc-sub">Preparing analysis modules</div>
+          <div class="proc-title" id="proc-title"><span data-i18n="1396aada4a95a663">Initializing NLP pipeline…</span></div>
+          <div class="proc-sub" id="proc-sub"><span data-i18n="1db4bfea9970ee04">Preparing analysis modules</span></div>
         </div>
       </div>
       <div class="layer-rows" id="layer-rows"></div>
       <div style="display:flex;gap:16px;margin-top:12px;padding:8px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary)">
-        <span>Prompt: <strong id="proc-prompt-tokens" style="color:var(--text-secondary)">0</strong></span>
-        <span>Completion: <strong id="proc-completion-tokens" style="color:var(--text-secondary)">0</strong></span>
-        <span>Total: <strong id="proc-total-tokens" style="color:var(--teal)">0</strong></span>
-        <span style="margin-left:auto">LLM calls: <strong id="proc-llm-calls" style="color:var(--text-secondary)">0</strong></span>
+        <span><span data-i18n="35261535449d29f8">Prompt:</span> <strong id="proc-prompt-tokens" style="color:var(--text-secondary)">0</strong></span>
+        <span><span data-i18n="819c15f77c3040af">Completion:</span> <strong id="proc-completion-tokens" style="color:var(--text-secondary)">0</strong></span>
+        <span><span data-i18n="18e872be2359d76e">Total:</span> <strong id="proc-total-tokens" style="color:var(--teal)">0</strong></span>
+        <span style="margin-left:auto"><span data-i18n="0f41e56ff018fe54">LLM calls:</span> <strong id="proc-llm-calls" style="color:var(--text-secondary)">0</strong></span>
       </div>
       <div class="proc-log" id="proc-log"></div>
     </div>
@@ -114,34 +144,34 @@
   <!-- ══ RESULTS SCREEN ══ -->
   <div class="screen" id="s-results">
     <div class="stats-bar">
-      <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="st-words">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="0a8be89a52a87051">Words</span></div><div class="stat-val" id="st-words">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Sentences</div><div class="stat-val" id="st-sents">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="9fce2e3cccb1bf56">Sentences</span></div><div class="stat-val" id="st-sents">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Paragraphs</div><div class="stat-val" id="st-paras">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="d2ef75e86bb76390">Paragraphs</span></div><div class="stat-val" id="st-paras">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Mean sent. len</div><div class="stat-val" id="st-msl">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="2d0511abb05c8f7d">Mean sent. len</span></div><div class="stat-val" id="st-msl">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Type-Token</div><div class="stat-val" id="st-ttr">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="9ecf3b8afa6c0675">Type-Token</span></div><div class="stat-val" id="st-ttr">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">AWL density</div><div class="stat-val" id="st-awl">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="0a528ea355d49df8">AWL density</span></div><div class="stat-val" id="st-awl">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="st-time">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="40f1b2f0c627233e">Analysis time</span></div><div class="stat-val" id="st-time">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Prompt tokens</div><div class="stat-val" id="st-prompt-tokens">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="b8fbf83c69d10704">Prompt tokens</span></div><div class="stat-val" id="st-prompt-tokens">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Completion tokens</div><div class="stat-val" id="st-completion-tokens">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="f5ad1c5b775f969a">Completion tokens</span></div><div class="stat-val" id="st-completion-tokens">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Total tokens</div><div class="stat-val" id="st-total-tokens">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="e7601ca1178ad955">Total tokens</span></div><div class="stat-val" id="st-total-tokens">—</div></div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
         <span id="st-llm-provider" style="font-size:9px;color:var(--text-tertiary)"></span>
-        <button class="nav-btn" id="btn-new-essay" style="font-size:11px">← New essay</button>
+        <button class="nav-btn" id="btn-new-essay" style="font-size:11px"><span data-i18n="15d4454dc2c8cc16">← New essay</span></button>
       </div>
     </div>
     <div class="results-inner">
       <!-- Sidebar -->
       <div class="sidebar">
-        <div class="sb-header">Analysis Layers</div>
+        <div class="sb-header"><span data-i18n="db0e9864dbee11c1">Analysis Layers</span></div>
         <div id="layer-list"></div>
       </div>
       <!-- Center -->
@@ -149,25 +179,25 @@
       <!-- Right -->
       <div class="right-panel">
         <div>
-          <div class="rp-section-title">Composite factors <button class="info-btn" data-info="composite-factors">?</button></div>
+          <div class="rp-section-title"><span data-i18n="ede865cb5c0d3adc">Composite factors</span> <button class="info-btn" data-info="composite-factors">?</button></div>
           <div class="factor-chart-wrap"><canvas id="radar-chart"></canvas></div>
           <div class="factor-scores" id="factor-scores"></div>
         </div>
         <div class="overall-score">
           <div class="os-num" id="overall-score-num">—</div>
-          <div class="os-label">Overall Cohesion Score <button class="info-btn" data-info="overall-score">?</button></div>
-          <div class="os-sub">Weighted composite · 0–100</div>
+          <div class="os-label"><span data-i18n="b9783b31958745ff">Overall Cohesion Score</span> <button class="info-btn" data-info="overall-score">?</button></div>
+          <div class="os-sub"><span data-i18n="d83ff012e55609cb">Weighted composite · 0–100</span></div>
         </div>
         <div>
-          <div class="rp-section-title">Reader profile (L11) <button class="info-btn" data-info="reader-profile">?</button></div>
+          <div class="rp-section-title"><span data-i18n="9212467401919a40">Reader profile (L11)</span> <button class="info-btn" data-info="reader-profile">?</button></div>
           <div class="reader-card" id="reader-profile-card">
-            <div class="reader-row"><span class="reader-label">Awaiting analysis…</span></div>
+            <div class="reader-row"><span class="reader-label" data-i18n="65e89c2b61837f8f">Awaiting analysis…</span></div>
           </div>
         </div>
         <div>
-          <div class="rp-section-title">Priority feedback <button class="info-btn" data-info="priority-feedback">?</button></div>
+          <div class="rp-section-title"><span data-i18n="03a3d24eda5c9a9e">Priority feedback</span> <button class="info-btn" data-info="priority-feedback">?</button></div>
           <div class="feedback-box">
-            <div class="fb-label" id="feedback-count">AI Tutor</div>
+            <div class="fb-label" id="feedback-count"><span data-i18n="64da958601b1300b">AI Tutor</span></div>
             <div id="feedback-items"></div>
           </div>
         </div>
@@ -179,50 +209,50 @@
   <div class="screen" id="s-review">
     <!-- Review stats bar -->
     <div class="stats-bar">
-      <div class="stat-item"><div class="stat-label">Rubric Score</div><div class="stat-val" id="rv-total-score" style="color:var(--teal)">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="1e3cc943e2d84c2d">Rubric Score</span></div><div class="stat-val" id="rv-total-score" style="color:var(--teal)">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Criteria</div><div class="stat-val" id="rv-criteria-count">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="71708699acf8f3b3">Criteria</span></div><div class="stat-val" id="rv-criteria-count">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Cohesion Score</div><div class="stat-val" id="rv-cohesion-score">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="b5d13afe2288efb4">Cohesion Score</span></div><div class="stat-val" id="rv-cohesion-score">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Words</div><div class="stat-val" id="rv-words">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="0a8be89a52a87051">Words</span></div><div class="stat-val" id="rv-words">—</div></div>
       <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="rv-time">—</div></div>
+      <div class="stat-item"><div class="stat-label"><span data-i18n="40f1b2f0c627233e">Analysis time</span></div><div class="stat-val" id="rv-time">—</div></div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-        <button class="nav-btn" id="rv-btn-results" style="font-size:11px">← Metrics</button>
-        <button class="nav-btn" id="rv-btn-new" style="font-size:11px">New essay</button>
+        <button class="nav-btn" id="rv-btn-results" style="font-size:11px"><span data-i18n="bd28388b1b90f5ba">← Metrics</span></button>
+        <button class="nav-btn" id="rv-btn-new" style="font-size:11px"><span data-i18n="3a0f63052004b9d4">New essay</span></button>
       </div>
     </div>
     <div class="results-inner" style="grid-template-columns:260px 1fr 260px">
       <!-- Left: Rubric library + Criterion list -->
       <div class="sidebar">
-        <div class="sb-header">Rubric Library</div>
+        <div class="sb-header"><span data-i18n="c0132d6903f715bd">Rubric Library</span></div>
         <div id="rv-rubric-library" style="border-bottom:1px solid var(--border-tertiary)">
           <div style="padding:8px 12px;display:flex;gap:6px">
-            <button class="lib-upload-btn" id="rubric-lib-upload-btn" style="flex:1"><span>&#8593;</span> Upload</button>
+            <button class="lib-upload-btn" id="rubric-lib-upload-btn" style="flex:1"><span>&#8593;</span> <span data-i18n="865e89de78d94c74">Upload</span></button>
             <button class="lib-upload-btn" id="rubric-lib-refresh-btn">&#8635;</button>
             <input type="file" id="rubric-lib-file-input" accept=".txt,.docx,.pdf" hidden>
           </div>
           <div id="rv-rubric-list"></div>
         </div>
-        <div class="sb-header">Criteria Scores</div>
+        <div class="sb-header"><span data-i18n="e2d501071d73504d">Criteria Scores</span></div>
         <div id="rv-criteria-list"></div>
       </div>
       <!-- Center: Rubric input (before eval) or Criterion detail (after eval) -->
       <div class="center-panel" id="rv-center-panel">
         <div id="rv-rubric-input-area">
           <div class="cp-header">
-            <div class="cp-layer-name">Rubric-Based Review</div>
+            <div class="cp-layer-name"><span data-i18n="22cae83c7367e768">Rubric-Based Review</span></div>
           </div>
           <div class="cp-summary" style="border-left-color:var(--amber)">
-            Select a rubric from the library, or paste your rubric criteria below, then click <strong>Evaluate</strong> to generate a rubric-based review of the essay.
+            <span data-i18n="5329b26004ef7f90">Select a rubric from the library, or paste your rubric criteria below, then click <strong>Evaluate</strong> to generate a rubric-based review of the essay.</span>
           </div>
           <div class="rubric-section" style="margin:0">
-            <div class="field-label">Rubric criteria</div>
-            <textarea id="rubric-text" style="height:200px" placeholder="Paste rubric criteria here…&#10;&#10;Example:&#10;Content & Ideas (25 pts): thesis clarity, depth of analysis, relevance to prompt&#10;Argumentation (25 pts): claims supported by evidence, counter-arguments, reasoning&#10;Organization (20 pts): introduction, transitions, paragraph structure, conclusion&#10;Language & Style (20 pts): vocabulary, sentence variety, academic register&#10;Mechanics (10 pts): grammar, spelling, formatting"></textarea>
+            <div class="field-label"><span data-i18n="540b8535a0d9b587">Rubric criteria</span></div>
+            <textarea id="rubric-text" style="height:200px" placeholder="Paste rubric criteria here…&#10;&#10;Example:&#10;Content & Ideas (25 pts): thesis clarity, depth of analysis, relevance to prompt&#10;Argumentation (25 pts): claims supported by evidence, counter-arguments, reasoning&#10;Organization (20 pts): introduction, transitions, paragraph structure, conclusion&#10;Language & Style (20 pts): vocabulary, sentence variety, academic register&#10;Mechanics (10 pts): grammar, spelling, formatting" data-i18n-placeholder="65c4d9871626db9d"></textarea>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
-            <button class="rubric-evaluate-btn" id="rubric-evaluate-btn" style="flex:none">Evaluate with Rubric</button>
+            <button class="rubric-evaluate-btn" id="rubric-evaluate-btn" style="flex:none"><span data-i18n="f8466c57b87a3cea">Evaluate with Rubric</span></button>
             <div class="rubric-evaluate-status" id="rubric-evaluate-status"></div>
             <span id="rubric-selected-name" style="margin-left:auto;font-size:11px;color:var(--teal);font-weight:500"></span>
           </div>
@@ -232,18 +262,18 @@
       <div class="right-panel">
         <div class="overall-score">
           <div class="os-num" id="rv-score-big">—</div>
-          <div class="os-label">Rubric Score</div>
+          <div class="os-label"><span data-i18n="1e3cc943e2d84c2d">Rubric Score</span></div>
           <div class="os-sub" id="rv-score-sub">— / —</div>
         </div>
         <div>
-          <div class="rp-section-title">Score by Criterion</div>
-          <div id="rv-score-bars"><div style="font-size:11px;color:var(--text-tertiary);padding:4px 0">Run evaluation to see scores</div></div>
+          <div class="rp-section-title"><span data-i18n="0aa8b3c74f2dc981">Score by Criterion</span></div>
+          <div id="rv-score-bars"><div style="font-size:11px;color:var(--text-tertiary);padding:4px 0"><span data-i18n="97c199520a89ed51">Run evaluation to see scores</span></div></div>
         </div>
         <div>
-          <div class="rp-section-title">Overall Assessment</div>
+          <div class="rp-section-title"><span data-i18n="85133be299ebf52c">Overall Assessment</span></div>
           <div class="feedback-box" id="rv-overall-narrative">
-            <div class="fb-label">Rubric Review</div>
-            <div id="rv-narrative-text" style="font-size:11px;color:#065F46;line-height:1.6">Select a rubric and click Evaluate</div>
+            <div class="fb-label"><span data-i18n="53572774eaab59da">Rubric Review</span></div>
+            <div id="rv-narrative-text" style="font-size:11px;color:#065F46;line-height:1.6"><span data-i18n="aec965f6ffd7517d">Select a rubric and click Evaluate</span></div>
           </div>
         </div>
       </div>
@@ -261,15 +291,15 @@
     <div class="help-header">
       <div class="help-header-icon">?</div>
       <div class="help-header-text">
-        <div class="help-header-title" id="help-header-title">Help</div>
+        <div class="help-header-title" id="help-header-title"><span data-i18n="b79cac926e0b2e34">Help</span></div>
         <div class="help-header-sub" id="help-header-sub"></div>
       </div>
       <button class="help-close-btn" id="help-close-btn">&#10005;</button>
     </div>
     <div class="help-messages" id="help-messages"></div>
     <div class="help-input-area">
-      <input class="help-input" id="help-input" type="text" placeholder="Ask a follow-up question…">
-      <button class="help-send-btn" id="help-send-btn">Ask</button>
+      <input class="help-input" id="help-input" type="text" placeholder="Ask a follow-up question…" data-i18n-placeholder="767489b006e328f2">
+      <button class="help-send-btn" id="help-send-btn"><span data-i18n="b8c209cdead61a09">Ask</span></button>
     </div>
   </div>
 </div>
@@ -286,8 +316,8 @@
     <div class="info-chat" id="info-chat">
       <div class="info-chat-messages" id="info-chat-messages"></div>
       <div class="info-chat-input-row">
-        <input class="info-chat-input" id="info-chat-input" type="text" placeholder="Ask a follow-up question&hellip;">
-        <button class="info-chat-send" id="info-chat-send">Ask</button>
+        <input class="info-chat-input" id="info-chat-input" type="text" placeholder="Ask a follow-up question&hellip;" data-i18n-placeholder="767489b006e328f2">
+        <button class="info-chat-send" id="info-chat-send"><span data-i18n="b8c209cdead61a09">Ask</span></button>
       </div>
     </div>
   </div>
@@ -298,43 +328,43 @@
   <div class="cost-backdrop" id="cost-backdrop"></div>
   <div class="cost-modal">
     <div class="cost-header">
-      <div class="cost-header-title">Token Usage & Cost</div>
+      <div class="cost-header-title"><span data-i18n="15ea7f184e0bfd29">Token Usage & Cost</span></div>
       <span class="cost-provider" id="tf-provider"></span>
       <button class="cost-close-btn" id="cost-close-btn">&times;</button>
     </div>
     <div class="cost-body">
       <div class="cost-total-row">
         <div class="cost-total-amount" id="cost-total-usd">$0.00</div>
-        <div class="cost-total-label">Estimated session cost</div>
+        <div class="cost-total-label"><span data-i18n="6fdd75a55cd6ac56">Estimated session cost</span></div>
       </div>
       <div class="cost-grid">
         <div class="cost-card">
-          <div class="cost-card-label">Session</div>
-          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-session-calls">0</strong></div>
-          <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-session-prompt">0</strong></div>
-          <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-session-completion">0</strong></div>
-          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-session-total">0</strong></div>
-          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-session-usd">$0.00</strong></div>
+          <div class="cost-card-label"><span data-i18n="6959b4159575d8dd">Session</span></div>
+          <div class="cost-card-row"><span data-i18n="5f7864d17c245382">LLM calls</span><strong id="tf-session-calls">0</strong></div>
+          <div class="cost-card-row"><span data-i18n="b8fbf83c69d10704">Prompt tokens</span><strong id="tf-session-prompt">0</strong></div>
+          <div class="cost-card-row"><span data-i18n="f5ad1c5b775f969a">Completion tokens</span><strong id="tf-session-completion">0</strong></div>
+          <div class="cost-card-row total"><span data-i18n="e7601ca1178ad955">Total tokens</span><strong id="tf-session-total">0</strong></div>
+          <div class="cost-card-row cost"><span data-i18n="204a5eb2cd28bcfd">Cost</span><strong id="cost-session-usd">$0.00</strong></div>
         </div>
         <div class="cost-card">
-          <div class="cost-card-label">Last Analysis</div>
-          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-analysis-calls">0</strong></div>
-          <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-analysis-prompt">0</strong></div>
-          <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-analysis-completion">0</strong></div>
-          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-analysis-total">0</strong></div>
-          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-analysis-usd">$0.00</strong></div>
+          <div class="cost-card-label"><span data-i18n="b08c40a13bd61b5a">Last Analysis</span></div>
+          <div class="cost-card-row"><span data-i18n="5f7864d17c245382">LLM calls</span><strong id="tf-analysis-calls">0</strong></div>
+          <div class="cost-card-row"><span data-i18n="b8fbf83c69d10704">Prompt tokens</span><strong id="tf-analysis-prompt">0</strong></div>
+          <div class="cost-card-row"><span data-i18n="f5ad1c5b775f969a">Completion tokens</span><strong id="tf-analysis-completion">0</strong></div>
+          <div class="cost-card-row total"><span data-i18n="e7601ca1178ad955">Total tokens</span><strong id="tf-analysis-total">0</strong></div>
+          <div class="cost-card-row cost"><span data-i18n="204a5eb2cd28bcfd">Cost</span><strong id="cost-analysis-usd">$0.00</strong></div>
         </div>
         <div class="cost-card">
-          <div class="cost-card-label">Post-Analysis</div>
-          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-post-calls">0</strong></div>
-          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-post-total">0</strong></div>
-          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-post-usd">$0.00</strong></div>
+          <div class="cost-card-label"><span data-i18n="5453c4353174fee1">Post-Analysis</span></div>
+          <div class="cost-card-row"><span data-i18n="5f7864d17c245382">LLM calls</span><strong id="tf-post-calls">0</strong></div>
+          <div class="cost-card-row total"><span data-i18n="e7601ca1178ad955">Total tokens</span><strong id="tf-post-total">0</strong></div>
+          <div class="cost-card-row cost"><span data-i18n="204a5eb2cd28bcfd">Cost</span><strong id="cost-post-usd">$0.00</strong></div>
         </div>
       </div>
-      <div class="cost-note" id="cost-note">Pricing based on published API rates</div>
+      <div class="cost-note" id="cost-note"><span data-i18n="f5ad17ba0462dc0c">Pricing based on published API rates</span></div>
     </div>
     <div class="cost-footer">
-      <button class="cost-reset-btn" id="tf-reset-btn">Reset session</button>
+      <button class="cost-reset-btn" id="tf-reset-btn"><span data-i18n="28318be464b400aa">Reset session</span></button>
     </div>
   </div>
 </div>
@@ -355,6 +385,10 @@
 <script src="/js/upload.js"></script>
 <script src="/js/projects.js"></script>
 <script src="/js/info-modal.js"></script>
+<script src="/js/i18n-config.js"></script>
+<script src="/js/i18n-utils.js"></script>
+<script src="/js/i18n-engine.js"></script>
+<script src="/js/i18n-selector.js"></script>
 <script src="/js/app.js"></script>
 
 <script>
@@ -364,6 +398,9 @@
     App.resetNavigation();
     Projects.loadProjects();
   });
+
+  // Initialize i18n (language from ?lang= URL param)
+  I18nSelector.init();
 </script>
 </body>
 </html>

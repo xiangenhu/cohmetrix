@@ -8,18 +8,18 @@ const Results = (() => {
 
   // Theoretical basis descriptions (shown under "Technical details" toggle)
   const LAYER_BASIS = {
-    L0: 'Baseline text statistics for normalization and structural assessment. MATTR and MTLD preferred over raw TTR for length-invariant vocabulary diversity (Covington & McFall 2010; McCarthy & Jarvis 2010). Flesch-Kincaid provides traditional readability.',
-    L1: 'Per-token LLM surprisal replaces MRC frequency norms. Higher surprisal = lower predictability = higher processing cost (Smith & Levy 2013). Psycholinguistic norms from Kuperman (2012; AoA) and Brysbaert (2014; concreteness).',
-    L2: 'Dependency Locality Theory (Gibson 2000): integration cost grows with distance between dependent and head. Universal Dependencies provides cross-lingual, validated syntactic representation. Syntactic pattern density (Biber 1988).',
-    L3: 'Tracks entity re-introduction across sentences (Givón 1983 topic continuity). Coh-Metrix CRF binary overlap measures for local and global argument/noun overlap. Coreference chain analysis for entity tracking.',
-    L4: 'SBERT contextual embeddings replace LSA (Reimers & Gurevych 2019). Resolves polysemy collapse, word-order blindness, and negation failures. Given/new ratio measures information progression.',
-    L5: 'Connectives are the explicit "glue" of the textbase (Halliday & Hasan 1976). Causal, temporal, adversative, additive, and logical connective incidence per 1000 words. Coh-Metrix CNC indices.',
-    L6: 'Kintsch (1998) Construction-Integration model: deep comprehension requires building a mental simulation. Zwaan & Radvansky (1998) event-indexing: causation, intentionality, time, space, protagonist.',
-    L7: 'RST (Mann & Thompson 1988) captures intentional discourse organization. Evidence, contrast/concession, and elaboration relation ratios. Rhetorical diversity via Shannon entropy.',
-    L8: 'Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal. LLM-based argument mining classifies roles at sentence level. Evidence diversity and logical fallacy detection.',
-    L9: 'Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969). Epistemic calibration via hedge-to-boost ratio (Hyland 2005). Critical for academic register.',
-    L10: 'Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay reveals tonal consistency and emotional engagement. Affect-argument alignment measures strategic emotional placement.',
-    L11: 'All L0–L10 metrics re-scored relative to learner profile. ZPD proximity operationalizes Vygotsky (1978) — optimal challenge ≈ 0.5–1.5 SD above learner baseline.',
+    L0: { text: 'Baseline text statistics for normalization and structural assessment. MATTR and MTLD preferred over raw TTR for length-invariant vocabulary diversity (Covington & McFall 2010; McCarthy & Jarvis 2010). Flesch-Kincaid provides traditional readability.', i18n: '60dd0c19e1ec6952' },
+    L1: { text: 'Per-token LLM surprisal replaces MRC frequency norms. Higher surprisal = lower predictability = higher processing cost (Smith & Levy 2013). Psycholinguistic norms from Kuperman (2012; AoA) and Brysbaert (2014; concreteness).', i18n: 'cc5ec90702536d57' },
+    L2: { text: 'Dependency Locality Theory (Gibson 2000): integration cost grows with distance between dependent and head. Universal Dependencies provides cross-lingual, validated syntactic representation. Syntactic pattern density (Biber 1988).', i18n: '363929211137d110' },
+    L3: { text: 'Tracks entity re-introduction across sentences (Givón 1983 topic continuity). Coh-Metrix CRF binary overlap measures for local and global argument/noun overlap. Coreference chain analysis for entity tracking.', i18n: '2a0329bc3817950d' },
+    L4: { text: 'SBERT contextual embeddings replace LSA (Reimers & Gurevych 2019). Resolves polysemy collapse, word-order blindness, and negation failures. Given/new ratio measures information progression.', i18n: 'a0ca82eb2691a15d' },
+    L5: { text: 'Connectives are the explicit "glue" of the textbase (Halliday & Hasan 1976). Causal, temporal, adversative, additive, and logical connective incidence per 1000 words. Coh-Metrix CNC indices.', i18n: '68177fb15c23735d' },
+    L6: { text: 'Kintsch (1998) Construction-Integration model: deep comprehension requires building a mental simulation. Zwaan & Radvansky (1998) event-indexing: causation, intentionality, time, space, protagonist.', i18n: '5498a870a3e7a0bc' },
+    L7: { text: 'RST (Mann & Thompson 1988) captures intentional discourse organization. Evidence, contrast/concession, and elaboration relation ratios. Rhetorical diversity via Shannon entropy.', i18n: 'b470306a280dc044' },
+    L8: { text: 'Toulmin (1958) model: Claim → Data → Warrant → Backing → Rebuttal. LLM-based argument mining classifies roles at sentence level. Evidence diversity and logical fallacy detection.', i18n: '2e7d0f20ca085d70' },
+    L9: { text: 'Hedging, evidentiality, and speech act theory (Austin 1962; Searle 1969). Epistemic calibration via hedge-to-boost ratio (Hyland 2005). Critical for academic register.', i18n: 'bc3991188139b78c' },
+    L10: { text: 'Valence-Arousal-Dominance model (Russell 1980). VAD arc across the essay reveals tonal consistency and emotional engagement. Affect-argument alignment measures strategic emotional placement.', i18n: 'a5fd4a0d629ae8f6' },
+    L11: { text: 'All L0–L10 metrics re-scored relative to learner profile. ZPD proximity operationalizes Vygotsky (1978) — optimal challenge ≈ 0.5–1.5 SD above learner baseline.', i18n: '9ab9e2a062502034' },
   };
 
   function scoreCls(s) {
@@ -73,6 +73,8 @@ const Results = (() => {
       TokenFooter.setAnalysisTokens(data.tokenUsage);
       TokenFooter.refresh();
     }
+    // Resolve i18n hashes for dynamic server content
+    if (typeof I18nUtils !== 'undefined') I18nUtils.resolveDynamic();
   }
 
   function renderStatsBar() {
@@ -97,7 +99,7 @@ const Results = (() => {
       item.className = 'layer-item' + (i === activeLayerIdx ? ' active' : '');
       item.innerHTML = `
         <span class="li-badge">${l.layerId}</span>
-        <span class="li-name">${l.layerName}</span>
+        <span class="li-name" data-i18n-dynamic>${l.layerName}</span>
         <span class="li-score ${scoreCls(l.score)}">${l.score}</span>
         <button class="help-btn" data-help-id="${l.layerId}" title="What is ${l.layerName}?">?</button>`;
       item.addEventListener('click', (e) => {
@@ -115,7 +117,7 @@ const Results = (() => {
     // Summary button below layer list
     const summaryBtn = document.createElement('div');
     summaryBtn.className = 'sidebar-summary-btn';
-    summaryBtn.innerHTML = '<span class="sidebar-summary-icon">&#9670;</span> Analysis Summary & FAQs';
+    summaryBtn.innerHTML = '<span class="sidebar-summary-icon">&#9670;</span> <span data-i18n="87cb3121bd0d55b5">Analysis Summary &amp; FAQs</span>';
     summaryBtn.addEventListener('click', () => showSummary());
     list.appendChild(summaryBtn);
   }
@@ -153,10 +155,10 @@ const Results = (() => {
     // Step 1: Detect genre and reading level
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary</div>
-        <div class="cp-layer-tag">all dimensions</div>
+        <div class="cp-layer-name"><span data-i18n="fe7750bb0e61b4f1">Analysis Summary</span></div>
+        <div class="cp-layer-tag"><span data-i18n="ecedb42419edce37">all dimensions</span></div>
       </div>
-      <div class="summary-loading">Detecting genre and reading level...</div>`;
+      <div class="summary-loading"><span data-i18n="702011e1565bdf7e">Detecting genre and reading level...</span></div>`;
 
     try {
       // Fetch genres and detect in parallel
@@ -188,18 +190,18 @@ const Results = (() => {
     // Clear the center panel while modal is open
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary</div>
-        <div class="cp-layer-tag">configure genre & reading level</div>
+        <div class="cp-layer-name"><span data-i18n="fe7750bb0e61b4f1">Analysis Summary</span></div>
+        <div class="cp-layer-tag"><span data-i18n="036b52eca2213499">configure genre &amp; reading level</span></div>
       </div>`;
 
     const genreOptions = buildGenreOptions(detected.suggestedGenre || '');
     const levelOptions = [
-      { value: 'elementary', label: 'Elementary (grades 3-5)' },
-      { value: 'middle-school', label: 'Middle School (grades 6-8)' },
-      { value: 'high-school', label: 'High School (grades 9-12)' },
-      { value: 'college', label: 'College (undergraduate)' },
-      { value: 'graduate', label: 'Graduate / Professional' },
-    ].map(o => `<option value="${o.value}"${o.value === (detected.suggestedLevel || '') ? ' selected' : ''}>${o.label}</option>`).join('');
+      { value: 'elementary', label: 'Elementary (grades 3-5)', i18n: '81c542659470d711' },
+      { value: 'middle-school', label: 'Middle School (grades 6-8)', i18n: '60497a5dde764449' },
+      { value: 'high-school', label: 'High School (grades 9-12)', i18n: '64baba6677bf740f' },
+      { value: 'college', label: 'College (undergraduate)', i18n: '32f3644b25f831b9' },
+      { value: 'graduate', label: 'Graduate / Professional', i18n: 'e4350f7a95b355f6' },
+    ].map(o => `<option value="${o.value}" data-i18n="${o.i18n}"${o.value === (detected.suggestedLevel || '') ? ' selected' : ''}>${o.label}</option>`).join('');
 
     const fkDisplay = detected.fkGrade != null ? detected.fkGrade.toFixed(1) : '—';
     const freDisplay = detected.fleschReadingEase != null ? detected.fleschReadingEase.toFixed(1) : '—';
@@ -211,14 +213,14 @@ const Results = (() => {
     const hasSuggestion = suggestedGenreLabel || suggestedLevelLabel;
     const suggestionHtml = hasSuggestion ? `
       <div class="modal-suggest">
-        <div class="modal-suggest-header">Based on my reading, I suggest:</div>
+        <div class="modal-suggest-header"><span data-i18n="3d8423b00b2b7ead">Based on my reading, I suggest:</span></div>
         <div class="modal-suggest-row">
           <div class="modal-suggest-item">
-            <span class="modal-suggest-label">Genre</span>
+            <span class="modal-suggest-label"><span data-i18n="6da795a8664f37f6">Genre</span></span>
             <span class="modal-suggest-value">${escapeHtml(suggestedGenreLabel)}${suggestedGenreCat ? ` <span class="modal-suggest-cat">${escapeHtml(suggestedGenreCat)}</span>` : ''}</span>
           </div>
           <div class="modal-suggest-item">
-            <span class="modal-suggest-label">Reading Level</span>
+            <span class="modal-suggest-label"><span data-i18n="fda6294684f67cb2">Reading Level</span></span>
             <span class="modal-suggest-value">${escapeHtml(suggestedLevelLabel)}</span>
           </div>
         </div>
@@ -236,23 +238,23 @@ const Results = (() => {
     overlay.innerHTML = `
       <div class="summary-modal">
         <div class="summary-modal-header">
-          <div class="summary-modal-title">Configure Summary</div>
+          <div class="summary-modal-title"><span data-i18n="7e6ef166d84ccb62">Configure Summary</span></div>
           <button class="summary-modal-close" id="summary-modal-close">&times;</button>
         </div>
         ${suggestionHtml}
         <div class="summary-modal-body">
           <div class="modal-field">
-            <label class="modal-field-label" for="summary-genre">Genre</label>
+            <label class="modal-field-label" for="summary-genre" data-i18n="6da795a8664f37f6">Genre</label>
             <select id="summary-genre" class="detect-select">${genreOptions}</select>
           </div>
           <div class="modal-field">
-            <label class="modal-field-label" for="summary-level">Intended Reading Level</label>
+            <label class="modal-field-label" for="summary-level" data-i18n="c3463bf330757667">Intended Reading Level</label>
             <select id="summary-level" class="detect-select">${levelOptions}</select>
           </div>
         </div>
         <div class="summary-modal-footer">
-          <button class="summary-modal-cancel" id="summary-modal-cancel">Cancel</button>
-          <button class="run-btn summary-modal-generate" id="generate-summary-btn">Generate Summary</button>
+          <button class="summary-modal-cancel" id="summary-modal-cancel" data-i18n="19766ed6ccb2f4a3">Cancel</button>
+          <button class="run-btn summary-modal-generate" id="generate-summary-btn" data-i18n="2e77dacd17f00b96">Generate Summary</button>
         </div>
       </div>`;
 
@@ -292,16 +294,16 @@ const Results = (() => {
 
   function buildGenreOptions(selectedId) {
     if (window._genreCache) return buildGenreOptHtml(window._genreCache, selectedId);
-    return `<option value="">Select genre...</option>` +
+    return `<option value="" data-i18n="7fc67431c61ddafc">Select genre...</option>` +
       (selectedId ? `<option value="${selectedId}" selected>${selectedId.replace(/-/g, ' ')}</option>` : '');
   }
 
   function buildGenreOptHtml(categories, selectedId) {
-    let html = '<option value="">Select genre...</option>';
+    let html = '<option value="" data-i18n="7fc67431c61ddafc">Select genre...</option>';
     (categories || []).forEach(cat => {
-      html += `<optgroup label="${escapeHtml(cat.category)}">`;
+      html += `<optgroup label="${escapeHtml(cat.category)}"${cat.i18n ? ` data-i18n-label="${cat.i18n}"` : ''}>`;
       cat.genres.forEach(g => {
-        html += `<option value="${g.id}"${g.id === selectedId ? ' selected' : ''}>${escapeHtml(g.name)}</option>`;
+        html += `<option value="${g.id}"${g.id === selectedId ? ' selected' : ''}${g.i18n ? ` data-i18n="${g.i18n}"` : ''}>${escapeHtml(g.name)}</option>`;
       });
       html += '</optgroup>';
     });
@@ -313,10 +315,10 @@ const Results = (() => {
 
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary</div>
-        <div class="cp-layer-tag">generating...</div>
+        <div class="cp-layer-name"><span data-i18n="fe7750bb0e61b4f1">Analysis Summary</span></div>
+        <div class="cp-layer-tag"><span data-i18n="e18012c3a0fad257">generating...</span></div>
       </div>
-      <div class="summary-loading">Generating genre-aware dimensional summary and FAQs...</div>`;
+      <div class="summary-loading"><span data-i18n="f04e04b4fedd3c8c">Generating genre-aware dimensional summary and FAQs...</span></div>`;
 
     try {
       const resp = await Auth.apiFetch('/api/help/summary', {
@@ -342,22 +344,22 @@ const Results = (() => {
     } catch (err) {
       cp.innerHTML = `
         <div class="cp-header">
-          <div class="cp-layer-name">Analysis Summary</div>
-          <div class="cp-layer-tag">error</div>
+          <div class="cp-layer-name"><span data-i18n="fe7750bb0e61b4f1">Analysis Summary</span></div>
+          <div class="cp-layer-tag"><span data-i18n="ca00fccfb408989e">error</span></div>
         </div>
-        <div class="summary-error">Failed to generate summary. Please try again.</div>`;
+        <div class="summary-error"><span data-i18n="39fce99720b23aa9">Failed to generate summary. Please try again.</span></div>`;
     }
   }
 
   function renderSummaryContent(cp, data) {
     // Build dimension cards from the layers
     const dimensions = [
-      { label: 'Surface & Vocabulary', layers: ['L0', 'L1'], color: '#0D9488' },
-      { label: 'Syntactic Complexity', layers: ['L2'], color: '#2563EB' },
-      { label: 'Cohesion & Coherence', layers: ['L3', 'L4', 'L5'], color: '#7C3AED' },
-      { label: 'Situation Model', layers: ['L6'], color: '#D97706' },
-      { label: 'Rhetoric & Argumentation', layers: ['L7', 'L8'], color: '#DC2626' },
-      { label: 'Stance & Tone', layers: ['L9', 'L10'], color: '#059669' },
+      { label: 'Surface & Vocabulary', layers: ['L0', 'L1'], color: '#0D9488', i18n: '3348f1b68914f06a' },
+      { label: 'Syntactic Complexity', layers: ['L2'], color: '#2563EB', i18n: '97d42b1dc4ff9563' },
+      { label: 'Cohesion & Coherence', layers: ['L3', 'L4', 'L5'], color: '#7C3AED', i18n: 'c894c6e6db8bd0c5' },
+      { label: 'Situation Model', layers: ['L6'], color: '#D97706', i18n: '5357ff59d718be10' },
+      { label: 'Rhetoric & Argumentation', layers: ['L7', 'L8'], color: '#DC2626', i18n: '162a3ca6d6de2dce' },
+      { label: 'Stance & Tone', layers: ['L9', 'L10'], color: '#059669', i18n: '0b5ce2076b2c3f87' },
     ];
 
     const dimCardsHtml = dimensions.map(dim => {
@@ -371,7 +373,7 @@ const Results = (() => {
       return `
         <div class="dim-card" style="border-left-color:${dim.color}">
           <div class="dim-card-header">
-            <span class="dim-card-title">${dim.label}</span>
+            <span class="dim-card-title"><span data-i18n="${dim.i18n}">${dim.label}</span></span>
             ${avgScore !== null ? `<span class="dim-card-score ${scoreCls(avgScore)}">${avgScore}</span>` : ''}
           </div>
           <div class="dim-layer-badges">${layerBadges}</div>
@@ -403,17 +405,17 @@ const Results = (() => {
 
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">Analysis Summary ${genreBadge}${levelBadge}</div>
+        <div class="cp-layer-name"><span data-i18n="fe7750bb0e61b4f1">Analysis Summary</span> ${genreBadge}${levelBadge}</div>
         <div class="cp-layer-tag">overall: <strong>${analysisData.overallScore}/100</strong></div>
       </div>
       <div class="summary-dimensions">${dimCardsHtml}</div>
       <div class="summary-section">
-        <div class="summary-section-title">Dimensional Summary</div>
+        <div class="summary-section-title"><span data-i18n="a835518aa5844ab4">Dimensional Summary</span></div>
         <div class="summary-text">${summaryHtml}</div>
       </div>
       <div class="summary-section">
-        <div class="summary-section-title">Frequently Asked Questions</div>
-        <div class="faq-list">${faqsHtml || '<div class="summary-text">No FAQs generated.</div>'}</div>
+        <div class="summary-section-title"><span data-i18n="a3d458e1bd1eda06">Frequently Asked Questions</span></div>
+        <div class="faq-list">${faqsHtml || '<div class="summary-text"><span data-i18n="9bf01da8703a4d29">No FAQs generated.</span></div>'}</div>
       </div>`;
   }
 
@@ -425,22 +427,22 @@ const Results = (() => {
     const noteHtml = dist.note ? `<div class="mc-dist-note">${escapeHtml(dist.note)}</div>` : '';
     return `
       <button class="mc-dist-toggle" onclick="this.classList.toggle('open');document.getElementById('${uid}').classList.toggle('open')">
-        <span class="chevron">&#9654;</span> Distribution (n=${dist.n})
+        <span class="chevron">&#9654;</span> <span data-i18n="72a23e549d099bbd">Distribution</span> (n=${dist.n})
       </button>
       <div class="mc-dist-panel" id="${uid}">
         ${noteHtml}
         <div class="mc-dist-grid">
           <div class="mc-dist-cell"><span class="mc-dist-cell-label">n</span><span class="mc-dist-cell-val">${dist.n}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Mean</span><span class="mc-dist-cell-val">${dist.mean}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">SD</span><span class="mc-dist-cell-val">${dist.sd}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Min</span><span class="mc-dist-cell-val">${dist.min}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Max</span><span class="mc-dist-cell-val">${dist.max}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="727a7d114f4d518e">Mean</span></span><span class="mc-dist-cell-val">${dist.mean}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="495496f0156b1a6c">SD</span></span><span class="mc-dist-cell-val">${dist.sd}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="dea79332147ffe1f">Min</span></span><span class="mc-dist-cell-val">${dist.min}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="a1a5936d3b0f8a69">Max</span></span><span class="mc-dist-cell-val">${dist.max}</span></div>
         </div>
         <div class="mc-dist-row2">
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Median</span><span class="mc-dist-cell-val">${dist.median}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Q1</span><span class="mc-dist-cell-val">${dist.q1}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Q3</span><span class="mc-dist-cell-val">${dist.q3}</span></div>
-          <div class="mc-dist-cell"><span class="mc-dist-cell-label">Skew</span><span class="mc-dist-cell-val">${dist.skewness}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="daab7c435134742a">Median</span></span><span class="mc-dist-cell-val">${dist.median}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="32d833f348ce377c">Q1</span></span><span class="mc-dist-cell-val">${dist.q1}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="9fc58f1abf0d4f13">Q3</span></span><span class="mc-dist-cell-val">${dist.q3}</span></div>
+          <div class="mc-dist-cell"><span class="mc-dist-cell-label"><span data-i18n="06598d480e8203e1">Skew</span></span><span class="mc-dist-cell-val">${dist.skewness}</span></div>
         </div>
       </div>`;
   }
@@ -452,7 +454,8 @@ const Results = (() => {
     if (!l) return;
 
     const cp = document.getElementById('center-panel');
-    const technicalBasis = LAYER_BASIS[l.layerId] || '';
+    const basisEntry = LAYER_BASIS[l.layerId];
+    const technicalBasis = basisEntry ? basisEntry.text : '';
     const hasLayerSummary = l.layerSummary && l.layerSummary.length > 0;
 
     // Filter displayable metrics (show all for researchers)
@@ -476,7 +479,7 @@ const Results = (() => {
         ).join('');
         evidenceHtml = `
           <button class="mc-evidence-toggle" onclick="this.classList.toggle('open');document.getElementById('${uid}').classList.toggle('open')">
-            <span class="chevron">&#9654;</span> Show evidence (${m.evidence.length})
+            <span class="chevron">&#9654;</span> <span data-i18n="f5bb18ac38942c72">Show evidence</span> (${m.evidence.length})
           </button>
           <div class="mc-evidence-list" id="${uid}">${quotes}</div>`;
       }
@@ -487,8 +490,8 @@ const Results = (() => {
       return `<div class="metric-card">
         <div class="mc-id">${id}<button class="help-btn" data-help-id="${id}" title="What is ${m.label}?">?</button>${verdictHtml}</div>
         <div class="mc-val">${m.value}<span style="font-size:11px;color:var(--text-tertiary);font-weight:400"> ${m.unit}</span></div>
-        <div class="mc-label">${m.label}</div>
-        ${hasPlain ? `<div class="mc-plain">${escapeHtml(m.plainDescription)}</div>` : ''}
+        <div class="mc-label" data-i18n-dynamic>${m.label}</div>
+        ${hasPlain ? `<div class="mc-plain" data-i18n-dynamic>${escapeHtml(m.plainDescription)}</div>` : ''}
         <div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${color}"></div></div>
         ${distHtml}
         ${evidenceHtml}
@@ -498,16 +501,16 @@ const Results = (() => {
     // Layer summary (plain language) + collapsible technical basis
     const summaryHtml = hasLayerSummary
       ? `<div class="cp-summary">${escapeHtml(l.layerSummary)}</div>`
-      : `<div class="cp-summary" id="cp-summary-placeholder" style="color:var(--text-tertiary);font-style:italic">Generating plain-language summary…</div>`;
+      : `<div class="cp-summary" id="cp-summary-placeholder" style="color:var(--text-tertiary);font-style:italic"><span data-i18n="5e41541c1bd67cef">Generating plain-language summary…</span></div>`;
 
     const basisHtml = technicalBasis
-      ? `<button class="cp-basis-toggle" onclick="document.getElementById('tech-basis').classList.toggle('open');this.textContent=document.getElementById('tech-basis').classList.contains('open')?'Hide technical details ▴':'Show technical details ▾'">Show technical details ▾</button>
-         <div class="cp-basis-technical" id="tech-basis">${escapeHtml(technicalBasis)}</div>`
+      ? `<button class="cp-basis-toggle" onclick="document.getElementById('tech-basis').classList.toggle('open');this.textContent=document.getElementById('tech-basis').classList.contains('open')?'Hide technical details ▴':'Show technical details ▾'"><span data-i18n="f8b2dc749d1c5cb3">Show technical details ▾</span></button>
+         <div class="cp-basis-technical" id="tech-basis"><span data-i18n="${basisEntry.i18n}">${escapeHtml(technicalBasis)}</span></div>`
       : '';
 
     cp.innerHTML = `
       <div class="cp-header">
-        <div class="cp-layer-name">${l.layerId} — ${l.layerName}</div>
+        <div class="cp-layer-name">${l.layerId} — <span data-i18n-dynamic>${l.layerName}</span></div>
         <div class="cp-layer-tag">score: <strong>${l.score}/100</strong></div>
       </div>
       ${summaryHtml}
@@ -515,8 +518,8 @@ const Results = (() => {
       <div class="metrics-grid">${metricsHtml}</div>
       <div class="chart-wrap"><canvas id="layer-chart"></canvas></div>
       <div class="interp-box">
-        <div class="interp-label">Interpretation</div>
-        <div class="interp-text" id="interp-text">${hasLayerSummary ? escapeHtml(l.layerSummary) : 'Generating interpretation…'}</div>
+        <div class="interp-label"><span data-i18n="d5da114b5fac7b65">Interpretation</span></div>
+        <div class="interp-text" id="interp-text">${hasLayerSummary ? escapeHtml(l.layerSummary) : '<span data-i18n="2fa874c796dde032">Generating interpretation…</span>'}</div>
       </div>`;
 
     // Bind help buttons on metric cards
@@ -613,22 +616,23 @@ const Results = (() => {
     const readerCard = document.getElementById('reader-profile-card');
     if (rp) {
       readerCard.innerHTML = `
-        <div class="reader-row"><span class="reader-label">Vocab level</span><span class="reader-val" style="color:var(--teal)">${rp.vocabLevel}</span></div>
-        <div class="reader-row"><span class="reader-label">Syntax fluency</span><span class="reader-val">${rp.syntaxFluency}</span></div>
-        <div class="reader-row"><span class="reader-label">Domain expertise</span><span class="reader-val">${rp.domainExpertise}</span></div>
-        <div class="reader-row"><span class="reader-label">ZPD proximity</span><span class="reader-val" style="color:${rp.zpdProximity > 0.5 ? '#059669' : 'var(--amber)'}">${rp.zpdProximity} ${rp.zpdProximity > 0.5 ? '✓' : ''}</span></div>
-        <div class="reader-row"><span class="reader-label">Difficulty z-score</span><span class="reader-val">${rp.difficultyZScore > 0 ? '+' : ''}${rp.difficultyZScore}</span></div>
-        <div class="reader-row"><span class="reader-label">Scaffold type</span><span class="reader-val" style="color:var(--amber)">${rp.scaffoldType}</span></div>`;
+        <div class="reader-row"><span class="reader-label"><span data-i18n="1d8fc7f827a94c7f">Vocab level</span></span><span class="reader-val" style="color:var(--teal)">${rp.vocabLevel}</span></div>
+        <div class="reader-row"><span class="reader-label"><span data-i18n="00a0f0aaee5fe9a9">Syntax fluency</span></span><span class="reader-val">${rp.syntaxFluency}</span></div>
+        <div class="reader-row"><span class="reader-label"><span data-i18n="0e92a373ef5bda1b">Domain expertise</span></span><span class="reader-val">${rp.domainExpertise}</span></div>
+        <div class="reader-row"><span class="reader-label"><span data-i18n="77307e05be07173f">ZPD proximity</span></span><span class="reader-val" style="color:${rp.zpdProximity > 0.5 ? '#059669' : 'var(--amber)'}">${rp.zpdProximity} ${rp.zpdProximity > 0.5 ? '✓' : ''}</span></div>
+        <div class="reader-row"><span class="reader-label"><span data-i18n="6a47ca863a47bc4a">Difficulty z-score</span></span><span class="reader-val">${rp.difficultyZScore > 0 ? '+' : ''}${rp.difficultyZScore}</span></div>
+        <div class="reader-row"><span class="reader-label"><span data-i18n="5a8a7f792a2b5e6d">Scaffold type</span></span><span class="reader-val" style="color:var(--amber)">${rp.scaffoldType}</span></div>`;
     } else {
-      readerCard.innerHTML = '<div class="reader-row"><span class="reader-label">L11 not enabled</span></div>';
+      readerCard.innerHTML = '<div class="reader-row"><span class="reader-label"><span data-i18n="25cb8e76f21c98c6">L11 not enabled</span></span></div>';
     }
 
     const fbBox = document.getElementById('feedback-items');
     const feedback = analysisData.feedback || [];
     fbBox.innerHTML = feedback.map(f => `
       <div class="fb-item"><div class="fb-dot"></div><div>${f}</div></div>
-    `).join('') || '<div class="fb-item"><div class="fb-dot"></div><div>No feedback generated.</div></div>';
-    document.getElementById('feedback-count').textContent = `AI Tutor · ${feedback.length} points`;
+    `).join('') || '<div class="fb-item"><div class="fb-dot"></div><div><span data-i18n="9724127893ee1b90">No feedback generated.</span></div></div>';
+    const feedbackCountEl = document.getElementById('feedback-count');
+    feedbackCountEl.innerHTML = `<span data-i18n="64da958601b1300b">AI Tutor</span> · ${feedback.length} points`;
   }
 
   return { show };

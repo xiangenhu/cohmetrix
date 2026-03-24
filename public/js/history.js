@@ -26,7 +26,7 @@ const History = (() => {
   async function loadResults() {
     const body = document.getElementById('history-body');
     const badge = document.getElementById('history-badge');
-    body.innerHTML = '<div class="history-loading">Loading past analyses…</div>';
+    body.innerHTML = '<div class="history-loading" data-i18n="fdcb09536cf6ca9c">Loading past analyses…</div>';
 
     try {
       const resp = await Auth.apiFetch('/api/results?full=true');
@@ -37,7 +37,7 @@ const History = (() => {
       badge.textContent = results.length;
       renderList();
     } catch (err) {
-      body.innerHTML = '<div class="history-empty">Failed to load results</div>';
+      body.innerHTML = '<div class="history-empty" data-i18n="713653ea47be33cc">Failed to load results</div>';
       console.error('History load error:', err);
     }
   }
@@ -52,12 +52,12 @@ const History = (() => {
 
     const toolbar = `
       <div class="history-toolbar">
-        <span class="history-sort-label">Recent analyses</span>
-        <button class="history-refresh-btn" id="history-refresh-btn">&#8635; Refresh</button>
+        <span class="history-sort-label" data-i18n="8ad6d2f4cef0bd50">Recent analyses</span>
+        <button class="history-refresh-btn" id="history-refresh-btn"><span>&#8635;</span> <span data-i18n="0e91610117029a62">Refresh</span></button>
       </div>`;
 
     if (results.length === 0) {
-      body.innerHTML = toolbar + '<div class="history-empty">No analyses yet. Run an analysis to see results here.</div>';
+      body.innerHTML = toolbar + '<div class="history-empty" data-i18n="3aaa26922f896609">No analyses yet. Run an analysis to see results here.</div>';
       bindToolbar();
       return;
     }

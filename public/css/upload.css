@@ -1,12 +1,90 @@
-/* ═══ Upload Screen ═══ */
+/* ═══ Home / Workspace Screen ═══ */
 #s-upload {
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  gap: 20px;
+  padding: 0;
+  gap: 0;
+  overflow-y: auto;
 }
 
+.home-workspace {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Hero header */
+.home-hero {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.home-title {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.home-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Quick-start cards */
+.home-quickstart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.home-qs-card {
+  padding: 18px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.home-qs-card:hover {
+  border-color: var(--teal);
+  box-shadow: 0 4px 16px rgba(13,148,136,0.08);
+  transform: translateY(-2px);
+}
+
+.home-qs-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.home-qs-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.home-qs-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+/* Projects section */
+.home-projects-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ═══ Upload Card (used in project detail) ═══ */
 .upload-card {
   width: 100%;
   max-width: 640px;
@@ -248,4 +326,11 @@
   margin-left: auto;
   color: var(--text-tertiary);
   font-size: 11px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .home-quickstart {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

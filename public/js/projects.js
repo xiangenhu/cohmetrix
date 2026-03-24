@@ -55,8 +55,8 @@ const Projects = (() => {
       </div>
     `).join('') + `
       <div class="proj-create-row">
-        <input class="proj-create-input" id="proj-create-input" placeholder="New project name…">
-        <button class="proj-create-btn" id="proj-create-btn">Create</button>
+        <input class="proj-create-input" id="proj-create-input" placeholder="New project name…" data-i18n-placeholder="6c6a959bab27ef7a">
+        <button class="proj-create-btn" id="proj-create-btn" data-i18n="4759498ac2a719c6">Create</button>
       </div>`;
 
     body.querySelectorAll('.proj-item').forEach(el => {
@@ -147,7 +147,7 @@ const Projects = (() => {
 
   function metaStatus(meta) {
     const mc = countMetaFields(meta);
-    if (mc.filled === 0) return { label: 'No metadata', cls: 'status-none', icon: '\u25cb' };
+    if (mc.filled === 0) return { label: '<span data-i18n="ec4f5d68e5c68d2e">No metadata</span>', cls: 'status-none', icon: '\u25cb' };
     if (mc.filled < 4) return { label: `${mc.filled}/${mc.total}`, cls: 'status-partial', icon: '\u25d4' };
     if (mc.filled < 8) return { label: `${mc.filled}/${mc.total}`, cls: 'status-good', icon: '\u25d4' };
     return { label: `${mc.filled}/${mc.total}`, cls: 'status-ready', icon: '\u25cf' };
@@ -157,8 +157,8 @@ const Projects = (() => {
     const cfg = currentProject?.config || {};
     const has = (v) => v && v.length > 0;
     const layers = (cfg.enabledLayers || []).length;
-    if (layers === 0) return { ready: false, label: 'No layers selected' };
-    return { ready: true, label: `${layers} layers` + (has(cfg.genre) ? ', genre set' : '') + (has(cfg.promptText) ? ', prompt set' : '') };
+    if (layers === 0) return { ready: false, label: '<span data-i18n="f92519230b09a0d8">No layers selected</span>' };
+    return { ready: true, label: `${layers} <span data-i18n="3d7db37d08f9140f">layers</span>` + (has(cfg.genre) ? ', <span data-i18n="ea33992457c4a2c1">genre set</span>' : '') + (has(cfg.promptText) ? ', <span data-i18n="b9ff9ed1c6cb3d29">prompt set</span>' : '') };
   }
 
   function renderStep0() {
@@ -168,16 +168,16 @@ const Projects = (() => {
     const canAnalyze = readyFiles.length > 0 && cfgSt.ready;
 
     s.innerHTML = `
-      ${header('&larr; Projects', currentProject.name)}
+      ${header('&larr; <span data-i18n="193a6d1722fc259d">Projects</span>', currentProject.name)}
       <div class="proj-step-body">
 
         <!-- ═══ FILES TABLE with selection ═══ -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <div style="font-size:15px;font-weight:600;color:var(--text-primary)">Files</div>
-          <span style="font-size:11px;color:var(--text-tertiary)">${currentFiles.length} total, ${readyFiles.length} ready</span>
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary)" data-i18n="abc7e9892806b047">Files</div>
+          <span style="font-size:11px;color:var(--text-tertiary)">${currentFiles.length} <span data-i18n="e8353a02697faf99">total,</span> ${readyFiles.length} <span data-i18n="d72b47966b9e026b">ready</span></span>
           <div style="margin-left:auto;display:flex;gap:6px">
-            <button class="proj-upload-btn" id="proj-upload-trigger">+ Upload</button>
-            <button class="proj-upload-btn" id="proj-drive-trigger" style="background:var(--bg-primary);color:var(--text-secondary);border:0.5px solid var(--border-secondary)">&#9729; Drive</button>
+            <button class="proj-upload-btn" id="proj-upload-trigger"><span data-i18n="51d77b5cf7a49bdc">+ Upload</span></button>
+            <button class="proj-upload-btn" id="proj-drive-trigger" style="background:var(--bg-primary);color:var(--text-secondary);border:0.5px solid var(--border-secondary)">&#9729; <span data-i18n="6312b4b9baf12770">Drive</span></button>
           </div>
           <input type="file" id="proj-file-input" accept=".txt,.docx,.pdf" multiple hidden>
         </div>
@@ -185,18 +185,18 @@ const Projects = (() => {
         ${currentFiles.length > 0 ? `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <label style="font-size:11px;color:var(--text-secondary);cursor:pointer">
-            <input type="checkbox" id="proj-sel-all" ${readyFiles.length > 0 && readyFiles.length === currentFiles.length ? '' : ''}> Select all ready
+            <input type="checkbox" id="proj-sel-all" ${readyFiles.length > 0 && readyFiles.length === currentFiles.length ? '' : ''}> <span data-i18n="cdaf59212fc41a98">Select all ready</span>
           </label>
-          <span style="font-size:11px;color:var(--text-tertiary)" id="proj-sel-count">0 selected</span>
+          <span style="font-size:11px;color:var(--text-tertiary)" id="proj-sel-count">0 <span data-i18n="d7cbbb688b2e506c">selected</span></span>
         </div>
         <table class="proj-file-table">
           <thead>
             <tr>
               <th style="width:28px"></th>
-              <th>File</th>
-              <th>Type</th>
-              <th>Size</th>
-              <th>Metadata</th>
+              <th data-i18n="50009ce1da4d15e1">File</th>
+              <th data-i18n="baaddf70fb5d432b">Type</th>
+              <th data-i18n="1af851907331c0ed">Size</th>
+              <th data-i18n="9eddf573cb509f1f">Metadata</th>
               <th></th>
             </tr>
           </thead>
@@ -206,7 +206,7 @@ const Projects = (() => {
               const isReady = mc.filled >= 4;
               const ms = metaStatus(f.meta);
               return `<tr class="proj-file-table-row${!isReady ? ' proj-file-row-disabled' : ''}" data-editname="${esc(f.name)}">
-                <td><input type="checkbox" class="proj-file-check" data-name="${esc(f.name)}" ${!isReady ? 'disabled title="Complete metadata first (min 4 fields)"' : ''}></td>
+                <td><input type="checkbox" class="proj-file-check" data-name="${esc(f.name)}" ${!isReady ? 'disabled title="Complete metadata first (min 4 fields)" data-i18n-title="408fb158f6c52c70"' : ''}></td>
                 <td class="proj-ft-name">${esc(f.name)}</td>
                 <td class="proj-ft-type">${fileExt(f.name)}</td>
                 <td class="proj-ft-size">${f.sizeLabel || ''}</td>
@@ -216,7 +216,7 @@ const Projects = (() => {
             }).join('')}
           </tbody>
         </table>
-        ` : '<div class="proj-empty">No files yet. Upload documents or import from Google Drive.</div>'}
+        ` : '<div class="proj-empty" data-i18n="8507a9389fcfc601">No files yet. Upload documents or import from Google Drive.</div>'}
 
         <!-- File metadata editor (hidden) -->
         <div id="proj-file-meta-panel" style="display:none"></div>
@@ -225,13 +225,13 @@ const Projects = (() => {
         <div id="proj-drive-panel" style="display:none">
           <div class="upload-card" style="padding:16px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <div class="field-label" style="margin:0">Import from Google Drive</div>
+              <div class="field-label" style="margin:0" data-i18n="8a692a48f71e6e9c">Import from Google Drive</div>
               <button id="proj-drive-close" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:16px">&times;</button>
             </div>
-            <div id="proj-drive-instructions" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Loading…</div>
+            <div id="proj-drive-instructions" style="font-size:12px;color:var(--text-secondary);margin-bottom:10px" data-i18n="ba3bbbe10d8bef66">Loading…</div>
             <div style="display:flex;gap:8px">
               <input type="text" id="proj-drive-url" placeholder="https://drive.google.com/drive/folders/..." style="flex:1;padding:8px 12px;border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md);font-size:12px;font-family:var(--font-sans);background:var(--bg-secondary);color:var(--text-primary)">
-              <button class="proj-upload-btn" id="proj-drive-list-btn">List files</button>
+              <button class="proj-upload-btn" id="proj-drive-list-btn" data-i18n="e700817c9d5ece14">List files</button>
             </div>
             <div id="proj-drive-files" style="margin-top:12px"></div>
           </div>
@@ -239,9 +239,9 @@ const Projects = (() => {
 
         <!-- ═══ CONFIGURATION ═══ -->
         <div style="display:flex;align-items:center;gap:8px;margin-top:20px;margin-bottom:8px">
-          <div style="font-size:15px;font-weight:600;color:var(--text-primary)">Configuration</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary)" data-i18n="b332c3492d5eb10a">Configuration</div>
           <span style="font-size:11px;color:${cfgSt.ready ? 'var(--teal)' : 'var(--coral)'}">${cfgSt.label}</span>
-          <button class="nav-btn" id="proj-edit-config" style="margin-left:auto;font-size:11px">Edit</button>
+          <button class="nav-btn" id="proj-edit-config" style="margin-left:auto;font-size:11px" data-i18n="464c4ffd019e1e96">Edit</button>
         </div>
         <div class="proj-config-preview">
           ${renderConfigPreview()}
@@ -250,11 +250,11 @@ const Projects = (() => {
         <!-- ═══ ACTIONS ═══ -->
         <div style="display:flex;gap:10px;margin-top:16px;align-items:center">
           <button class="run-btn" id="proj-analyze-selected" disabled style="padding:10px 28px;font-size:13px;opacity:0.5">
-            &#9654; Analyze Selected
+            &#9654; <span data-i18n="a2f94cd82e1fc10f">Analyze Selected</span>
           </button>
           ${currentResults.length > 0 ? `
           <button class="nav-btn" id="proj-go-results" style="font-size:12px">
-            &#128202; Past Results (${currentResults.length})
+            &#128202; <span data-i18n="04f2e6324046f8f1">Past Results</span> (${currentResults.length})
           </button>` : ''}
         </div>
       </div>`;
@@ -275,11 +275,11 @@ const Projects = (() => {
       const allChecks = s.querySelectorAll('.proj-file-check:not(:disabled)');
       const checkedChecks = s.querySelectorAll('.proj-file-check:checked');
       const count = checkedChecks.length;
-      if (selCountEl) selCountEl.textContent = `${count} selected`;
+      if (selCountEl) selCountEl.innerHTML = `${count} <span data-i18n="d7cbbb688b2e506c">selected</span>`;
       if (analyzeBtn) {
         analyzeBtn.disabled = count === 0 || !cfgSt.ready;
         analyzeBtn.style.opacity = (count === 0 || !cfgSt.ready) ? '0.5' : '1';
-        analyzeBtn.textContent = count > 0 ? `\u25b6 Analyze ${count} file${count>1?'s':''}` : '\u25b6 Analyze Selected';
+        analyzeBtn.innerHTML = count > 0 ? `\u25b6 <span data-i18n="9ad615491016a591">Analyze</span> ${count} file${count>1?'s':''}` : '\u25b6 <span data-i18n="a2f94cd82e1fc10f">Analyze Selected</span>';
       }
       if (selAllCb) {
         selAllCb.checked = allChecks.length > 0 && count === allChecks.length;
@@ -327,10 +327,10 @@ const Projects = (() => {
     const cfg = currentProject?.config || {};
     const layers = cfg.enabledLayers || [];
     return `
-      <div class="proj-cfg-preview-row"><span>Layers</span><strong>${layers.length > 0 ? layers.join(', ') : '<span style="color:var(--coral)">None selected</span>'}</strong></div>
-      ${cfg.genre ? `<div class="proj-cfg-preview-row"><span>Genre</span><strong>${cfg.genre}</strong></div>` : ''}
-      ${cfg.promptText ? `<div class="proj-cfg-preview-row"><span>Prompt</span><strong>${esc(cfg.promptText).substring(0, 80)}${cfg.promptText.length > 80 ? '…' : ''}</strong></div>` : ''}
-      ${cfg.learnerId ? `<div class="proj-cfg-preview-row"><span>Learner ID</span><strong>${esc(cfg.learnerId)}</strong></div>` : ''}
+      <div class="proj-cfg-preview-row"><span data-i18n="0bcd66e677f4ee72">Layers</span><strong>${layers.length > 0 ? layers.join(', ') : '<span style="color:var(--coral)" data-i18n="557832355c8534ab">None selected</span>'}</strong></div>
+      ${cfg.genre ? `<div class="proj-cfg-preview-row"><span data-i18n="6da795a8664f37f6">Genre</span><strong>${cfg.genre}</strong></div>` : ''}
+      ${cfg.promptText ? `<div class="proj-cfg-preview-row"><span data-i18n="5c39123805ffb4e2">Prompt</span><strong>${esc(cfg.promptText).substring(0, 80)}${cfg.promptText.length > 80 ? '…' : ''}</strong></div>` : ''}
+      ${cfg.learnerId ? `<div class="proj-cfg-preview-row"><span data-i18n="5b32ac8d29a125c8">Learner ID</span><strong>${esc(cfg.learnerId)}</strong></div>` : ''}
     `;
   }
 
@@ -345,31 +345,31 @@ const Projects = (() => {
     const enabled = new Set(cfg.enabledLayers || allLayers.slice(0, 11));
 
     s.innerHTML = `
-      ${header('&larr; Back', 'Edit Configuration')}
+      ${header('&larr; Back', '<span data-i18n="0a397326a036f57a">Edit Configuration</span>')}
       <div class="proj-step-body">
-        <div class="proj-step-label">Project-level settings applied to all files during analysis</div>
+        <div class="proj-step-label" data-i18n="81a9da18293b1f13">Project-level settings applied to all files during analysis</div>
         <div class="proj-config-form">
           <div>
-            <div class="field-label">Analysis layers</div>
+            <div class="field-label" data-i18n="160ae9e27ab03126">Analysis layers</div>
             <div class="options-row" style="flex-wrap:wrap;gap:6px">
               ${allLayers.map(l => `<div class="opt-chip${enabled.has(l)?' on':''}" data-layer="${l}"><div class="opt-dot"></div>${l}</div>`).join('')}
             </div>
           </div>
           <div>
-            <div class="field-label">Default genre <span style="font-weight:400;color:var(--text-tertiary)">(overridden by per-file metadata)</span></div>
-            <select id="proj-cfg-genre" class="proj-input"><option value="">Select genre…</option></select>
+            <div class="field-label"><span data-i18n="7b21cc479361d27c">Default genre</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="9d8ed46998db471f">(overridden by per-file metadata)</span></div>
+            <select id="proj-cfg-genre" class="proj-input"><option value="" data-i18n="285bb526e02fedf1">Select genre…</option></select>
           </div>
           <div>
-            <div class="field-label">Default prompt <span style="font-weight:400;color:var(--text-tertiary)">(overridden by per-file metadata)</span></div>
+            <div class="field-label"><span data-i18n="d304dc136ef83f86">Default prompt</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="9d8ed46998db471f">(overridden by per-file metadata)</span></div>
             <textarea id="proj-cfg-prompt" class="proj-input" style="height:60px;resize:vertical" placeholder="e.g. Discuss the impact of AI on higher education…">${esc(cfg.promptText||'')}</textarea>
           </div>
           <div>
-            <div class="field-label">Learner ID <span style="font-weight:400;color:var(--text-tertiary)">(for L11 reader-adaptive)</span></div>
+            <div class="field-label"><span data-i18n="5b32ac8d29a125c8">Learner ID</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="d8cb4271c3930e15">(for L11 reader-adaptive)</span></div>
             <input type="text" id="proj-cfg-learner" class="proj-input" value="${esc(cfg.learnerId||'')}" placeholder="student_4821">
           </div>
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-            <button class="nav-btn" id="proj-cfg-cancel">Cancel</button>
-            <button class="proj-upload-btn" id="proj-cfg-save" style="padding:8px 24px">Save configuration</button>
+            <button class="nav-btn" id="proj-cfg-cancel" data-i18n="19766ed6ccb2f4a3">Cancel</button>
+            <button class="proj-upload-btn" id="proj-cfg-save" style="padding:8px 24px" data-i18n="b2b158f2ea6f2698">Save configuration</button>
           </div>
         </div>
       </div>`;
@@ -380,9 +380,11 @@ const Projects = (() => {
       (data.categories||[]).forEach(cat => {
         const grp = document.createElement('optgroup');
         grp.label = cat.category;
+        if (cat.i18n) grp.setAttribute('data-i18n-label', cat.i18n);
         cat.genres.forEach(g => {
           const opt = document.createElement('option');
           opt.value = g.id; opt.textContent = g.name;
+          if (g.i18n) opt.setAttribute('data-i18n', g.i18n);
           if (g.id === cfg.genre) opt.selected = true;
           grp.appendChild(opt);
         });
@@ -408,7 +410,7 @@ const Projects = (() => {
         learnerId: (s.querySelector('#proj-cfg-learner')?.value || '').trim(),
       };
       const btn = s.querySelector('#proj-cfg-save');
-      btn.textContent = 'Saving…'; btn.disabled = true;
+      btn.textContent = 'Saving…'; btn.setAttribute('data-i18n', '23e39291d6135814'); btn.disabled = true;
       try {
         await Auth.apiFetch(`/api/projects/${currentProject.id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -416,7 +418,7 @@ const Projects = (() => {
         });
         currentProject.config = newCfg;
         renderStep0();
-      } catch { btn.textContent = 'Save configuration'; btn.disabled = false; }
+      } catch { btn.textContent = 'Save configuration'; btn.setAttribute('data-i18n', 'b2b158f2ea6f2698'); btn.disabled = false; }
     });
   }
 
@@ -426,41 +428,41 @@ const Projects = (() => {
     panel.style.display = '';
 
     const readingLevels = [
-      { value: '', label: 'Not specified' },
-      { value: 'elementary', label: 'Elementary (grades 3-5)' },
-      { value: 'middle-school', label: 'Middle School (grades 6-8)' },
-      { value: 'high-school', label: 'High School (grades 9-12)' },
-      { value: 'college', label: 'College (undergraduate)' },
-      { value: 'graduate', label: 'Graduate / Professional' },
+      { value: '', label: 'Not specified', hash: 'dc12bec5d71f167b' },
+      { value: 'elementary', label: 'Elementary (grades 3-5)', hash: '81c542659470d711' },
+      { value: 'middle-school', label: 'Middle School (grades 6-8)', hash: '60497a5dde764449' },
+      { value: 'high-school', label: 'High School (grades 9-12)', hash: '64baba6677bf740f' },
+      { value: 'college', label: 'College (undergraduate)', hash: '32f3644b25f831b9' },
+      { value: 'graduate', label: 'Graduate / Professional', hash: 'e4350f7a95b355f6' },
     ];
 
     const assignmentTypes = [
-      { value: '', label: 'Not specified' },
-      { value: 'argumentative', label: 'Argumentative essay' },
-      { value: 'expository', label: 'Expository / informational' },
-      { value: 'narrative', label: 'Narrative / personal' },
-      { value: 'analytical', label: 'Analytical / critical' },
-      { value: 'compare-contrast', label: 'Compare & contrast' },
-      { value: 'research-paper', label: 'Research paper' },
-      { value: 'lab-report', label: 'Lab / technical report' },
-      { value: 'reflection', label: 'Reflection / journal' },
-      { value: 'creative', label: 'Creative writing' },
-      { value: 'summary', label: 'Summary / review' },
-      { value: 'other', label: 'Other' },
+      { value: '', label: 'Not specified', hash: 'dc12bec5d71f167b' },
+      { value: 'argumentative', label: 'Argumentative essay', hash: '610a8151589e433f' },
+      { value: 'expository', label: 'Expository / informational', hash: 'ca84a5500b88ca9d' },
+      { value: 'narrative', label: 'Narrative / personal', hash: 'd77602c97be1d90f' },
+      { value: 'analytical', label: 'Analytical / critical', hash: '8cd148ed60b00fdb' },
+      { value: 'compare-contrast', label: 'Compare & contrast', hash: '04aee6d586c94e27' },
+      { value: 'research-paper', label: 'Research paper', hash: 'e6fc3b22955a9628' },
+      { value: 'lab-report', label: 'Lab / technical report', hash: 'd7b46c21b3964d79' },
+      { value: 'reflection', label: 'Reflection / journal', hash: 'a70632a07490736c' },
+      { value: 'creative', label: 'Creative writing', hash: 'f919aefdb9688dca' },
+      { value: 'summary', label: 'Summary / review', hash: '751429f420d43651' },
+      { value: 'other', label: 'Other', hash: 'f97e9da0e3b879f0' },
     ];
 
     const authorLevels = [
-      { value: '', label: 'Not specified' },
-      { value: 'esl-beginner', label: 'ESL — Beginner (A1-A2)' },
-      { value: 'esl-intermediate', label: 'ESL — Intermediate (B1-B2)' },
-      { value: 'esl-advanced', label: 'ESL — Advanced (C1-C2)' },
-      { value: 'native-k5', label: 'Native — Elementary (K-5)' },
-      { value: 'native-middle', label: 'Native — Middle school (6-8)' },
-      { value: 'native-high', label: 'Native — High school (9-12)' },
-      { value: 'college-freshman', label: 'College — Freshman/Sophomore' },
-      { value: 'college-upper', label: 'College — Junior/Senior' },
-      { value: 'graduate', label: 'Graduate student' },
-      { value: 'professional', label: 'Professional / faculty' },
+      { value: '', label: 'Not specified', hash: 'dc12bec5d71f167b' },
+      { value: 'esl-beginner', label: 'ESL — Beginner (A1-A2)', hash: 'c75f9ea8e7cd7864' },
+      { value: 'esl-intermediate', label: 'ESL — Intermediate (B1-B2)', hash: 'f31d53b6d00a32e5' },
+      { value: 'esl-advanced', label: 'ESL — Advanced (C1-C2)', hash: '2a33d49a10cf9e7f' },
+      { value: 'native-k5', label: 'Native — Elementary (K-5)', hash: '4dae73ce56a02d96' },
+      { value: 'native-middle', label: 'Native — Middle school (6-8)', hash: '364cfdf612ea1876' },
+      { value: 'native-high', label: 'Native — High school (9-12)', hash: 'ca904f41e05c8f47' },
+      { value: 'college-freshman', label: 'College — Freshman/Sophomore', hash: 'f40706f2da13368a' },
+      { value: 'college-upper', label: 'College — Junior/Senior', hash: '2953c9946199ccd5' },
+      { value: 'graduate', label: 'Graduate student', hash: 'f352b6f7c6b11b04' },
+      { value: 'professional', label: 'Professional / faculty', hash: '25dd88cf7ecf5711' },
     ];
 
     const metaComplete = countMetaFields(meta);
@@ -471,92 +473,92 @@ const Projects = (() => {
           <div class="field-label" style="margin:0;font-size:14px">File: ${esc(filename)}</div>
           <button id="proj-meta-close" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:16px">&times;</button>
         </div>
-        <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">
+        <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px" data-i18n="c96b478ed71a1ffc">
           The more complete the metadata, the better the analysis. Each field gives the LLM context that improves accuracy and reduces wasted tokens.
         </div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-          <span style="font-size:11px;color:var(--teal);font-weight:500" class="proj-meta-completeness">Completeness: ${metaComplete.filled} / ${metaComplete.total}</span>
+          <span style="font-size:11px;color:var(--teal);font-weight:500" class="proj-meta-completeness"><span data-i18n="76d93f2ec651c176">Completeness:</span> ${metaComplete.filled} / ${metaComplete.total}</span>
           <button class="proj-upload-btn" id="proj-meta-autodetect" style="margin-left:auto;font-size:11px;padding:5px 14px">
-            &#9733; Auto-detect with AI
+            &#9733; <span data-i18n="59f030eb6fd7296d">Auto-detect with AI</span>
           </button>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px">
           <!-- Document context -->
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px">Document context</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px" data-i18n="e2b5bca76104eebf">Document context</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <div class="field-label">Genre</div>
-              <select id="proj-meta-genre" class="proj-input"><option value="">Select genre…</option></select>
+              <div class="field-label" data-i18n="6da795a8664f37f6">Genre</div>
+              <select id="proj-meta-genre" class="proj-input"><option value="" data-i18n="285bb526e02fedf1">Select genre…</option></select>
             </div>
             <div>
-              <div class="field-label">Target reading level</div>
+              <div class="field-label" data-i18n="1e45784760449cf3">Target reading level</div>
               <select id="proj-meta-level" class="proj-input">
-                ${readingLevels.map(l => `<option value="${l.value}"${l.value === (meta.readingLevel||'') ? ' selected' : ''}>${l.label}</option>`).join('')}
+                ${readingLevels.map(l => `<option value="${l.value}"${l.value === (meta.readingLevel||'') ? ' selected' : ''} data-i18n="${l.hash}">${l.label}</option>`).join('')}
               </select>
             </div>
           </div>
 
           <!-- Assignment context -->
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:0.5px solid var(--border-tertiary)">Assignment context</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:0.5px solid var(--border-tertiary)" data-i18n="51e719fc193d0cb4">Assignment context</div>
           <div>
-            <div class="field-label">Assignment type</div>
+            <div class="field-label" data-i18n="c77c8ce006c4dce5">Assignment type</div>
             <select id="proj-meta-assignment" class="proj-input">
-              ${assignmentTypes.map(a => `<option value="${a.value}"${a.value === (meta.assignmentType||'') ? ' selected' : ''}>${a.label}</option>`).join('')}
+              ${assignmentTypes.map(a => `<option value="${a.value}"${a.value === (meta.assignmentType||'') ? ' selected' : ''} data-i18n="${a.hash}">${a.label}</option>`).join('')}
             </select>
           </div>
           <div>
-            <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(the writing task given to the student)</span></div>
+            <div class="field-label"><span data-i18n="6a72b0aeff61b579">Assignment prompt</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="5880ee8adb4e85fa">(the writing task given to the student)</span></div>
             <textarea id="proj-meta-prompt" class="proj-input" style="height:50px;resize:vertical" placeholder="e.g. Compare two theories of language acquisition. Discuss strengths and weaknesses of each, using at least 3 peer-reviewed sources. 1000-1500 words.">${esc(meta.promptText||'')}</textarea>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <div class="field-label">Expected word count</div>
+              <div class="field-label" data-i18n="5d53d7277043ce0d">Expected word count</div>
               <input type="text" id="proj-meta-wordcount" class="proj-input" value="${esc(meta.expectedWordCount||'')}" placeholder="e.g. 800-1000">
             </div>
             <div>
-              <div class="field-label">Course / class</div>
+              <div class="field-label" data-i18n="82d124c089137468">Course / class</div>
               <input type="text" id="proj-meta-course" class="proj-input" value="${esc(meta.course||'')}" placeholder="e.g. ENG 101, Fall 2026">
             </div>
           </div>
           <div>
-            <div class="field-label">Rubric criteria <span style="font-weight:400;color:var(--text-tertiary)">(key grading dimensions)</span></div>
+            <div class="field-label"><span data-i18n="540b8535a0d9b587">Rubric criteria</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="4d445c37e50c8dcb">(key grading dimensions)</span></div>
             <textarea id="proj-meta-rubric" class="proj-input" style="height:50px;resize:vertical" placeholder="e.g. Thesis clarity (20%), Evidence use (25%), Organization (20%), Language (20%), Mechanics (15%)">${esc(meta.rubricNotes||'')}</textarea>
           </div>
 
           <!-- Author context -->
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:0.5px solid var(--border-tertiary)">Author context</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:0.5px solid var(--border-tertiary)" data-i18n="84846c9917914882">Author context</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <div class="field-label">Author / Student ID</div>
+              <div class="field-label" data-i18n="03b79d335575a3b8">Author / Student ID</div>
               <input type="text" id="proj-meta-author" class="proj-input" value="${esc(meta.author||'')}" placeholder="e.g. student_4821">
             </div>
             <div>
-              <div class="field-label">Author level</div>
+              <div class="field-label" data-i18n="6b7419d40d47aa50">Author level</div>
               <select id="proj-meta-authorlevel" class="proj-input">
-                ${authorLevels.map(a => `<option value="${a.value}"${a.value === (meta.authorLevel||'') ? ' selected' : ''}>${a.label}</option>`).join('')}
+                ${authorLevels.map(a => `<option value="${a.value}"${a.value === (meta.authorLevel||'') ? ' selected' : ''} data-i18n="${a.hash}">${a.label}</option>`).join('')}
               </select>
             </div>
           </div>
 
           <!-- Analysis hints -->
-          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:0.5px solid var(--border-tertiary)">Analysis hints</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px;border-top:0.5px solid var(--border-tertiary)" data-i18n="148c622fd67aa826">Analysis hints</div>
           <div>
-            <div class="field-label">Focus areas <span style="font-weight:400;color:var(--text-tertiary)">(what to pay special attention to)</span></div>
+            <div class="field-label"><span data-i18n="c9c89e30117d5f60">Focus areas</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="94072f33e4892ee1">(what to pay special attention to)</span></div>
             <input type="text" id="proj-meta-focus" class="proj-input" value="${esc(meta.focusAreas||'')}" placeholder="e.g. argumentation quality, use of evidence, paragraph transitions">
           </div>
           <div>
-            <div class="field-label">Known issues <span style="font-weight:400;color:var(--text-tertiary)">(pre-identified concerns)</span></div>
+            <div class="field-label"><span data-i18n="9e06846ba2df2bb2">Known issues</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="b7b26ff974fad33e">(pre-identified concerns)</span></div>
             <input type="text" id="proj-meta-issues" class="proj-input" value="${esc(meta.knownIssues||'')}" placeholder="e.g. weak thesis, repetitive vocabulary, off-topic in section 3">
           </div>
           <div>
-            <div class="field-label">Additional notes</div>
+            <div class="field-label" data-i18n="5871e1abaa639712">Additional notes</div>
             <textarea id="proj-meta-notes" class="proj-input" style="height:50px;resize:vertical" placeholder="Any other context that helps interpretation…">${esc(meta.notes||'')}</textarea>
           </div>
 
           <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:0.5px solid var(--border-tertiary)">
-            <button class="nav-btn" id="proj-meta-cancel">Cancel</button>
-            <button class="proj-upload-btn" id="proj-meta-save">Save metadata</button>
+            <button class="nav-btn" id="proj-meta-cancel" data-i18n="19766ed6ccb2f4a3">Cancel</button>
+            <button class="proj-upload-btn" id="proj-meta-save" data-i18n="06d1ae6bcb25c522">Save metadata</button>
           </div>
         </div>
       </div>`;
@@ -567,9 +569,11 @@ const Projects = (() => {
       (data.categories || []).forEach(cat => {
         const grp = document.createElement('optgroup');
         grp.label = cat.category;
+        if (cat.i18n) grp.setAttribute('data-i18n-label', cat.i18n);
         cat.genres.forEach(g => {
           const opt = document.createElement('option');
           opt.value = g.id; opt.textContent = g.name;
+          if (g.i18n) opt.setAttribute('data-i18n', g.i18n);
           if (g.id === (meta.genre || '')) opt.selected = true;
           grp.appendChild(opt);
         });
@@ -584,7 +588,7 @@ const Projects = (() => {
     // Auto-detect with AI
     panel.querySelector('#proj-meta-autodetect').addEventListener('click', async () => {
       const btn = panel.querySelector('#proj-meta-autodetect');
-      btn.textContent = 'Analyzing file…'; btn.disabled = true;
+      btn.textContent = 'Analyzing file…'; btn.setAttribute('data-i18n', '30690de26f8dc7c4'); btn.disabled = true;
       try {
         const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/files/${encodeURIComponent(filename)}/auto-meta`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -619,7 +623,7 @@ const Projects = (() => {
         setIfEmpty('#proj-meta-issues', s.knownIssues);
 
         // Auto-save after populating
-        btn.textContent = 'Saving…';
+        btn.textContent = 'Saving…'; btn.setAttribute('data-i18n', '23e39291d6135814');
         const autoMeta = {
           genre: panel.querySelector('#proj-meta-genre').value,
           readingLevel: panel.querySelector('#proj-meta-level').value,
@@ -642,22 +646,22 @@ const Projects = (() => {
         const localFile = currentFiles.find(f => f.name === filename);
         if (localFile) localFile.meta = autoMeta;
 
-        btn.textContent = 'Detected & saved!';
+        btn.textContent = 'Detected & saved!'; btn.setAttribute('data-i18n', 'f7ef4b0eca2139cb');
         btn.style.background = 'var(--teal-light)';
         btn.style.color = '#065F46';
         // Update completeness display
         const mc = countMetaFields(autoMeta);
         const compEl = panel.querySelector('.proj-meta-completeness');
-        if (compEl) compEl.textContent = `Completeness: ${mc.filled} / ${mc.total}`;
+        if (compEl) compEl.innerHTML = `<span data-i18n="76d93f2ec651c176">Completeness:</span> ${mc.filled} / ${mc.total}`;
 
         setTimeout(() => {
-          btn.textContent = '\u2733 Auto-detect with AI';
+          btn.textContent = '\u2733 Auto-detect with AI'; btn.setAttribute('data-i18n', '59f030eb6fd7296d');
           btn.style.background = ''; btn.style.color = '';
           btn.disabled = false;
         }, 2000);
       } catch (err) {
         alert('Auto-detect failed: ' + err.message);
-        btn.textContent = '\u2733 Auto-detect with AI'; btn.disabled = false;
+        btn.textContent = '\u2733 Auto-detect with AI'; btn.setAttribute('data-i18n', '59f030eb6fd7296d'); btn.disabled = false;
       }
     });
 
@@ -678,7 +682,7 @@ const Projects = (() => {
         notes: panel.querySelector('#proj-meta-notes').value.trim(),
       };
       const saveBtn = panel.querySelector('#proj-meta-save');
-      saveBtn.textContent = 'Saving…'; saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…'; saveBtn.setAttribute('data-i18n', '23e39291d6135814'); saveBtn.disabled = true;
       try {
         await Auth.apiFetch(`/api/projects/${currentProject.id}/files/${encodeURIComponent(filename)}/meta`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -687,13 +691,13 @@ const Projects = (() => {
         // Update local data immediately
         const localFile = currentFiles.find(f => f.name === filename);
         if (localFile) localFile.meta = newMeta;
-        saveBtn.textContent = 'Saved!';
+        saveBtn.textContent = 'Saved!'; saveBtn.setAttribute('data-i18n', 'ed9b760289e614c9');
         setTimeout(() => {
           panel.style.display = 'none';
           renderStep0();
         }, 500);
       } catch {
-        saveBtn.textContent = 'Save metadata'; saveBtn.disabled = false;
+        saveBtn.textContent = 'Save metadata'; saveBtn.setAttribute('data-i18n', '06d1ae6bcb25c522'); saveBtn.disabled = false;
       }
     });
   }
@@ -709,13 +713,13 @@ const Projects = (() => {
     if (selectedFiles.length === 0) selectedFiles = readyFiles.map(f => f.name);
 
     s.innerHTML = `
-      ${header('&larr; Back', 'Step 1 of 2: Select Files')}
+      ${header('&larr; Back', '<span data-i18n="5e573109207e2470">Step 1 of 2: Select Files</span>')}
       <div class="proj-step-body">
         <div class="proj-step-label">${readyFiles.length} of ${currentFiles.length} files ready for analysis</div>
         ${readyFiles.length > 0 ? `
         <div style="margin-bottom:8px">
           <label style="font-size:12px;color:var(--text-secondary);cursor:pointer">
-            <input type="checkbox" id="proj-sel-all" ${selectedFiles.length===readyFiles.length?'checked':''}> Select all ready (${readyFiles.length})
+            <input type="checkbox" id="proj-sel-all" ${selectedFiles.length===readyFiles.length?'checked':''}> <span data-i18n="cdaf59212fc41a98">Select all ready</span> (${readyFiles.length})
           </label>
         </div>` : ''}
         <div class="proj-file-list">
@@ -733,11 +737,11 @@ const Projects = (() => {
         </div>
         ${notReady.length > 0 ? `
         <div style="margin-top:8px;font-size:11px;color:var(--amber)">
-          ${notReady.length} file${notReady.length>1?'s':''} need more metadata (min 4 fields). Go back to fill in.
+          ${notReady.length} file${notReady.length>1?'s':''} <span data-i18n="6612dc85d7dbb8ec">need more metadata (min 4 fields). Go back to fill in.</span>
         </div>` : ''}
         <div class="proj-step-nav">
           <div></div>
-          <button class="proj-next-btn" id="proj-next1" ${readyFiles.length===0?'disabled':''}>Next: Review &amp; Estimate &rarr;</button>
+          <button class="proj-next-btn" id="proj-next1" ${readyFiles.length===0?'disabled':''}><span data-i18n="9594e1f9746f7826">Next: Review &amp; Estimate</span> &rarr;</button>
         </div>
       </div>`;
 
@@ -764,32 +768,32 @@ const Projects = (() => {
     const enabled = new Set(cfg.enabledLayers || allLayers.slice(0, 11));
 
     s.innerHTML = `
-      ${header('&larr; Back', 'Step 2 of 3: Configure')}
+      ${header('&larr; Back', '<span data-i18n="c456c2494bf2182e">Step 2 of 3: Configure</span>')}
       <div class="proj-step-body">
-        <div class="proj-step-label">${selectedFiles.length} file${selectedFiles.length>1?'s':''} selected</div>
+        <div class="proj-step-label">${selectedFiles.length} file${selectedFiles.length>1?'s':''} <span data-i18n="d7cbbb688b2e506c">selected</span></div>
         <div class="proj-config-form">
           <div>
-            <div class="field-label">Analysis layers</div>
+            <div class="field-label" data-i18n="160ae9e27ab03126">Analysis layers</div>
             <div class="options-row" style="flex-wrap:wrap;gap:6px">
               ${allLayers.map(l => `<div class="opt-chip${enabled.has(l)?' on':''}" data-layer="${l}"><div class="opt-dot"></div>${l}</div>`).join('')}
             </div>
           </div>
           <div>
-            <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
+            <div class="field-label"><span data-i18n="6a72b0aeff61b579">Assignment prompt</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="0059798b7f7023e4">(optional)</span></div>
             <input type="text" id="proj-cfg-prompt" value="${esc(cfg.promptText||'')}" placeholder="e.g. Discuss the impact of AI…" class="proj-input">
           </div>
           <div>
-            <div class="field-label">Genre <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
-            <select id="proj-cfg-genre" class="proj-input"><option value="">Select genre…</option></select>
+            <div class="field-label"><span data-i18n="6da795a8664f37f6">Genre</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="0059798b7f7023e4">(optional)</span></div>
+            <select id="proj-cfg-genre" class="proj-input"><option value="" data-i18n="285bb526e02fedf1">Select genre…</option></select>
           </div>
           <div>
-            <div class="field-label">Learner ID <span style="font-weight:400;color:var(--text-tertiary)">(for L11)</span></div>
+            <div class="field-label"><span data-i18n="5b32ac8d29a125c8">Learner ID</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="2b9079c02d741dc0">(for L11)</span></div>
             <input type="text" id="proj-cfg-learner" value="${esc(cfg.learnerId||'')}" placeholder="student_4821" class="proj-input">
           </div>
         </div>
         <div class="proj-step-nav">
           <div></div>
-          <button class="proj-next-btn" id="proj-next2">Next: Review &amp; Estimate &rarr;</button>
+          <button class="proj-next-btn" id="proj-next2"><span data-i18n="9594e1f9746f7826">Next: Review &amp; Estimate</span> &rarr;</button>
         </div>
       </div>`;
 
@@ -799,9 +803,11 @@ const Projects = (() => {
       (data.categories||[]).forEach(cat => {
         const grp = document.createElement('optgroup');
         grp.label = cat.category;
+        if (cat.i18n) grp.setAttribute('data-i18n-label', cat.i18n);
         cat.genres.forEach(g => {
           const opt = document.createElement('option');
           opt.value = g.id; opt.textContent = g.name;
+          if (g.i18n) opt.setAttribute('data-i18n', g.i18n);
           if (g.id === cfg.genre) opt.selected = true;
           grp.appendChild(opt);
         });
@@ -836,23 +842,23 @@ const Projects = (() => {
     const s = screen();
 
     s.innerHTML = `
-      ${header('&larr; Back', 'Review &amp; Run')}
+      ${header('&larr; Back', '<span data-i18n="0f38605c24042fbd">Review &amp; Run</span>')}
       <div class="proj-step-body">
-        <div class="proj-step-label">Review your analysis setup</div>
+        <div class="proj-step-label" data-i18n="f8a2bb74b1147f29">Review your analysis setup</div>
 
         <div class="proj-review-card">
-          <div class="proj-review-row"><span>Files</span><strong>${selectedFiles.length}</strong></div>
+          <div class="proj-review-row"><span data-i18n="abc7e9892806b047">Files</span><strong>${selectedFiles.length}</strong></div>
           <div class="proj-review-files">${selectedFiles.map(f => `<span class="proj-file-chip">${esc(f)}</span>`).join('')}</div>
-          <div class="proj-review-row"><span>Layers</span><strong>${(wizardConfig.enabledLayers||[]).join(', ')}</strong></div>
-          ${wizardConfig.promptText ? `<div class="proj-review-row"><span>Prompt</span><strong>${esc(wizardConfig.promptText)}</strong></div>` : ''}
-          ${wizardConfig.genre ? `<div class="proj-review-row"><span>Genre</span><strong>${wizardConfig.genre}</strong></div>` : ''}
+          <div class="proj-review-row"><span data-i18n="0bcd66e677f4ee72">Layers</span><strong>${(wizardConfig.enabledLayers||[]).join(', ')}</strong></div>
+          ${wizardConfig.promptText ? `<div class="proj-review-row"><span data-i18n="5c39123805ffb4e2">Prompt</span><strong>${esc(wizardConfig.promptText)}</strong></div>` : ''}
+          ${wizardConfig.genre ? `<div class="proj-review-row"><span data-i18n="6da795a8664f37f6">Genre</span><strong>${wizardConfig.genre}</strong></div>` : ''}
         </div>
 
-        <div id="proj-cost-area" class="proj-cost-loading">Estimating cost…</div>
+        <div id="proj-cost-area" class="proj-cost-loading" data-i18n="f183716b2574a335">Estimating cost…</div>
 
         <div class="proj-step-nav">
           <div></div>
-          <button class="proj-next-btn proj-run-btn-big" id="proj-run" disabled>Waiting for estimate…</button>
+          <button class="proj-next-btn proj-run-btn-big" id="proj-run" disabled data-i18n="7197f99f7ef7c7b1">Waiting for estimate…</button>
         </div>
       </div>`;
 
@@ -873,23 +879,23 @@ const Projects = (() => {
       const costArea = s.querySelector('#proj-cost-area');
       costArea.className = 'proj-cost-summary';
       costArea.innerHTML = `
-        <div class="proj-cost-total">Estimated cost: ~$${data.estimatedCost.toFixed(3)}</div>
-        <div class="proj-cost-row"><span>Total words</span><strong>${data.totalWords.toLocaleString()}</strong></div>
-        <div class="proj-cost-row"><span>Estimated tokens</span><strong>${data.totalEstimatedTokens.toLocaleString()}</strong></div>
-        <div class="proj-cost-row"><span>LLM calls per file</span><strong>${data.llmCallsPerFile}</strong></div>
+        <div class="proj-cost-total"><span data-i18n="85f4ef04044749e5">Estimated cost:</span> ~$${data.estimatedCost.toFixed(3)}</div>
+        <div class="proj-cost-row"><span data-i18n="25c55ce79c23be69">Total words</span><strong>${data.totalWords.toLocaleString()}</strong></div>
+        <div class="proj-cost-row"><span data-i18n="4db7759dca08e87d">Estimated tokens</span><strong>${data.totalEstimatedTokens.toLocaleString()}</strong></div>
+        <div class="proj-cost-row"><span data-i18n="a852520d7d5f55f0">LLM calls per file</span><strong>${data.llmCallsPerFile}</strong></div>
         <div style="margin-top:8px;font-size:10px;color:var(--text-tertiary)">
           ${data.pricing.promptPer1M ? `$${data.pricing.promptPer1M}/M input · $${data.pricing.completionPer1M}/M output` : ''}
         </div>`;
 
       const runBtn = s.querySelector('#proj-run');
       runBtn.disabled = false;
-      runBtn.textContent = `Run Analysis ($${data.estimatedCost.toFixed(3)}) \u2192`;
+      runBtn.textContent = `Run Analysis ($${data.estimatedCost.toFixed(3)}) \u2192`; runBtn.setAttribute('data-i18n', '658e795fe0ec9ce0');
       runBtn.addEventListener('click', () => runBatchAnalysis());
     } catch (err) {
-      s.querySelector('#proj-cost-area').textContent = 'Could not estimate cost.';
+      s.querySelector('#proj-cost-area').textContent = 'Could not estimate cost.'; s.querySelector('#proj-cost-area').setAttribute('data-i18n', 'd9cf2c38576b179b');
       const runBtn = s.querySelector('#proj-run');
       runBtn.disabled = false;
-      runBtn.textContent = 'Run Analysis \u2192';
+      runBtn.textContent = 'Run Analysis \u2192'; runBtn.setAttribute('data-i18n', '658e795fe0ec9ce0');
       runBtn.addEventListener('click', () => runBatchAnalysis());
     }
   }
@@ -908,14 +914,14 @@ const Projects = (() => {
     if (isSingle) {
       // Use the nice processing UI with layer progress bars
       Processing.initUI();
-      document.getElementById('proc-title').textContent = `Analyzing: ${selectedFiles[0]}`;
-      document.getElementById('proc-sub').textContent = 'Preparing analysis modules';
+      document.getElementById('proc-title').innerHTML = `<span data-i18n="70e435752ac235c3">Analyzing:</span> ${esc(selectedFiles[0])}`;
+      document.getElementById('proc-sub').textContent = 'Preparing analysis modules'; document.getElementById('proc-sub').setAttribute('data-i18n', '1db4bfea9970ee04');
     } else {
       const procTitle = document.getElementById('proc-title');
       const procSub = document.getElementById('proc-sub');
       const procLog = document.getElementById('proc-log');
-      if (procTitle) procTitle.textContent = `Analyzing ${selectedFiles.length} files`;
-      if (procSub) procSub.textContent = 'Results will be saved to the project\u2019s Past Results when complete.';
+      if (procTitle) procTitle.innerHTML = `<span data-i18n="0141ee9533e133b3">Analyzing</span> ${selectedFiles.length} <span data-i18n="e3b816898ca5ba5f">files</span>`;
+      if (procSub) { procSub.textContent = 'Results will be saved to the project\u2019s Past Results when complete.'; procSub.setAttribute('data-i18n', '198d6689fcc8da7c'); }
       if (procLog) procLog.innerHTML = '';
     }
 
@@ -961,7 +967,7 @@ const Projects = (() => {
       }
     } catch (err) {
       document.getElementById('spinner').style.display = 'none';
-      document.getElementById('proc-title').textContent = isSingle ? 'Analysis failed' : 'Failed';
+      const errTitle = document.getElementById('proc-title'); errTitle.textContent = isSingle ? 'Analysis failed' : 'Failed'; errTitle.setAttribute('data-i18n', isSingle ? '4d6ac1bfe5d253f3' : '031a8f0f659df890');
       document.getElementById('proc-sub').textContent = err.message;
     }
   }
@@ -973,7 +979,7 @@ const Projects = (() => {
 
     switch (evt.type) {
       case 'layer_start':
-        if (procTitle) procTitle.textContent = `Analyzing ${evt.layerName || evt.layerId}…`;
+        if (procTitle) procTitle.innerHTML = `<span data-i18n="0141ee9533e133b3">Analyzing</span> ${esc(evt.layerName || evt.layerId)}…`;
         Processing.updateLayer(evt.layerId, 'active');
         Processing.addLog(evt.message || '');
         break;
@@ -992,15 +998,15 @@ const Projects = (() => {
         break;
       case 'batch_file_done':
         document.getElementById('spinner').style.display = 'none';
-        if (procTitle) procTitle.textContent = 'Analysis complete';
-        if (procSub) procSub.textContent = `Score: ${evt.overallScore}/100`;
+        if (procTitle) { procTitle.textContent = 'Analysis complete'; procTitle.setAttribute('data-i18n', '60ffb9b9006a07df'); }
+        if (procSub) procSub.innerHTML = `<span data-i18n="9689a814f3584ec9">Score:</span> ${evt.overallScore}/100`;
         if (evt.tokenUsage) {
           Processing.updateTokenDisplay(evt.tokenUsage);
         }
         break;
       case 'batch_file_error':
         document.getElementById('spinner').style.display = 'none';
-        if (procTitle) procTitle.textContent = 'Analysis failed';
+        if (procTitle) { procTitle.textContent = 'Analysis failed'; procTitle.setAttribute('data-i18n', '4d6ac1bfe5d253f3'); }
         if (procSub) procSub.textContent = evt.error;
         break;
     }
@@ -1014,15 +1020,15 @@ const Projects = (() => {
 
     switch (evt.type) {
       case 'batch_file_start':
-        if (procTitle) procTitle.textContent = `File ${evt.fileIndex+1} of ${evt.totalFiles}: ${evt.fileName}`;
-        if (procSub) procSub.textContent = 'Initializing…';
+        if (procTitle) procTitle.innerHTML = `<span data-i18n="50009ce1da4d15e1">File</span> ${evt.fileIndex+1} <span data-i18n="28391d3bc64ec15c">of</span> ${evt.totalFiles}: ${esc(evt.fileName)}`;
+        if (procSub) { procSub.textContent = 'Initializing…'; procSub.setAttribute('data-i18n', '83f1e8a4e5b3b3db'); }
         break;
       case 'init': case 'log':
         if (procSub) procSub.textContent = evt.message || '';
         addLog(procLog, `[${evt.fileName||''}] ${evt.message||''}`, 'var(--text-tertiary)');
         break;
       case 'layer_done':
-        if (procSub) procSub.textContent = `${evt.layerName||evt.layerId} done (${evt.score}/100)`;
+        if (procSub) procSub.innerHTML = `${esc(evt.layerName||evt.layerId)} <span data-i18n="a4c3ed04a95a3da1">done</span> (${evt.score}/100)`;
         break;
       case 'batch_file_done':
         addLog(procLog, `\u2713 ${evt.fileName}: score ${evt.overallScore}`, 'var(--teal)', true);
@@ -1031,13 +1037,13 @@ const Projects = (() => {
         addLog(procLog, `\u2717 ${evt.fileName}: ${evt.error}`, 'var(--coral)', true);
         break;
       case 'batch_complete':
-        if (procTitle) procTitle.textContent = 'Analysis complete';
-        if (procSub) procSub.textContent = `${(evt.results||[]).length} file${(evt.results||[]).length!==1?'s':''} analyzed`;
+        if (procTitle) { procTitle.textContent = 'Analysis complete'; procTitle.setAttribute('data-i18n', '60ffb9b9006a07df'); }
+        if (procSub) procSub.innerHTML = `${(evt.results||[]).length} file${(evt.results||[]).length!==1?'s':''} <span data-i18n="8db72550fce2d86a">analyzed</span>`;
         if (procLog) {
           const div = document.createElement('div');
           div.style.cssText = 'margin-top:16px;display:flex;gap:8px';
           const btn = document.createElement('button');
-          btn.textContent = '\u2190 View results in project';
+          btn.textContent = '\u2190 View results in project'; btn.setAttribute('data-i18n', '5015fd159057549b');
           btn.className = 'run-btn';
           btn.style.cssText = 'font-size:13px;padding:10px 24px';
           btn.addEventListener('click', async () => {
@@ -1067,10 +1073,10 @@ const Projects = (() => {
   function renderResultsList() {
     const s = screen();
     s.innerHTML = `
-      ${header('&larr; ' + esc(currentProject.name), 'Past Results')}
+      ${header('&larr; ' + esc(currentProject.name), '<span data-i18n="04f2e6324046f8f1">Past Results</span>')}
       <div class="proj-step-body">
         ${currentResults.length === 0
-          ? '<div class="proj-empty">No results yet. Run a New Analysis first.</div>'
+          ? '<div class="proj-empty" data-i18n="b04754ee48e64b1e">No results yet. Run a New Analysis first.</div>'
           : currentResults.map(r => `
             <div class="proj-result-row" data-rid="${r.id}">
               <span class="proj-result-file">${esc(r.sourceFile||r.id)}</span>
@@ -1136,21 +1142,21 @@ const Projects = (() => {
       const data = await resp.json();
       if (data.serviceAccountEmail) {
         instrEl.innerHTML = `
-          <div style="margin-bottom:8px">Share your Google Drive folder with this service account:</div>
+          <div style="margin-bottom:8px" data-i18n="9d44183f27b4b342">Share your Google Drive folder with this service account:</div>
           <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md);margin-bottom:8px">
             <code style="flex:1;font-size:12px;color:var(--teal);word-break:break-all">${esc(data.serviceAccountEmail)}</code>
-            <button onclick="navigator.clipboard.writeText('${data.serviceAccountEmail}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;padding:3px 10px;border:0.5px solid var(--border-tertiary);border-radius:4px;background:var(--bg-primary);color:var(--text-secondary);cursor:pointer">Copy</button>
+            <button onclick="navigator.clipboard.writeText('${data.serviceAccountEmail}');this.textContent='Copied!';this.setAttribute('data-i18n','e21f935f11d7e966');setTimeout(()=>{this.textContent='Copy';this.setAttribute('data-i18n','9fd7135e16f19b7b')},1500)" style="font-size:10px;padding:3px 10px;border:0.5px solid var(--border-tertiary);border-radius:4px;background:var(--bg-primary);color:var(--text-secondary);cursor:pointer" data-i18n="9fd7135e16f19b7b">Copy</button>
           </div>
           <div style="font-size:11px;color:var(--text-tertiary);line-height:1.6">
-            <strong>How:</strong> In Google Drive, right-click your folder → Share → Add the email above as <strong>Viewer</strong>.<br>
-            <strong>Why:</strong> This gives NeoCohMetrix read-only access to copy files into your project. Your files stay on Google Drive — we only copy what you select.<br>
-            <strong>After import:</strong> You can remove sharing access from the service account. Once files are copied to your project, the Drive link is no longer needed.
+            <strong data-i18n="678bfa6af48b17cd">How:</strong> <span data-i18n="ad389aa4c08e3d7c">In Google Drive, right-click your folder → Share → Add the email above as</span> <strong data-i18n="853740a142602f9c">Viewer</strong>.<br>
+            <strong data-i18n="d04a682c542b1ad1">Why:</strong> <span data-i18n="fab6b1289e300db1">This gives NeoCohMetrix read-only access to copy files into your project. Your files stay on Google Drive — we only copy what you select.</span><br>
+            <strong data-i18n="ed3ee834d6ae59ce">After import:</strong> <span data-i18n="bcc649cfdb8cc557">You can remove sharing access from the service account. Once files are copied to your project, the Drive link is no longer needed.</span>
           </div>`;
       } else {
-        instrEl.textContent = data.instructions || 'Google Drive import is not configured.';
+        instrEl.textContent = data.instructions || 'Google Drive import is not configured.'; instrEl.setAttribute('data-i18n', '04e2a9728af75840');
       }
     } catch {
-      instrEl.textContent = 'Could not load sharing instructions.';
+      instrEl.textContent = 'Could not load sharing instructions.'; instrEl.setAttribute('data-i18n', '113b8e2f4761d74c');
     }
   }
 
@@ -1163,8 +1169,8 @@ const Projects = (() => {
     const folderUrl = urlInput.value.trim();
     if (!folderUrl) { alert('Paste a Google Drive folder link.'); return; }
 
-    listBtn.textContent = 'Loading…'; listBtn.disabled = true;
-    filesDiv.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0">Scanning folder…</div>';
+    listBtn.textContent = 'Loading…'; listBtn.setAttribute('data-i18n', 'ba3bbbe10d8bef66'); listBtn.disabled = true;
+    filesDiv.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0" data-i18n="f4d7711c7b81cc02">Scanning folder…</div>';
 
     try {
       const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/drive/list`, {
@@ -1178,15 +1184,15 @@ const Projects = (() => {
       }
 
       if (data.files.length === 0) {
-        filesDiv.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0">No supported files found (.txt, .docx, .pdf, Google Docs).</div>';
+        filesDiv.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:8px 0" data-i18n="9bf7112076f3400c">No supported files found (.txt, .docx, .pdf, Google Docs).</div>';
         return;
       }
 
       filesDiv.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:11px;color:var(--text-tertiary)">${data.supported} file${data.supported!==1?'s':''} found</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">${data.supported} file${data.supported!==1?'s':''} <span data-i18n="1fc9a387654d410f">found</span></span>
           <label style="font-size:11px;color:var(--text-secondary);cursor:pointer;margin-left:auto">
-            <input type="checkbox" id="proj-drive-sel-all" checked> Select all
+            <input type="checkbox" id="proj-drive-sel-all" checked> <span data-i18n="f12310620d6f87e7">Select all</span>
           </label>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
@@ -1199,7 +1205,7 @@ const Projects = (() => {
           `).join('')}
         </div>
         <div style="margin-top:10px;text-align:right">
-          <button class="proj-upload-btn" id="proj-drive-import-btn">Import selected</button>
+          <button class="proj-upload-btn" id="proj-drive-import-btn" data-i18n="f9cebc0f35fe930f">Import selected</button>
         </div>
       `;
 
@@ -1226,7 +1232,7 @@ const Projects = (() => {
     } catch (err) {
       filesDiv.innerHTML = `<div style="font-size:12px;color:var(--coral);padding:8px 0">${esc(err.message)}</div>`;
     } finally {
-      listBtn.textContent = 'List files'; listBtn.disabled = false;
+      listBtn.textContent = 'List files'; listBtn.setAttribute('data-i18n', 'e700817c9d5ece14'); listBtn.disabled = false;
     }
   }
 
@@ -1242,7 +1248,7 @@ const Projects = (() => {
     }));
 
     const importBtn = filesDiv.querySelector('#proj-drive-import-btn');
-    importBtn.textContent = `Importing ${files.length}…`; importBtn.disabled = true;
+    importBtn.innerHTML = `<span data-i18n="d252fffacbf03707">Importing</span> ${files.length}…`; importBtn.disabled = true;
 
     try {
       const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/drive/import`, {
@@ -1262,7 +1268,7 @@ const Projects = (() => {
     } catch (err) {
       alert('Import failed: ' + err.message);
     } finally {
-      importBtn.textContent = 'Import selected'; importBtn.disabled = false;
+      importBtn.textContent = 'Import selected'; importBtn.setAttribute('data-i18n', 'f9cebc0f35fe930f'); importBtn.disabled = false;
     }
   }
 
@@ -1288,9 +1294,9 @@ const Projects = (() => {
       if (!input.files.length) return;
       const fd = new FormData();
       for (const f of input.files) fd.append('files', f);
-      trigger.textContent = 'Uploading…'; trigger.disabled = true;
+      trigger.textContent = 'Uploading…'; trigger.setAttribute('data-i18n', '5ce44dd77dae789f'); trigger.disabled = true;
       try { await Auth.apiFetch(`/api/projects/${currentProject.id}/files`, { method: 'POST', body: fd }); } catch {}
-      trigger.textContent = '+ Upload files'; trigger.disabled = false;
+      trigger.textContent = '+ Upload files'; trigger.setAttribute('data-i18n', '62b8e6f34264bfb2'); trigger.disabled = false;
       input.value = '';
       if (onDone) onDone();
     });
@@ -1310,5 +1316,23 @@ const Projects = (() => {
 
   function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-  return { init, loadProjects, openProject };
+  /**
+   * Quick-start helper: open first project or prompt to create one.
+   * @param {string} action - optional: 'drive' to auto-open drive panel after opening project
+   */
+  function openFirstOrPrompt(action) {
+    if (projects.length > 0) {
+      openProject(projects[0].id).then(() => {
+        if (action === 'drive') {
+          const driveBtn = document.getElementById('proj-drive-trigger');
+          if (driveBtn) setTimeout(() => driveBtn.click(), 200);
+        }
+      });
+    } else {
+      const input = document.getElementById('proj-create-input');
+      if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
+    }
+  }
+
+  return { init, loadProjects, openProject, openFirstOrPrompt };
 })();

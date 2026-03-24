@@ -436,51 +436,55 @@
       .layers-grid { grid-template-columns: repeat(2,1fr); }
     }
   </style>
+  <link rel="stylesheet" href="/css/i18n.css">
 </head>
 <body>
 
 <!-- NAV -->
 <nav class="nav">
   <div class="nav-logo">Neo<span>CohMetrix</span></div>
-  <button class="nav-cta" onclick="openLogin()">Get started</button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="topbar-right"></div>
+    <button class="nav-cta" onclick="openLogin()" data-i18n="61e8d44ad423a4a0">Get started</button>
+  </div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
-  <div class="badge"><span class="badge-dot"></span> v0.9 Beta</div>
-  <h1>Understand writing<br>at <span>every level</span></h1>
+  <div class="badge"><span class="badge-dot"></span> <span data-i18n="b4c89a5571c79f61">v0.9 Beta</span></div>
+  <h1><span data-i18n="ff09d78a55fc5129">Understand writing</span><br>at <span data-i18n="1ec865ce1f0f2c83">every level</span></h1>
   <p id="hero-sub">Deep text analysis grounded in discourse science. From surface features to argumentation quality — metrics that reveal how writing truly works.</p>
   <div class="cta-group">
     <button class="cta-primary" onclick="openLogin()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      Get started
+      <span data-i18n="61e8d44ad423a4a0">Get started</span>
     </button>
-    <button class="cta-secondary" onclick="document.getElementById('s-problem').scrollIntoView({behavior:'smooth'})">Learn more</button>
+    <button class="cta-secondary" onclick="document.getElementById('s-problem').scrollIntoView({behavior:'smooth'})" data-i18n="1445799c033a2d17">Learn more</button>
   </div>
-  <div class="hero-note">Sign in with Google to start analyzing</div>
-  <div class="scroll-hint"><span>Explore</span><div class="scroll-line"></div></div>
+  <div class="hero-note" data-i18n="7b5bc008cba1fb28">Sign in with Google to create projects and start analyzing</div>
+  <div class="scroll-hint"><span data-i18n="3b73900b8d29f963">Explore</span><div class="scroll-line"></div></div>
 </div>
 
 <!-- PROBLEM -->
 <div class="problem-bg">
 <section class="fi" id="s-problem">
-  <div class="label">The problem</div>
-  <h2>Essay feedback is broken</h2>
+  <div class="label" data-i18n="e01d77b4a0bd549a">The problem</div>
+  <h2 data-i18n="33a27ea389087c1d">Essay feedback is broken</h2>
   <div class="problem-grid">
     <div class="problem-card">
       <div class="problem-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-      <h3>Surface-level only</h3>
-      <p>Most tools stop at grammar and spelling. They miss cohesion, argumentation, rhetorical structure — the things that determine whether writing communicates effectively.</p>
+      <h3 data-i18n="598576f64e3718bf">Surface-level only</h3>
+      <p data-i18n="2c482723679302a6">Most tools stop at grammar and spelling. They miss cohesion, argumentation, rhetorical structure — the things that determine whether writing communicates effectively.</p>
     </div>
     <div class="problem-card">
       <div class="problem-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-      <h3>One-size-fits-all</h3>
-      <p>A research paper and a personal essay are evaluated identically. Genre expectations, audience level, and assignment context are ignored entirely.</p>
+      <h3 data-i18n="c47dd735fd4652bd">One-size-fits-all</h3>
+      <p data-i18n="fb3134fecd719786">A research paper and a personal essay are evaluated identically. Genre expectations, audience level, and assignment context are ignored entirely.</p>
     </div>
     <div class="problem-card">
       <div class="problem-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-      <h3>No explanation</h3>
-      <p>A score without evidence is useless. Writers need to see <em>where</em> the problems are and <em>why</em> a metric matters — not just a number.</p>
+      <h3 data-i18n="d6ba971ca3c8d4b3">No explanation</h3>
+      <p data-i18n="85ccc03bdbcb4eef" data-i18n-html>A score without evidence is useless. Writers need to see <em>where</em> the problems are and <em>why</em> a metric matters — not just a number.</p>
     </div>
   </div>
 </section>
@@ -491,11 +495,11 @@
 <section class="fi">
   <div class="what-layout">
     <div class="what-text">
-      <div class="label">What it is</div>
-      <h2>A multi-layer analysis engine for text cohesion</h2>
-      <p>NeoCohMetrix applies the multilevel framework of discourse comprehension (Graesser, McNamara et al.) to analyze writing across five theoretical levels — from surface code through pragmatic communication.</p>
-      <p>Each layer produces scored metrics with textual evidence, plain-language explanations, and benchmarks grounded in peer-reviewed research.</p>
-      <p>It combines NLP with LLM-based analysis to go beyond what statistical tools alone can capture: argumentation structure, rhetorical moves, stance calibration, and reader-relative difficulty.</p>
+      <div class="label" data-i18n="1f36becc3aa7c8a8">What it is</div>
+      <h2 data-i18n="27212a7d3ccaf933">A multi-layer analysis engine for text cohesion</h2>
+      <p data-i18n="b28d6803868f97da">NeoCohMetrix applies the multilevel framework of discourse comprehension (Graesser, McNamara et al.) to analyze writing across five theoretical levels — from surface code through pragmatic communication.</p>
+      <p data-i18n="0ad334ed4decab11">Each layer produces scored metrics with textual evidence, plain-language explanations, and benchmarks grounded in peer-reviewed research.</p>
+      <p data-i18n="79a5a492c6f01114">It combines NLP with LLM-based analysis to go beyond what statistical tools alone can capture: argumentation structure, rhetorical moves, stance calibration, and reader-relative difficulty.</p>
     </div>
     <div class="stat-grid" id="stats"></div>
   </div>
@@ -505,14 +509,14 @@
 <!-- HOW IT WORKS -->
 <div class="how-bg">
 <section class="fi">
-  <div class="label">How it works</div>
-  <h2>From upload to insight</h2>
-  <p>Four steps, fully automated. Results in minutes, not hours.</p>
+  <div class="label" data-i18n="9c870aa6e5e93270">How it works</div>
+  <h2 data-i18n="d430a81fafd15733">From project to insight</h2>
+  <p data-i18n="40d31d4f67dc05ca">Organize, import, batch-analyze, explore. Results in minutes, not hours.</p>
   <div class="how-steps">
-    <div class="how-step"><div class="how-num">1</div><h3>Upload</h3><p>Drop a PDF, DOCX, or paste text. Set the genre and assignment prompt for context-aware scoring.</p></div>
-    <div class="how-step"><div class="how-num">2</div><h3>Analyze</h3><p>The pipeline runs analysis layers in parallel groups, streaming each layer's progress in real time.</p></div>
-    <div class="how-step"><div class="how-num">3</div><h3>Explore</h3><p>Browse per-metric scores, composite factors, evidence excerpts pulled from the text, and radar visualizations.</p></div>
-    <div class="how-step"><div class="how-num">4</div><h3>Act</h3><p>Get prioritized AI tutor feedback, ask follow-up questions, or evaluate against your own rubric.</p></div>
+    <div class="how-step"><div class="how-num">1</div><h3 data-i18n="c52af048cebf3e0a">Create a project</h3><p data-i18n="9260e0b2dcc5291f">Group related documents into projects. Upload files, import from Google Drive, or paste text directly.</p></div>
+    <div class="how-step"><div class="how-num">2</div><h3 data-i18n="6f0a896812c16e36">Batch analyze</h3><p data-i18n="499e7850cf9a9689">Select one or many files. The pipeline runs all analysis layers in parallel, streaming progress in real time.</p></div>
+    <div class="how-step"><div class="how-num">3</div><h3 data-i18n="3b73900b8d29f963">Explore</h3><p data-i18n="4868e972c0fe6313">Browse per-metric scores, composite factors, evidence excerpts pulled from the text, and radar visualizations.</p></div>
+    <div class="how-step"><div class="how-num">4</div><h3 data-i18n="0368e65a11318373">Act</h3><p data-i18n="2288ce3f6b5b617b">Get prioritized AI tutor feedback, ask follow-up questions, or evaluate against your own rubric.</p></div>
   </div>
 </section>
 </div>
@@ -520,37 +524,39 @@
 <!-- DISCOURSE MODEL -->
 <div class="disc-bg">
 <section class="fi">
-  <div class="label">The science</div>
-  <h2>Five levels of discourse comprehension</h2>
-  <p>Readers don't just decode words — they build mental models. Each discourse level captures a different layer of that process.</p>
+  <div class="label" data-i18n="e428a3cc16dd9da3">The science</div>
+  <h2 data-i18n="10c028a013371088">Five levels of discourse comprehension</h2>
+  <p data-i18n="ccf7d25819c6f23b">Readers don't just decode words — they build mental models. Each discourse level captures a different layer of that process.</p>
   <div class="disc-visual" id="discourse"></div>
 </section>
 </div>
 
 <!-- FEATURES -->
 <section class="fi">
-  <div class="label">What you get</div>
-  <h2>Analysis that explains itself</h2>
-  <p>Every score comes with evidence, context, and actionable guidance.</p>
+  <div class="label" data-i18n="41a1acbef2962368">What you get</div>
+  <h2 data-i18n="b147da687161b34e">Analysis that explains itself</h2>
+  <p data-i18n="6949e26edec8271c">Every score comes with evidence, context, and actionable guidance.</p>
   <div class="feat-grid">
-    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><h3>Evidence from your text</h3><p>Every metric is backed by specific excerpts from the essay. You see exactly which sentences drive each score — no black boxes.</p></div>
-    <div class="feat-card"><div class="feat-icon ic-amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><h3 id="genre-title">Genre-aware scoring <span class="coming">Coming soon</span></h3><p id="genre-desc">Analysis adapts to your document type. A narrative essay is evaluated differently from a lab report or opinion piece.</p></div>
-    <div class="feat-card"><div class="feat-icon ic-rose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>AI tutor</h3><p>An LLM interprets your results and generates prioritized, actionable feedback. Ask follow-up questions in a built-in help chat.</p></div>
-    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div><h3>Rubric mapping</h3><p>Upload your grading rubric. The system maps cohesion metrics to each criterion and generates a scored review against your framework.</p></div>
-    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Reader-adaptive scoring</h3><p>Difficulty is relative. Scores adjust to learner profiles using Zone of Proximal Development proximity.</p></div>
-    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3>Composite factors</h3><p>Eight PCA-analog dimensions — Narrativity, Syntactic Simplicity, Deep Cohesion, Argumentation — give a high-level profile of the essay's strengths.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><h3 data-i18n="cd04b6a03d06fcbf">Evidence from your text</h3><p data-i18n="133d3391f79c7fdb">Every metric is backed by specific excerpts from the essay. You see exactly which sentences drive each score — no black boxes.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><h3 id="genre-title">Genre-aware scoring</h3><p id="genre-desc">Analysis adapts to your document type. A narrative essay is evaluated differently from a lab report or opinion piece across 117 genres.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-rose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3 data-i18n="6a5937a90267c010">AI tutor</h3><p data-i18n="34a5fda312bc2097">An LLM interprets your results and generates prioritized, actionable feedback. Ask follow-up questions in a built-in help chat.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div><h3 data-i18n="575635dbfd23013c">Rubric mapping</h3><p data-i18n="5fe6086c1629e6c6">Upload your grading rubric. The system maps cohesion metrics to each criterion and generates a scored review against your framework.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h3 data-i18n="0bac02750fe3e63c">Project-based workflow</h3><p data-i18n="a79bb93dc1dbb54d">Organize documents into projects with shared configuration. Set genre, prompt, and analysis layers once — apply to all files automatically.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div><h3 data-i18n="325973b317505002">Batch processing</h3><p data-i18n="7c695446ad1486a2">Analyze dozens of essays in one run. Upload files, import entire Google Drive folders, then batch-analyze with cost estimates upfront.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3 data-i18n="07d56f47e67a359b">Reader-adaptive scoring</h3><p data-i18n="43b45965cae89ee6">Difficulty is relative. Scores adjust to learner profiles using Zone of Proximal Development proximity.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3 data-i18n="ede865cb5c0d3adc">Composite factors</h3><p data-i18n="11e6ad6e7d9fd403">Eight PCA-analog dimensions — Narrativity, Syntactic Simplicity, Deep Cohesion, Argumentation — give a high-level profile of the essay's strengths.</p></div>
   </div>
 </section>
 
 <!-- WHO -->
 <div class="who-bg">
 <section class="fi">
-  <div class="label">Who it's for</div>
-  <h2>Built for educators and researchers</h2>
+  <div class="label" data-i18n="60c3907ec26963d2">Who it's for</div>
+  <h2 data-i18n="07adab1aa2af41ad">Built for educators and researchers</h2>
   <div class="who-grid">
-    <div class="who-card"><h3>Writing instructors</h3><p>Get diagnostic breakdowns that show <em>why</em> an essay scores low on cohesion — not just that it does. Use the rubric tool to align with your syllabus.</p></div>
-    <div class="who-card"><h3>Researchers</h3><p>Access the full metric set across all discourse levels for corpus studies. Every metric maps to published constructs with citations.</p></div>
-    <div class="who-card"><h3>Students</h3><p>Understand your own writing through evidence-backed feedback. The AI tutor explains each metric in plain language and suggests concrete revisions.</p></div>
+    <div class="who-card"><h3 data-i18n="58326653364508c6">Writing instructors</h3><p data-i18n="ddcf6e1553131e9e" data-i18n-html>Get diagnostic breakdowns that show <em>why</em> an essay scores low on cohesion — not just that it does. Use the rubric tool to align with your syllabus.</p></div>
+    <div class="who-card"><h3 data-i18n="de7757d95832f91a">Researchers</h3><p data-i18n="9d2a3bf695e9f260">Access the full metric set across all discourse levels for corpus studies. Every metric maps to published constructs with citations.</p></div>
+    <div class="who-card"><h3 data-i18n="2a19bb78de3ef043">Students</h3><p data-i18n="6e53b7c6c9fbabc3">Understand your own writing through evidence-backed feedback. The AI tutor explains each metric in plain language and suggests concrete revisions.</p></div>
   </div>
 </section>
 </div>
@@ -558,29 +564,29 @@
 <!-- LAYERS -->
 <div class="disc-bg">
 <section class="fi">
-  <div class="label">Deep dive</div>
-  <h2>Every layer, every metric</h2>
-  <p>Each layer targets a specific construct from the discourse comprehension literature.</p>
+  <div class="label" data-i18n="280213f51e5f7c57">Deep dive</div>
+  <h2 data-i18n="58f1708d057663ba">Every layer, every metric</h2>
+  <p data-i18n="65bcdfe0a33f10e9">Each layer targets a specific construct from the discourse comprehension literature.</p>
   <div class="layers-grid" id="layers"></div>
 </section>
 </div>
 
 <!-- BOTTOM CTA -->
 <div class="bottom-cta">
-  <h2>Ready to see what's under the surface?</h2>
-  <p id="cta-sub">Upload an essay and get the full multi-layer breakdown in minutes.</p>
+  <h2 data-i18n="cc1134cada1c2f5e">Ready to see what's under the surface?</h2>
+  <p id="cta-sub">Create a project, import your essays, and get the full multi-layer breakdown in minutes.</p>
   <button class="big-cta" onclick="openLogin()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-    Sign in with Google
+    <span data-i18n="1dbcee6824432178">Sign in with Google</span>
   </button>
-  <div class="hero-note" style="margin-top:12px">Your Google account is used for authentication only</div>
+  <div class="hero-note" style="margin-top:12px" data-i18n="69ac09cb9a60bcb4">Your Google account is used for authentication only</div>
 </div>
 
 <!-- FOOTER -->
 <footer>
-  <div class="f-brand">NeoCohMetrix</div>
-  <div class="f-credit">Created by <strong>Xiangen Hu</strong>, Chair Professor of Learning Sciences &amp; Technologies, PolyU, Hong Kong SAR, P. R. China</div>
-  <div class="f-sub">Built on the multilevel framework of discourse comprehension</div>
+  <div class="f-brand" data-i18n="ce5468a30656a2a7">NeoCohMetrix</div>
+  <div class="f-credit" data-i18n="e2f80ef34261549b" data-i18n-html>Created by <strong>Xiangen Hu</strong>, Chair Professor of Learning Sciences &amp; Technologies, PolyU, Hong Kong SAR, P. R. China</div>
+  <div class="f-sub" data-i18n="d39ddbd4ee40e380">Built on the multilevel framework of discourse comprehension</div>
 </footer>
 
 <!-- LOGIN MODAL -->
@@ -589,15 +595,19 @@
   <div class="login-modal">
     <button class="login-close" onclick="document.getElementById('login-overlay').classList.remove('open')">&times;</button>
     <div class="login-modal-logo">Neo<span>CohMetrix</span></div>
-    <div class="login-modal-sub">Sign in to start analyzing</div>
+    <div class="login-modal-sub" data-i18n="e487308a414a67d2">Sign in to start analyzing</div>
     <button class="login-google-btn" id="login-btn">
       <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Sign in with Google
+      <span data-i18n="1dbcee6824432178">Sign in with Google</span>
     </button>
-    <div class="login-modal-note">Your Google account is used for authentication only.</div>
+    <div class="login-modal-note" data-i18n="c4fa146dc7110084">Your Google account is used for authentication only.</div>
   </div>
 </div>
 
+<script src="/js/i18n-config.js"></script>
+<script src="/js/i18n-utils.js"></script>
+<script src="/js/i18n-engine.js"></script>
+<script src="/js/i18n-selector.js"></script>
 <script>
 // Login modal
 function openLogin() {
@@ -631,29 +641,29 @@ fetch('/api/meta').then(r=>r.json()).then(m=>{
 
   // Stats
   document.getElementById('stats').innerHTML=[
-    {n:total,l:'Metrics'},{n:layers.length,l:'Layers'},
-    {n:factors.length,l:'Factors'},{n:dCount,l:'Discourse levels'}
-  ].map(s=>`<div class="stat-card"><div class="stat-num">${s.n}</div><div class="stat-label">${s.l}</div></div>`).join('');
+    {n:total,l:'Metrics',h:'a58da793c7250f1b'},{n:layers.length,l:'Layers',h:'0bcd66e677f4ee72'},
+    {n:factors.length,l:'Factors',h:'d7cf50c1419e5f16'},{n:dCount,l:'Discourse levels',h:'437d56c942fa73ba'}
+  ].map(s=>`<div class="stat-card"><div class="stat-num">${s.n}</div><div class="stat-label" data-i18n-dynamic="${s.h}">${s.l}</div></div>`).join('');
 
   // Discourse
   const ln=id=>layers.find(x=>x.id===id)?.name||id;
   document.getElementById('discourse').innerHTML=disc.map(d=>
-    `<div class="disc-row"><span class="disc-num"${d.level==='+'?' style="background:linear-gradient(135deg,var(--amber),var(--rose))"':''}>${d.level}</span><span class="disc-name">${d.name}</span><div class="disc-tags">${d.layers.map(l=>`<span class="disc-tag">${l} ${ln(l)}</span>`).join('')}</div></div>`
+    `<div class="disc-row"><span class="disc-num"${d.level==='+'?' style="background:linear-gradient(135deg,var(--amber),var(--rose))"':''}>${d.level}</span><span class="disc-name" data-i18n-dynamic>${d.name}</span><div class="disc-tags">${d.layers.map(l=>`<span class="disc-tag" data-i18n-dynamic>${l} ${ln(l)}</span>`).join('')}</div></div>`
   ).join('');
 
   // Genre
   if(genres){
-    document.getElementById('genre-title').innerHTML=`${genres.count}-genre scoring <span class="coming">Coming soon</span>`;
+    document.getElementById('genre-title').innerHTML=`${genres.count}-genre scoring`;
     document.getElementById('genre-desc').textContent=`Analysis adapts across ${genres.categories} genre categories. A narrative essay is evaluated differently from a lab report or opinion piece.`;
   }
 
   // CTA
-  document.getElementById('cta-sub').textContent=`Upload an essay and get the full ${layers.length}-layer breakdown in minutes.`;
+  document.getElementById('cta-sub').textContent=`Create a project, import your essays, and get the full ${layers.length}-layer breakdown in minutes.`;
 
   // Layers grid
   document.getElementById('layers').innerHTML=layers.map(l=>{
     const desc=l.definition?l.definition.split('. ').slice(0,2).join('. ')+'.':'';
-    return `<div class="layer-card"><div class="layer-id">${l.id}</div><div class="layer-name">${l.name}</div>${desc?`<div class="layer-desc">${desc}</div>`:''}${l.metricCount?`<div class="layer-count">${l.metricCount} metrics</div>`:''}</div>`;
+    return `<div class="layer-card"><div class="layer-id">${l.id}</div><div class="layer-name" data-i18n-dynamic>${l.name}</div>${desc?`<div class="layer-desc" data-i18n-dynamic>${desc}</div>`:''}${l.metricCount?`<div class="layer-count" data-i18n-dynamic>${l.metricCount} metrics</div>`:''}</div>`;
   }).join('');
 }).catch(()=>{});
 
@@ -662,6 +672,11 @@ const obs=new IntersectionObserver(es=>{
   es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});
 },{threshold:0.05});
 document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+
+// Initialize i18n
+if (typeof I18nSelector !== 'undefined') {
+  I18nSelector.init();
+}
 </script>
 </body>
 </html>

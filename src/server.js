@@ -25,10 +25,17 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── Public routes (no auth) ─────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 
-// Genre taxonomy (static, no auth needed)
+// Genre taxonomy (static, no auth needed) — includes i18n hashes
 app.get('/api/genres', (req, res) => {
+  const crypto = require('crypto');
+  const gh = (t) => crypto.createHash('sha256').update(t.trim()).digest('hex').substring(0, 16);
   const { GENRE_CATEGORIES } = require('./services/genres');
-  res.json({ categories: GENRE_CATEGORIES });
+  const categories = GENRE_CATEGORIES.map(cat => ({
+    ...cat,
+    i18n: gh(cat.category),
+    genres: cat.genres.map(g => ({ ...g, i18n: gh(g.name), descI18n: gh(g.description) })),
+  }));
+  res.json({ categories });
 });
 
 // App metadata for landing page (no auth needed)
@@ -71,6 +78,9 @@ app.get('/health', (req, res) => {
   info.pricing = llm.getPricing();
   res.json({ status: 'ok', version: '0.9.0', environment: config.nodeEnv, llm: info });
 });
+
+// ─── Public routes (no auth) ─────────────────────────────────────────────────
+app.use('/api/i18n', require('./routes/i18n'));
 
 // ─── Protected routes (require auth) ─────────────────────────────────────────
 app.use('/api/analyze', requireAuth, require('./routes/analyze'));

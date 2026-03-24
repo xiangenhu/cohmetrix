@@ -98,7 +98,7 @@ const Auth = (() => {
       userBar.innerHTML = `
         ${u.picture ? `<img class="user-avatar" src="${u.picture}" alt="">` : ''}
         <span class="user-name">${u.name || u.email}</span>
-        <button class="logout-btn" id="logout-btn">Logout</button>`;
+        <button class="logout-btn" id="logout-btn" data-i18n="d0527e4b3d658351">Logout</button>`;
       document.getElementById('logout-btn').addEventListener('click', logout);
     }
 

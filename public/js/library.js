@@ -57,7 +57,7 @@ const Library = (() => {
   async function loadDocuments() {
     const body = document.getElementById('library-body');
     const badge = document.getElementById('library-badge');
-    body.innerHTML = '<div class="library-loading">Loading documents…</div>';
+    body.innerHTML = '<div class="library-loading" data-i18n="1c104bbb3ee46ce1">Loading documents…</div>';
 
     try {
       const resp = await Auth.apiFetch('/api/documents');
@@ -68,7 +68,7 @@ const Library = (() => {
       badge.textContent = documents.length;
       renderList();
     } catch (err) {
-      body.innerHTML = `<div class="library-empty">Failed to load documents</div>`;
+      body.innerHTML = `<div class="library-empty" data-i18n="6be796069db6cf03">Failed to load documents</div>`;
       console.error('Library load error:', err);
     }
   }
@@ -80,11 +80,11 @@ const Library = (() => {
       body.innerHTML = `
         <div class="library-toolbar">
           <button class="lib-upload-btn" id="lib-upload-btn-inner">
-            <span>&#8593;</span> Upload to library
+            <span>&#8593;</span> <span data-i18n="435afde012109aed">Upload to library</span>
           </button>
-          <button class="lib-refresh-btn" id="lib-refresh-btn-inner">&#8635; Refresh</button>
+          <button class="lib-refresh-btn" id="lib-refresh-btn-inner"><span>&#8635;</span> <span data-i18n="0e91610117029a62">Refresh</span></button>
         </div>
-        <div class="library-empty">No documents yet. Upload a file to get started.</div>`;
+        <div class="library-empty" data-i18n="93509639afb7e762">No documents yet. Upload a file to get started.</div>`;
       bindToolbarInner();
       return;
     }
@@ -109,9 +109,9 @@ const Library = (() => {
     body.innerHTML = `
       <div class="library-toolbar">
         <button class="lib-upload-btn" id="lib-upload-btn-inner">
-          <span>&#8593;</span> Upload to library
+          <span>&#8593;</span> <span data-i18n="435afde012109aed">Upload to library</span>
         </button>
-        <button class="lib-refresh-btn" id="lib-refresh-btn-inner">&#8635; Refresh</button>
+        <button class="lib-refresh-btn" id="lib-refresh-btn-inner"><span>&#8635;</span> <span data-i18n="0e91610117029a62">Refresh</span></button>
       </div>
       ${items}`;
 
@@ -166,6 +166,7 @@ const Library = (() => {
     dropSub.textContent = `${doc.sizeLabel} · Loading text…`;
     textarea.value = '';
     textarea.placeholder = 'Loading document text…';
+    textarea.setAttribute('data-i18n-placeholder', 'f89ca538d8d28830');
 
     try {
       const resp = await Auth.apiFetch(`/api/documents/content/${encodeURIComponent(doc.name)}?extract=true`);
@@ -173,6 +174,7 @@ const Library = (() => {
       const data = await resp.json();
       textarea.value = data.text;
       textarea.placeholder = 'Paste essay content here...';
+      textarea.setAttribute('data-i18n-placeholder', 'b7b8ea6029d669f2');
       dropSub.textContent = `${doc.sizeLabel} · Text loaded from library`;
     } catch (err) {
       dropSub.textContent = `${doc.sizeLabel} · Failed to extract text`;

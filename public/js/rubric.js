@@ -50,7 +50,7 @@ const Rubric = (() => {
   async function loadRubrics() {
     const listEl = document.getElementById('rv-rubric-list');
     if (!listEl) return;
-    listEl.innerHTML = '<div class="library-loading">Loading…</div>';
+    listEl.innerHTML = '<div class="library-loading" data-i18n="ba3bbbe10d8bef66">Loading…</div>';
 
     try {
       const resp = await Auth.apiFetch('/api/rubrics');
@@ -60,7 +60,7 @@ const Rubric = (() => {
       libLoaded = true;
       renderLibraryList();
     } catch {
-      listEl.innerHTML = '<div class="library-empty" style="padding:12px">No rubrics yet</div>';
+      listEl.innerHTML = '<div class="library-empty" style="padding:12px" data-i18n="367f6b6a083ed700">No rubrics yet</div>';
     }
   }
 
@@ -69,7 +69,7 @@ const Rubric = (() => {
     if (!listEl) return;
 
     if (savedRubrics.length === 0) {
-      listEl.innerHTML = '<div class="library-empty" style="padding:12px;font-size:11px">No rubrics saved. Upload or paste one.</div>';
+      listEl.innerHTML = '<div class="library-empty" style="padding:12px;font-size:11px" data-i18n="08ebfe84484d3724">No rubrics saved. Upload or paste one.</div>';
       return;
     }
 
@@ -188,7 +188,7 @@ const Rubric = (() => {
     const evalBtn = document.getElementById('rubric-evaluate-btn');
     const status = document.getElementById('rubric-evaluate-status');
     if (evalBtn) evalBtn.disabled = true;
-    if (status) status.textContent = 'Evaluating…';
+    if (status) { status.textContent = 'Evaluating…'; status.setAttribute('data-i18n', 'f46f4682a742e004'); }
 
     // Show loading in center panel
     const cp = document.getElementById('rv-center-panel');
@@ -197,8 +197,8 @@ const Rubric = (() => {
     cp.innerHTML = `
       <div style="text-align:center;padding:60px;color:var(--text-tertiary)">
         <div class="proc-spinner" style="margin:0 auto 16px;width:24px;height:24px;border:2px solid var(--teal-light);border-top-color:var(--teal)"></div>
-        <div style="font-size:14px">Evaluating essay against rubric…</div>
-        <div style="font-size:11px;margin-top:4px">This may take 10–20 seconds</div>
+        <div style="font-size:14px" data-i18n="590b48a69d4ee4d3">Evaluating essay against rubric…</div>
+        <div style="font-size:11px;margin-top:4px" data-i18n="fe0c5d0bb241c6ec">This may take 10–20 seconds</div>
       </div>`;
 
     try {
@@ -215,7 +215,7 @@ const Rubric = (() => {
         currentEvaluation = result.evaluation;
         renderReviewResults();
         if (status) status.textContent = '';
-        if (evalBtn) evalBtn.textContent = 'Re-evaluate';
+        if (evalBtn) { evalBtn.textContent = 'Re-evaluate'; evalBtn.setAttribute('data-i18n', 'aa3f75cc8e90bff0'); }
         TokenFooter.onApiResponse(result);
       } else {
         throw new Error(result.error);
@@ -270,7 +270,9 @@ const Rubric = (() => {
     }).join('');
 
     // Right: narrative
-    document.getElementById('rv-narrative-text').textContent = ev.overall_narrative || 'No overall assessment generated.';
+    const narrativeEl = document.getElementById('rv-narrative-text');
+    narrativeEl.textContent = ev.overall_narrative || 'No overall assessment generated.';
+    if (!ev.overall_narrative) narrativeEl.setAttribute('data-i18n', '380668475ed16a64');
 
     // Sidebar: criteria list
     renderCriteriaList();
@@ -314,11 +316,11 @@ const Rubric = (() => {
 
     const strengthsHtml = (c.strengths || []).map(s =>
       `<div class="fb-item"><div class="fb-dot" style="background:#059669"></div><div>${escapeHtml(s)}</div></div>`
-    ).join('') || '<div style="font-size:11px;color:var(--text-tertiary)">None noted</div>';
+    ).join('') || '<div style="font-size:11px;color:var(--text-tertiary)" data-i18n="023d5216dc60dc3c">None noted</div>';
 
     const improvementsHtml = (c.improvements || []).map(s =>
       `<div class="fb-item"><div class="fb-dot" style="background:var(--amber)"></div><div>${escapeHtml(s)}</div></div>`
-    ).join('') || '<div style="font-size:11px;color:var(--text-tertiary)">None noted</div>';
+    ).join('') || '<div style="font-size:11px;color:var(--text-tertiary)" data-i18n="023d5216dc60dc3c">None noted</div>';
 
     const metricsHtml = (c.relevant_metrics || []).map(m =>
       `<span class="criterion-metric-tag">${m}</span>`
@@ -335,20 +337,20 @@ const Rubric = (() => {
       <div class="cp-summary">${escapeHtml(c.narrative || '')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px">
         <div>
-          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:#059669;margin-bottom:8px">Strengths</div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:#059669;margin-bottom:8px" data-i18n="b11d27f88ceb483a">Strengths</div>
           <div class="feedback-box" style="background:rgba(5,150,105,0.06);border:none">${strengthsHtml}</div>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--amber);margin-bottom:8px">Areas for Improvement</div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--amber);margin-bottom:8px" data-i18n="bd35893d9605fc35">Areas for Improvement</div>
           <div class="feedback-box" style="background:rgba(217,119,6,0.06);border:none">${improvementsHtml}</div>
         </div>
       </div>
       ${metricsHtml ? `<div style="margin-top:12px">
-        <div style="font-size:10px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Supporting Metrics</div>
+        <div style="font-size:10px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px" data-i18n="b8e11a1bb79bbd95">Supporting Metrics</div>
         <div class="criterion-metrics">${metricsHtml}</div>
       </div>` : ''}
       <div style="margin-top:16px;text-align:center">
-        <button class="rubric-evaluate-btn" style="font-size:11px;padding:6px 12px" onclick="Rubric.triggerEvaluate()">Re-evaluate with Different Rubric</button>
+        <button class="rubric-evaluate-btn" style="font-size:11px;padding:6px 12px" onclick="Rubric.triggerEvaluate()" data-i18n="a7eab9d9c6ae832d">Re-evaluate with Different Rubric</button>
       </div>`;
   }
 
