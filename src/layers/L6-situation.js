@@ -70,4 +70,5 @@ function normalizeToScore(value, idealMin, idealMax, absMin, absMax) {
 function clampScore(s) { return Math.max(0, Math.min(100, s)); }
 function round(n, d = 0) { const f = 10 ** d; return Math.round(n * f) / f; }
 
-module.exports = { analyze, LAYER_ID, LAYER_NAME };
+const METRIC_COUNT = 8;
+module.exports = { analyze, LAYER_ID, LAYER_NAME, METRIC_COUNT };

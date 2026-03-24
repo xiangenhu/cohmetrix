@@ -280,4 +280,36 @@ Return JSON array: [{"point": "feedback text here"}, ...]`;
   }
 }
 
-module.exports = { runAnalysis };
+/**
+ * Return composite factor definitions (for landing page metadata).
+ */
+function getCompositeDefinitions() {
+  return [
+    { id: 'F1', label: 'Narrativity', layers: ['L10', 'L6', 'L3'],
+      description: 'Measures how story-like and character-driven the text is. High narrativity means concrete events, characters with intentions, and emotional engagement. Based on Graesser et al. (2011) — narrative texts are easier to process because they mirror everyday experience.',
+      scoring: '40% Affect (L10) + 35% Situation Model (L6) + 25% Referential Cohesion (L3)' },
+    { id: 'F2', label: 'Syntactic Simplicity', layers: ['L2', 'L0'],
+      description: 'Captures how accessible the grammar is. Higher scores mean shorter sentences, simpler dependency structures, and lower subordination — easier for readers to parse. Based on Dependency Locality Theory (Gibson, 2000).',
+      scoring: '60% Syntactic Complexity (L2) + 40% Surface Metrics (L0)' },
+    { id: 'F3', label: 'Word Concreteness', layers: ['L1', 'L0'],
+      description: 'Measures vocabulary specificity and imageability. Concrete, familiar words are processed faster (dual-coding theory, Paivio 1986). High concreteness aids comprehension; low concreteness signals abstraction, common in academic prose.',
+      scoring: '60% Lexical Sophistication (L1) + 40% Surface Metrics (L0)' },
+    { id: 'F4', label: 'Referential Cohesion', layers: ['L3', 'L4'],
+      description: 'Tracks how consistently the text refers back to established entities and ideas. High referential cohesion means readers can follow who and what is being discussed without guessing. Based on Givón\'s (1983) topic continuity and Coh-Metrix CRF indices.',
+      scoring: '50% Referential Cohesion (L3) + 50% Semantic Cohesion (L4)' },
+    { id: 'F5', label: 'Deep Cohesion', layers: ['L5', 'L6', 'L4'],
+      description: 'Measures the explicit logical "glue" — causal, temporal, and adversative connectives that make relationships between ideas clear. High deep cohesion reduces the inferential burden on readers. Based on Halliday & Hasan (1976) and Coh-Metrix CNC indices.',
+      scoring: '40% Connective Cohesion (L5) + 30% Situation Model (L6) + 30% Semantic Cohesion (L4)' },
+    { id: 'F6', label: 'Argumentation Quality', layers: ['L8', 'L7'],
+      description: 'Evaluates logical reasoning structure using the Toulmin (1958) model. Measures whether claims are supported by evidence, warrants connect data to claims, and counter-arguments are addressed. The single strongest predictor of academic essay grades (Wingate, 2012).',
+      scoring: '70% Argumentation (L8) + 30% Rhetorical Structure (L7)' },
+    { id: 'F7', label: 'Epistemic Calibration', layers: ['L9'],
+      description: 'Measures how appropriately the writer modulates certainty through hedging ("may suggest") and boosting ("clearly demonstrates"). Mature academic writing calibrates confidence to evidence strength. Based on Hyland\'s (2005) metadiscourse framework.',
+      scoring: '100% Pragmatic Stance (L9)' },
+    { id: 'F8', label: 'Engagement & Affect', layers: ['L10', 'L6', 'L3'],
+      description: 'Captures emotional tone and reader engagement — valence, arousal, and whether affect is strategically placed or random. Even academic writing carries emotional charge; consistent, controlled affect signals maturity. Based on Russell\'s (1980) VAD model.',
+      scoring: '50% Affect (L10) + 30% Situation Model (L6) + 20% Referential Cohesion (L3)' },
+  ];
+}
+
+module.exports = { runAnalysis, getCompositeDefinitions };

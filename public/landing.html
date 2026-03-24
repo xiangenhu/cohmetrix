@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoCohMetrix</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08090e;
+      --surface: #0f1117;
+      --card: #13141b;
+      --card-hover: #191a23;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #e2e4ea;
+      --text2: #8b8fa4;
+      --text3: #5a5e72;
+      --cyan: #22d3ee;
+      --teal: #2dd4bf;
+      --violet: #a78bfa;
+      --rose: #fb7185;
+      --amber: #fbbf24;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text2);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(8,9,14,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .nav-logo span { color: var(--teal); }
+
+    .nav-cta {
+      padding: 8px 22px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 16px rgba(45,212,191,0.25);
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 24px rgba(45,212,191,0.4);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(45,212,191,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 70% 70%, rgba(34,211,238,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 20% 60%, rgba(167,139,250,0.06) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    /* dot grid */
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse 60% 50% at 50% 45%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 45%, black 20%, transparent 70%);
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 18px;
+      border-radius: 100px;
+      background: rgba(45,212,191,0.08);
+      border: 1px solid rgba(45,212,191,0.2);
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 36px;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 8px var(--teal);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .hero h1 {
+      font-size: clamp(42px, 6.5vw, 76px);
+      font-weight: 700;
+      letter-spacing: -2.5px;
+      line-height: 1.05;
+      color: #fff;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--teal), var(--cyan), var(--violet));
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 6s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+    .hero p {
+      font-size: clamp(16px, 2vw, 19px);
+      color: #b0b5c5;
+      line-height: 1.75;
+      max-width: 540px;
+      margin: 0 auto 48px;
+    }
+
+    .cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--bg);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 32px rgba(45,212,191,0.3), 0 0 80px rgba(34,211,238,0.15);
+    }
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(45,212,191,0.45), 0 0 100px rgba(34,211,238,0.2);
+    }
+    .cta-primary svg { width: 18px; height: 18px; }
+
+    .cta-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 30px; border: 1px solid var(--border-hover);
+      border-radius: 10px; background: rgba(255,255,255,0.03);
+      color: var(--text2); font-size: 15px; font-weight: 500;
+      font-family: var(--font); cursor: pointer; transition: all 0.2s;
+    }
+    .cta-secondary:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+    .hero-note { font-size: 12px; color: var(--text3); }
+
+    .scroll-hint {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: var(--text3); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+      animation: float 2.5s ease-in-out infinite;
+    }
+    .scroll-line { width: 1px; height: 28px; background: linear-gradient(to bottom, var(--text3), transparent); }
+    @keyframes float { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+
+    /* ── SECTIONS ── */
+    section { padding: 100px 24px; max-width: 1120px; margin: 0 auto; }
+
+    .label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2.5px; color: var(--teal); margin-bottom: 18px;
+      font-family: var(--mono);
+    }
+    .label::before { content: ''; width: 20px; height: 1px; background: var(--teal); }
+
+    section h2 {
+      font-size: clamp(28px, 3.5vw, 42px); font-weight: 700;
+      letter-spacing: -1.2px; line-height: 1.12; color: var(--text); margin-bottom: 18px;
+    }
+
+    section > p {
+      font-size: 16px; color: var(--text2); line-height: 1.75;
+      max-width: 560px; margin-bottom: 48px;
+    }
+
+    /* ── PROBLEM ── */
+    .problem-bg { background: var(--bg); border-bottom: 1px solid var(--border); }
+    .problem-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .problem-card {
+      padding: 28px 24px; border-radius: 14px; background: var(--card);
+      border: 1px solid var(--border); border-left: 3px solid var(--rose);
+      transition: all 0.3s;
+    }
+    .problem-card:hover { background: var(--card-hover); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(251,113,133,0.06); }
+    .problem-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: rgba(251,113,133,0.1); color: var(--rose);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
+    }
+    .problem-card h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .problem-card p { font-size: 14px; color: var(--text2); line-height: 1.7; }
+
+    /* ── WHAT IT IS ── */
+    .what-bg { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .what-layout { display: grid; grid-template-columns: 1fr 340px; gap: 64px; align-items: center; }
+    .what-text p { font-size: 16px; color: var(--text2); line-height: 1.75; margin-bottom: 24px; }
+    .what-text p:last-child { margin-bottom: 0; }
+    .stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+    .stat-card {
+      text-align: center; padding: 28px 16px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 14px; transition: all 0.3s;
+    }
+    .stat-card:hover { border-color: rgba(45,212,191,0.3); box-shadow: 0 0 24px rgba(45,212,191,0.15); transform: translateY(-2px); }
+    .stat-num {
+      font-size: 42px; font-weight: 700; letter-spacing: -1.5px;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      line-height: 1; margin-bottom: 8px;
+    }
+    .stat-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: var(--mono); }
+
+    /* ── HOW ── */
+    .how-bg { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .how-steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; position: relative; }
+    .how-steps::before {
+      content: ''; position: absolute; top: 48px; left: 12%; right: 12%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal), var(--cyan), var(--violet), transparent);
+      opacity: 0.4; z-index: 0;
+    }
+    .how-step { padding: 32px 24px; text-align: center; position: relative; z-index: 1; }
+    .how-num {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--border-hover);
+      color: var(--teal); font-size: 15px; font-weight: 700; font-family: var(--mono);
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 18px; box-shadow: 0 0 20px rgba(45,212,191,0.15);
+    }
+    .how-step h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .how-step p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+    /* ── DISCOURSE ── */
+    .disc-bg { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .disc-visual { display: flex; flex-direction: column; gap: 8px; margin-top: 48px; max-width: 740px; margin-left: auto; margin-right: auto; }
+    .disc-row {
+      display: flex; align-items: center; gap: 14px; padding: 14px 20px;
+      border-radius: 12px; background: var(--card); border: 1px solid var(--border); transition: all 0.3s;
+    }
+    .disc-row:hover { border-color: rgba(45,212,191,0.25); box-shadow: 0 0 20px rgba(45,212,191,0.15); transform: translateX(4px); }
+    .disc-num {
+      font-size: 12px; font-weight: 700; font-family: var(--mono);
+      color: var(--bg); background: linear-gradient(135deg, var(--teal), var(--cyan));
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .disc-name { font-size: 14px; font-weight: 600; color: var(--text); min-width: 160px; }
+    .disc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .disc-tag {
+      font-size: 11px; font-family: var(--mono); padding: 4px 10px;
+      border-radius: 6px; background: rgba(45,212,191,0.08);
+      border: 1px solid rgba(45,212,191,0.15); color: var(--teal); font-weight: 500;
+    }
+
+    /* ── FEATURES ── */
+    .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .feat-card {
+      padding: 30px 26px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 14px; transition: all 0.3s;
+    }
+    .feat-card:hover { background: var(--card-hover); border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+    }
+    .feat-icon.ic-teal { background: rgba(45,212,191,0.1); color: var(--teal); }
+    .feat-icon.ic-cyan { background: rgba(34,211,238,0.1); color: var(--cyan); }
+    .feat-icon.ic-amber { background: rgba(251,191,36,0.1); color: var(--amber); }
+    .feat-icon.ic-rose { background: rgba(251,113,133,0.1); color: var(--rose); }
+    .feat-card h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .feat-card p { font-size: 14px; color: var(--text2); line-height: 1.7; }
+    .coming { display: inline-block; font-size: 9px; font-weight: 700; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 8px; border-radius: 4px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: var(--amber); vertical-align: middle; margin-left: 4px; }
+
+    /* ── WHO ── */
+    .who-bg { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .who-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .who-card {
+      padding: 28px 24px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; transition: all 0.3s; position: relative;
+    }
+    .who-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--teal), var(--cyan), var(--violet)); }
+    .who-card:hover { background: var(--card-hover); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .who-card h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+    .who-card p { font-size: 14px; color: var(--text2); line-height: 1.7; }
+
+    /* ── LAYERS GRID ── */
+    .layers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 14px; }
+    .layer-card {
+      padding: 22px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .layer-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--cyan)); opacity:0; transition:opacity 0.3s; }
+    .layer-card:hover { background: var(--card-hover); border-color: rgba(45,212,191,0.2); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(45,212,191,0.15); }
+    .layer-card:hover::before { opacity: 1; }
+    .layer-id { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--teal); letter-spacing: 1.5px; margin-bottom: 8px; }
+    .layer-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+    .layer-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+    .layer-count { margin-top: 12px; font-size: 11px; font-family: var(--mono); color: var(--text3); padding-top: 10px; border-top: 1px solid var(--border); }
+
+    /* ── BOTTOM CTA ── */
+    .bottom-cta {
+      padding: 120px 24px; text-align: center;
+      background:
+        radial-gradient(ellipse 50% 60% at 50% 50%, rgba(45,212,191,0.1) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 55% 45%, rgba(167,139,250,0.06) 0%, transparent 70%),
+        var(--bg);
+    }
+    .bottom-cta h2 { font-size: clamp(28px,3.5vw,44px); font-weight: 700; letter-spacing: -1.2px; color: var(--text); margin-bottom: 14px; }
+    .bottom-cta p { font-size: 17px; color: var(--text2); margin-bottom: 48px; line-height: 1.65; max-width: 100%; }
+    .big-cta {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 20px 52px; border: none; border-radius: 14px;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--bg); font-size: 18px; font-weight: 700; font-family: var(--font);
+      cursor: pointer; transition: transform 0.25s, box-shadow 0.25s;
+      box-shadow: 0 0 40px rgba(45,212,191,0.4), 0 0 80px rgba(34,211,238,0.2), 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .big-cta:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 60px rgba(45,212,191,0.55), 0 0 120px rgba(34,211,238,0.3); }
+    .big-cta svg { width: 22px; height: 22px; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 24px 36px; border-top: 1px solid var(--border);
+      text-align: center; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .f-brand { font-size: 14px; font-weight: 600; color: var(--text2); }
+    .f-credit { font-size: 12px; color: var(--text3); line-height: 1.6; }
+    .f-credit strong { color: var(--text2); font-weight: 600; }
+    .f-sub { font-size: 11px; color: var(--text3); opacity: 0.6; font-family: var(--mono); letter-spacing: 0.3px; margin-top: 2px; }
+
+    /* ── FADE IN ── */
+    .fi { opacity: 0; transform: translateY(36px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .fi.vis { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:900px) {
+      .problem-grid,.who-grid { grid-template-columns: 1fr; }
+      .what-layout { grid-template-columns: 1fr; gap: 40px; }
+      .stat-grid { grid-template-columns: repeat(4,1fr); }
+      .feat-grid { grid-template-columns: repeat(2,1fr); }
+      .how-steps { grid-template-columns: repeat(2,1fr); }
+      .how-steps::before { display: none; }
+      .disc-name { min-width: auto; }
+    }
+    @media (max-width:600px) {
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+      .feat-grid,.how-steps { grid-template-columns: 1fr; }
+      .cta-group { flex-direction: column; }
+      .cta-primary,.cta-secondary { width: 100%; justify-content: center; }
+      .disc-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .layers-grid { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Neo<span>CohMetrix</span></div>
+  <button class="nav-cta" onclick="window.location='/'">Get started</button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge"><span class="badge-dot"></span> v0.9 Beta</div>
+  <h1>Understand writing<br>at <span>every level</span></h1>
+  <p id="hero-sub">Deep text analysis grounded in discourse science. From surface features to argumentation quality — metrics that reveal how writing truly works.</p>
+  <div class="cta-group">
+    <button class="cta-primary" onclick="window.location='/'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Get started
+    </button>
+    <button class="cta-secondary" onclick="document.getElementById('s-problem').scrollIntoView({behavior:'smooth'})">Learn more</button>
+  </div>
+  <div class="hero-note">Sign in with Google to start analyzing</div>
+  <div class="scroll-hint"><span>Explore</span><div class="scroll-line"></div></div>
+</div>
+
+<!-- PROBLEM -->
+<div class="problem-bg">
+<section class="fi" id="s-problem">
+  <div class="label">The problem</div>
+  <h2>Essay feedback is broken</h2>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="problem-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <h3>Surface-level only</h3>
+      <p>Most tools stop at grammar and spelling. They miss cohesion, argumentation, rhetorical structure — the things that determine whether writing communicates effectively.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <h3>One-size-fits-all</h3>
+      <p>A research paper and a personal essay are evaluated identically. Genre expectations, audience level, and assignment context are ignored entirely.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <h3>No explanation</h3>
+      <p>A score without evidence is useless. Writers need to see <em>where</em> the problems are and <em>why</em> a metric matters — not just a number.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- WHAT IT IS -->
+<div class="what-bg">
+<section class="fi">
+  <div class="what-layout">
+    <div class="what-text">
+      <div class="label">What it is</div>
+      <h2>A multi-layer analysis engine for text cohesion</h2>
+      <p>NeoCohMetrix applies the multilevel framework of discourse comprehension (Graesser, McNamara et al.) to analyze writing across five theoretical levels — from surface code through pragmatic communication.</p>
+      <p>Each layer produces scored metrics with textual evidence, plain-language explanations, and benchmarks grounded in peer-reviewed research.</p>
+      <p>It combines NLP with LLM-based analysis to go beyond what statistical tools alone can capture: argumentation structure, rhetorical moves, stance calibration, and reader-relative difficulty.</p>
+    </div>
+    <div class="stat-grid" id="stats"></div>
+  </div>
+</section>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-bg">
+<section class="fi">
+  <div class="label">How it works</div>
+  <h2>From upload to insight</h2>
+  <p>Four steps, fully automated. Results in minutes, not hours.</p>
+  <div class="how-steps">
+    <div class="how-step"><div class="how-num">1</div><h3>Upload</h3><p>Drop a PDF, DOCX, or paste text. Set the genre and assignment prompt for context-aware scoring.</p></div>
+    <div class="how-step"><div class="how-num">2</div><h3>Analyze</h3><p>The pipeline runs analysis layers in parallel groups, streaming each layer's progress in real time.</p></div>
+    <div class="how-step"><div class="how-num">3</div><h3>Explore</h3><p>Browse per-metric scores, composite factors, evidence excerpts pulled from the text, and radar visualizations.</p></div>
+    <div class="how-step"><div class="how-num">4</div><h3>Act</h3><p>Get prioritized AI tutor feedback, ask follow-up questions, or evaluate against your own rubric.</p></div>
+  </div>
+</section>
+</div>
+
+<!-- DISCOURSE MODEL -->
+<div class="disc-bg">
+<section class="fi">
+  <div class="label">The science</div>
+  <h2>Five levels of discourse comprehension</h2>
+  <p>Readers don't just decode words — they build mental models. Each discourse level captures a different layer of that process.</p>
+  <div class="disc-visual" id="discourse"></div>
+</section>
+</div>
+
+<!-- FEATURES -->
+<section class="fi">
+  <div class="label">What you get</div>
+  <h2>Analysis that explains itself</h2>
+  <p>Every score comes with evidence, context, and actionable guidance.</p>
+  <div class="feat-grid">
+    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><h3>Evidence from your text</h3><p>Every metric is backed by specific excerpts from the essay. You see exactly which sentences drive each score — no black boxes.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><h3 id="genre-title">Genre-aware scoring <span class="coming">Coming soon</span></h3><p id="genre-desc">Analysis adapts to your document type. A narrative essay is evaluated differently from a lab report or opinion piece.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-rose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>AI tutor</h3><p>An LLM interprets your results and generates prioritized, actionable feedback. Ask follow-up questions in a built-in help chat.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div><h3>Rubric mapping</h3><p>Upload your grading rubric. The system maps cohesion metrics to each criterion and generates a scored review against your framework.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Reader-adaptive scoring</h3><p>Difficulty is relative. Scores adjust to learner profiles using Zone of Proximal Development proximity.</p></div>
+    <div class="feat-card"><div class="feat-icon ic-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3>Composite factors</h3><p>Eight PCA-analog dimensions — Narrativity, Syntactic Simplicity, Deep Cohesion, Argumentation — give a high-level profile of the essay's strengths.</p></div>
+  </div>
+</section>
+
+<!-- WHO -->
+<div class="who-bg">
+<section class="fi">
+  <div class="label">Who it's for</div>
+  <h2>Built for educators and researchers</h2>
+  <div class="who-grid">
+    <div class="who-card"><h3>Writing instructors</h3><p>Get diagnostic breakdowns that show <em>why</em> an essay scores low on cohesion — not just that it does. Use the rubric tool to align with your syllabus.</p></div>
+    <div class="who-card"><h3>Researchers</h3><p>Access the full metric set across all discourse levels for corpus studies. Every metric maps to published constructs with citations.</p></div>
+    <div class="who-card"><h3>Students</h3><p>Understand your own writing through evidence-backed feedback. The AI tutor explains each metric in plain language and suggests concrete revisions.</p></div>
+  </div>
+</section>
+</div>
+
+<!-- LAYERS -->
+<div class="disc-bg">
+<section class="fi">
+  <div class="label">Deep dive</div>
+  <h2>Every layer, every metric</h2>
+  <p>Each layer targets a specific construct from the discourse comprehension literature.</p>
+  <div class="layers-grid" id="layers"></div>
+</section>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <h2>Ready to see what's under the surface?</h2>
+  <p id="cta-sub">Upload an essay and get the full multi-layer breakdown in minutes.</p>
+  <button class="big-cta" onclick="window.location='/'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+    Sign in with Google
+  </button>
+  <div class="hero-note" style="margin-top:12px">Your Google account is used for authentication only</div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-brand">NeoCohMetrix</div>
+  <div class="f-credit">Created by <strong>Xiangen Hu</strong>, Chair Professor of Learning Sciences &amp; Technologies, PolyU, Hong Kong SAR, P. R. China</div>
+  <div class="f-sub">Built on the multilevel framework of discourse comprehension</div>
+</footer>
+
+<script>
+// Fetch dynamic data
+fetch('/api/meta').then(r=>r.json()).then(m=>{
+  const layers=m.layers, factors=m.compositeFactors, disc=m.discourseLevels, genres=m.genres;
+  const total=layers.reduce((s,l)=>s+(l.metricCount||0),0);
+  const dCount=disc.filter(d=>d.level!=='+').length;
+
+  // Hero subtitle
+  document.getElementById('hero-sub').textContent=
+    `${layers.length}-layer deep text analysis grounded in discourse science. From surface features to argumentation quality — ${total} metrics that reveal how writing truly works.`;
+
+  // Stats
+  document.getElementById('stats').innerHTML=[
+    {n:total,l:'Metrics'},{n:layers.length,l:'Layers'},
+    {n:factors.length,l:'Factors'},{n:dCount,l:'Discourse levels'}
+  ].map(s=>`<div class="stat-card"><div class="stat-num">${s.n}</div><div class="stat-label">${s.l}</div></div>`).join('');
+
+  // Discourse
+  const ln=id=>layers.find(x=>x.id===id)?.name||id;
+  document.getElementById('discourse').innerHTML=disc.map(d=>
+    `<div class="disc-row"><span class="disc-num"${d.level==='+'?' style="background:linear-gradient(135deg,var(--amber),var(--rose))"':''}>${d.level}</span><span class="disc-name">${d.name}</span><div class="disc-tags">${d.layers.map(l=>`<span class="disc-tag">${l} ${ln(l)}</span>`).join('')}</div></div>`
+  ).join('');
+
+  // Genre
+  if(genres){
+    document.getElementById('genre-title').innerHTML=`${genres.count}-genre scoring <span class="coming">Coming soon</span>`;
+    document.getElementById('genre-desc').textContent=`Analysis adapts across ${genres.categories} genre categories. A narrative essay is evaluated differently from a lab report or opinion piece.`;
+  }
+
+  // CTA
+  document.getElementById('cta-sub').textContent=`Upload an essay and get the full ${layers.length}-layer breakdown in minutes.`;
+
+  // Layers grid
+  document.getElementById('layers').innerHTML=layers.map(l=>{
+    const desc=l.definition?l.definition.split('. ').slice(0,2).join('. ')+'.':'';
+    return `<div class="layer-card"><div class="layer-id">${l.id}</div><div class="layer-name">${l.name}</div>${desc?`<div class="layer-desc">${desc}</div>`:''}${l.metricCount?`<div class="layer-count">${l.metricCount} metrics</div>`:''}</div>`;
+  }).join('');
+}).catch(()=>{});
+
+// Scroll fade-in
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});
+},{threshold:0.05});
+document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

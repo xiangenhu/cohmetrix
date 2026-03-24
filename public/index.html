@@ -7,6 +7,7 @@
 
   <!-- Modular CSS -->
   <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/landing.css?v=3">
   <link rel="stylesheet" href="/css/topbar.css">
   <link rel="stylesheet" href="/css/upload.css">
   <link rel="stylesheet" href="/css/library.css">
@@ -17,28 +18,237 @@
   <link rel="stylesheet" href="/css/rubric.css">
   <link rel="stylesheet" href="/css/processing.css">
   <link rel="stylesheet" href="/css/results.css">
+  <link rel="stylesheet" href="/css/info-modal.css">
   <link rel="stylesheet" href="/css/token-footer.css">
 </head>
 <body>
 <div class="app">
 
-  <!-- ══ LOGIN SCREEN ══ -->
+  <!-- ══ LANDING / LOGIN SCREEN ══ -->
   <div id="s-login" style="display:flex;flex:1;flex-direction:column">
-    <div class="topbar">
-      <div class="logo">Neo<span>CohMetrix</span></div>
-      <div class="pill">v0.9 · Beta</div>
-    </div>
-    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem">
-      <div class="login-card">
-        <div class="login-logo">Neo<span>CohMetrix</span></div>
-        <div class="login-subtitle">12-layer cohesion analysis for essay grading</div>
-        <button class="login-btn" id="login-google-btn" onclick="Auth.login()">
-          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Sign in with Google
-        </button>
-        <div class="login-note">Sign in to access essay analysis tools.<br>Your Google account is used for authentication only.</div>
+
+    <!-- ─── HERO ─── -->
+    <section class="landing-hero">
+      <div class="hero-grid-overlay"></div>
+      <nav class="landing-nav">
+        <div class="landing-nav-logo">Neo<span>CohMetrix</span></div>
+        <button class="landing-nav-cta" onclick="Auth.login()">Get started</button>
+      </nav>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          v0.9 Beta
+        </div>
+        <h1 class="hero-title">Understand writing<br>at <span>every level</span></h1>
+        <p class="hero-subtitle" id="hero-subtitle">
+          Deep text analysis grounded in discourse science.
+          From surface features to argumentation quality &mdash;
+          metrics that reveal how writing truly works.
+        </p>
+        <div class="hero-cta-group">
+          <button class="hero-cta" onclick="Auth.login()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Get started
+          </button>
+          <button class="hero-secondary-cta" onclick="document.getElementById('section-problem').scrollIntoView({behavior:'smooth'})">
+            Learn more
+          </button>
+        </div>
+        <div class="hero-note">Sign in with Google to start analyzing</div>
       </div>
-    </div>
+      <div class="scroll-hint">
+        <span>Explore</span>
+        <div class="scroll-hint-line"></div>
+      </div>
+    </section>
+
+    <!-- ─── THE PROBLEM (WHY) ─── -->
+    <section class="landing-section problem-section fade-in-section" id="section-problem">
+      <div class="section-label">The problem</div>
+      <h2 class="section-title">Essay feedback is broken</h2>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="problem-title">Surface-level only</div>
+          <div class="problem-desc">Most tools stop at grammar and spelling. They miss cohesion, argumentation, rhetorical structure &mdash; the things that actually determine whether writing communicates effectively.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="problem-title">One-size-fits-all</div>
+          <div class="problem-desc">A research paper and a personal essay are evaluated identically. Genre expectations, audience level, and assignment context are ignored entirely.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="problem-title">No explanation</div>
+          <div class="problem-desc">A score without evidence is useless. Writers need to see <em>where</em> in their text the problems are and <em>why</em> a metric matters &mdash; not just a number.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── WHAT IT IS ─── -->
+    <section class="landing-section what-section fade-in-section">
+      <div class="what-layout">
+        <div class="what-text">
+          <div class="section-label">What it is</div>
+          <h2 class="section-title">A multi-layer analysis engine for text cohesion</h2>
+          <p class="section-desc" style="margin-bottom:24px">
+            NeoCohMetrix applies the multilevel framework of discourse comprehension (Graesser, McNamara et al.) to analyze writing across five theoretical levels &mdash; from surface code through pragmatic communication.
+          </p>
+          <p class="section-desc" style="margin-bottom:24px">
+            Each layer produces scored metrics with textual evidence, plain-language explanations, and benchmarks grounded in peer-reviewed research.
+          </p>
+          <p class="section-desc">
+            It combines NLP with LLM-based analysis to go beyond what statistical tools alone can capture: argumentation structure, rhetorical moves, stance calibration, and reader-relative difficulty.
+          </p>
+        </div>
+        <div class="what-stats" id="landing-stats"></div>
+      </div>
+    </section>
+
+    <!-- ─── HOW IT WORKS ─── -->
+    <section class="landing-section how-section fade-in-section">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">From upload to insight</h2>
+      <p class="section-desc">Four steps, fully automated. Results in minutes, not hours.</p>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <div class="how-title">Upload</div>
+          <div class="how-desc">Drop a PDF, DOCX, or paste text. Set the genre and assignment prompt for context-aware scoring.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <div class="how-title">Analyze</div>
+          <div class="how-desc">The pipeline runs analysis layers in parallel groups, streaming each layer's progress in real time.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <div class="how-title">Explore</div>
+          <div class="how-desc">Browse per-metric scores, composite factors, evidence excerpts pulled from the text, and radar visualizations.</div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <div class="how-title">Act</div>
+          <div class="how-desc">Get prioritized AI tutor feedback, ask follow-up questions, or evaluate against your own rubric.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── THE MODEL (DISCOURSE LEVELS) ─── -->
+    <section class="landing-section layers-section fade-in-section">
+      <div class="section-label">The science</div>
+      <h2 class="section-title">Five levels of discourse comprehension</h2>
+      <p class="section-desc">
+        Readers don't just decode words &mdash; they build mental models. Each discourse level captures a different layer of that process, from parsing syntax to evaluating arguments.
+      </p>
+      <div class="discourse-visual" id="landing-discourse"></div>
+    </section>
+
+    <!-- ─── WHAT YOU GET (CAPABILITIES) ─── -->
+    <section class="landing-section fade-in-section">
+      <div class="section-label">What you get</div>
+      <h2 class="section-title">Analysis that explains itself</h2>
+      <p class="section-desc">
+        Every score comes with evidence, context, and actionable guidance.
+      </p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon teal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="feature-title">Evidence from your text</div>
+          <div class="feature-desc">Every metric is backed by specific excerpts from the essay. You see exactly which sentences drive each score &mdash; no black boxes.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon amber">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="feature-title" id="genre-feature-title">Genre-aware scoring <span class="coming-soon-tag">Coming soon</span></div>
+          <div class="feature-desc" id="genre-feature-desc">Analysis adapts to your document type. A narrative essay is evaluated differently from a lab report or opinion piece.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon coral">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="feature-title">AI tutor</div>
+          <div class="feature-desc">An LLM interprets your results and generates prioritized, actionable feedback. Ask follow-up questions in a built-in help chat.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon navy">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </div>
+          <div class="feature-title">Rubric mapping</div>
+          <div class="feature-desc">Upload your grading rubric. The system maps cohesion metrics to each criterion and generates a scored review against your framework.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon teal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="feature-title">Reader-adaptive scoring</div>
+          <div class="feature-desc">Difficulty is relative. Scores adjust to learner profiles using Zone of Proximal Development proximity &mdash; "challenging for <em>this</em> student, not generically hard."</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon navy">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="feature-title">Composite factors</div>
+          <div class="feature-desc">Eight PCA-analog dimensions &mdash; Narrativity, Syntactic Simplicity, Deep Cohesion, Argumentation &mdash; give a high-level profile of the essay's strengths.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── WHO IT'S FOR ─── -->
+    <section class="landing-section who-section fade-in-section">
+      <div class="section-label">Who it's for</div>
+      <h2 class="section-title">Built for educators and researchers</h2>
+      <div class="who-grid">
+        <div class="who-card">
+          <div class="who-role">Writing instructors</div>
+          <div class="who-desc">Get diagnostic breakdowns that show <em>why</em> an essay scores low on cohesion &mdash; not just that it does. Use the rubric tool to align with your syllabus.</div>
+        </div>
+        <div class="who-card">
+          <div class="who-role">Researchers</div>
+          <div class="who-desc">Access the full metric set across all discourse levels for corpus studies. Every metric maps to published constructs with citations.</div>
+        </div>
+        <div class="who-card">
+          <div class="who-role">Students</div>
+          <div class="who-desc">Understand your own writing through evidence-backed feedback. The AI tutor explains each metric in plain language and suggests concrete revisions.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── LAYER GRID (dynamic) ─── -->
+    <section class="landing-section layers-section fade-in-section">
+      <div class="section-label">Deep dive</div>
+      <h2 class="section-title">Every layer, every metric</h2>
+      <p class="section-desc">Each layer targets a specific construct from the discourse comprehension literature.</p>
+      <div class="layers-grid" id="landing-layers-grid"></div>
+    </section>
+
+    <!-- ─── BOTTOM CTA ─── -->
+    <section class="landing-cta-section">
+      <h2 class="landing-cta-title">Ready to see what's under the surface?</h2>
+      <p class="landing-cta-sub" id="landing-cta-sub">Upload an essay and get the full multi-layer breakdown in minutes.</p>
+      <button class="cta-big-btn" onclick="Auth.login()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign in with Google
+      </button>
+      <div class="hero-note">Your Google account is used for authentication only</div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+      <div class="footer-brand">NeoCohMetrix</div>
+      <div class="footer-credit">Created by <strong>Xiangen Hu</strong>, Chair Professor of Learning Sciences &amp; Technologies, PolyU, Hong Kong SAR, P. R. China</div>
+      <div class="footer-sub">Built on the multilevel framework of discourse comprehension</div>
+    </footer>
+
   </div>
 
   <!-- ══ AUTHENTICATED APP ══ -->
@@ -53,6 +263,7 @@
       <button class="nav-btn" id="btn-process" style="opacity:0.4;pointer-events:none">Analysis</button>
       <button class="nav-btn" id="btn-results" style="opacity:0.4;pointer-events:none">Results</button>
       <button class="nav-btn" id="btn-review" style="display:none">Review</button>
+      <button class="cost-topbar-btn" id="cost-fab" style="display:none" title="Token usage & cost">$</button>
       <div class="user-bar" id="user-bar" style="display:none"></div>
     </div>
   </div>
@@ -62,7 +273,7 @@
     <div style="width:100%;max-width:640px;margin:auto;display:flex;flex-direction:column;gap:16px;padding:2rem 1rem">
       <div style="text-align:center;margin-bottom:4px">
         <div style="font-size:22px;font-weight:500;margin-bottom:4px">Cohesion Analysis</div>
-        <div style="font-size:13px;color:var(--text-secondary)">12-layer deep text analysis for essay grading · L0 – L11</div>
+        <div style="font-size:13px;color:var(--text-secondary)" id="app-tagline">Deep text cohesion analysis for essay grading</div>
       </div>
       <!-- Document Library -->
       <div class="library-panel" id="library-panel">
@@ -172,15 +383,8 @@
       <div class="stat-item"><div class="stat-label">AWL density</div><div class="stat-val" id="st-awl">—</div></div>
       <div class="stat-sep"></div>
       <div class="stat-item"><div class="stat-label">Analysis time</div><div class="stat-val" id="st-time">—</div></div>
-      <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Prompt tokens</div><div class="stat-val" id="st-prompt-tokens">—</div></div>
-      <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Completion tokens</div><div class="stat-val" id="st-completion-tokens">—</div></div>
-      <div class="stat-sep"></div>
-      <div class="stat-item"><div class="stat-label">Total tokens</div><div class="stat-val" id="st-total-tokens">—</div></div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-        <span id="st-llm-provider" style="font-size:9px;color:var(--text-tertiary)"></span>
-        <button class="nav-btn" id="btn-new-essay" style="font-size:11px">← New essay</button>
+        <button class="nav-btn" id="btn-new-essay" style="font-size:11px">&larr; New essay</button>
       </div>
     </div>
     <div class="results-inner">
@@ -194,22 +398,23 @@
       <!-- Right -->
       <div class="right-panel">
         <div>
-          <div class="rp-section-title">Composite factors</div>
+          <div class="rp-section-title">Composite factors <button class="info-btn" data-info="composite-factors">?</button></div>
           <div class="factor-chart-wrap"><canvas id="radar-chart"></canvas></div>
+          <div class="factor-scores" id="factor-scores"></div>
         </div>
         <div class="overall-score">
           <div class="os-num" id="overall-score-num">—</div>
-          <div class="os-label">Overall Cohesion Score</div>
-          <div class="os-sub">Weighted F1–F8 composite · 0–100</div>
+          <div class="os-label">Overall Cohesion Score <button class="info-btn" data-info="overall-score">?</button></div>
+          <div class="os-sub">Weighted composite · 0–100</div>
         </div>
         <div>
-          <div class="rp-section-title">Reader profile (L11)</div>
+          <div class="rp-section-title">Reader profile (L11) <button class="info-btn" data-info="reader-profile">?</button></div>
           <div class="reader-card" id="reader-profile-card">
             <div class="reader-row"><span class="reader-label">Awaiting analysis…</span></div>
           </div>
         </div>
         <div>
-          <div class="rp-section-title">Priority feedback</div>
+          <div class="rp-section-title">Priority feedback <button class="info-btn" data-info="priority-feedback">?</button></div>
           <div class="feedback-box">
             <div class="fb-label" id="feedback-count">AI Tutor</div>
             <div id="feedback-items"></div>
@@ -318,45 +523,68 @@
   </div>
 </div>
 
-<!-- ══ TOKEN USAGE FOOTER ══ -->
-<div class="token-footer" id="token-footer">
-  <div class="tf-section">
-    <span class="tf-label">Session</span>
-    <span class="tf-group">
-      <span class="tf-item">Calls: <strong id="tf-session-calls">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Prompt: <strong id="tf-session-prompt">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Completion: <strong id="tf-session-completion">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Total: <strong id="tf-session-total" class="tf-highlight">0</strong></span>
-    </span>
+<!-- ══ INFO MODAL (shared "?" help + chat) ══ -->
+<div class="info-overlay" id="info-overlay">
+  <div class="info-backdrop" id="info-backdrop"></div>
+  <div class="info-modal">
+    <div class="info-header">
+      <div class="info-header-title" id="info-title"></div>
+      <button class="info-close-btn" id="info-close-btn">&times;</button>
+    </div>
+    <div class="info-body" id="info-body"></div>
+    <div class="info-chat" id="info-chat">
+      <div class="info-chat-messages" id="info-chat-messages"></div>
+      <div class="info-chat-input-row">
+        <input class="info-chat-input" id="info-chat-input" type="text" placeholder="Ask a follow-up question&hellip;">
+        <button class="info-chat-send" id="info-chat-send">Ask</button>
+      </div>
+    </div>
   </div>
-  <div class="tf-divider"></div>
-  <div class="tf-section">
-    <span class="tf-label">Analysis</span>
-    <span class="tf-group">
-      <span class="tf-item">Calls: <strong id="tf-analysis-calls">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Prompt: <strong id="tf-analysis-prompt">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Completion: <strong id="tf-analysis-completion">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Total: <strong id="tf-analysis-total" class="tf-highlight">0</strong></span>
-    </span>
-  </div>
-  <div class="tf-divider"></div>
-  <div class="tf-section">
-    <span class="tf-label">Post-analysis</span>
-    <span class="tf-group">
-      <span class="tf-item">Calls: <strong id="tf-post-calls">0</strong></span>
-      <span class="tf-sep">|</span>
-      <span class="tf-item">Total: <strong id="tf-post-total" class="tf-highlight">0</strong></span>
-    </span>
-  </div>
-  <div class="tf-actions">
-    <span class="tf-provider" id="tf-provider"></span>
-    <button class="tf-reset-btn" id="tf-reset-btn" title="Reset session counters">Reset</button>
+</div>
+
+<!-- ══ COST BUTTON & MODAL ══ -->
+<div class="cost-overlay" id="cost-overlay">
+  <div class="cost-backdrop" id="cost-backdrop"></div>
+  <div class="cost-modal">
+    <div class="cost-header">
+      <div class="cost-header-title">Token Usage & Cost</div>
+      <span class="cost-provider" id="tf-provider"></span>
+      <button class="cost-close-btn" id="cost-close-btn">&times;</button>
+    </div>
+    <div class="cost-body">
+      <div class="cost-total-row">
+        <div class="cost-total-amount" id="cost-total-usd">$0.00</div>
+        <div class="cost-total-label">Estimated session cost</div>
+      </div>
+      <div class="cost-grid">
+        <div class="cost-card">
+          <div class="cost-card-label">Session</div>
+          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-session-calls">0</strong></div>
+          <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-session-prompt">0</strong></div>
+          <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-session-completion">0</strong></div>
+          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-session-total">0</strong></div>
+          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-session-usd">$0.00</strong></div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-card-label">Last Analysis</div>
+          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-analysis-calls">0</strong></div>
+          <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-analysis-prompt">0</strong></div>
+          <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-analysis-completion">0</strong></div>
+          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-analysis-total">0</strong></div>
+          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-analysis-usd">$0.00</strong></div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-card-label">Post-Analysis</div>
+          <div class="cost-card-row"><span>LLM calls</span><strong id="tf-post-calls">0</strong></div>
+          <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-post-total">0</strong></div>
+          <div class="cost-card-row cost"><span>Cost</span><strong id="cost-post-usd">$0.00</strong></div>
+        </div>
+      </div>
+      <div class="cost-note" id="cost-note">Pricing based on published API rates</div>
+    </div>
+    <div class="cost-footer">
+      <button class="cost-reset-btn" id="tf-reset-btn">Reset session</button>
+    </div>
   </div>
 </div>
 
@@ -374,6 +602,8 @@
 <script src="/js/history.js"></script>
 <script src="/js/rubric.js"></script>
 <script src="/js/upload.js"></script>
+<script src="/js/info-modal.js?v=3"></script>
+<script src="/js/landing.js?v=3"></script>
 <script src="/js/app.js"></script>
 
 <script>

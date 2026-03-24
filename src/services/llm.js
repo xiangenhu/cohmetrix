@@ -193,7 +193,37 @@ function getProviderInfo() {
   return { provider: config.llm.provider, name: p.name, model: p.model() };
 }
 
+// Per-1M-token pricing for cost estimation (USD)
+const MODEL_PRICING = {
+  // Anthropic
+  'claude-sonnet-4-20250514':       { promptPer1M: 3.00, completionPer1M: 15.00 },
+  'claude-haiku-4-5-20251001':      { promptPer1M: 0.80, completionPer1M: 4.00 },
+  'claude-opus-4-20250514':         { promptPer1M: 15.00, completionPer1M: 75.00 },
+  // OpenAI
+  'gpt-4o':                         { promptPer1M: 2.50, completionPer1M: 10.00 },
+  'gpt-4o-mini':                    { promptPer1M: 0.15, completionPer1M: 0.60 },
+  'gpt-4.1':                        { promptPer1M: 2.00, completionPer1M: 8.00 },
+  'gpt-4.1-mini':                   { promptPer1M: 0.40, completionPer1M: 1.60 },
+  'gpt-4.1-nano':                   { promptPer1M: 0.10, completionPer1M: 0.40 },
+  'gpt-4-turbo':                    { promptPer1M: 10.00, completionPer1M: 30.00 },
+  'o3':                             { promptPer1M: 2.00, completionPer1M: 8.00 },
+  'o3-mini':                        { promptPer1M: 1.10, completionPer1M: 4.40 },
+  'o4-mini':                        { promptPer1M: 1.10, completionPer1M: 4.40 },
+};
+
+function getPricing() {
+  const model = getProvider().model();
+  // Exact match
+  if (MODEL_PRICING[model]) return MODEL_PRICING[model];
+  // Prefix match (e.g. "claude-sonnet-4-20250514" matches "claude-sonnet-4")
+  for (const [key, val] of Object.entries(MODEL_PRICING)) {
+    if (model.startsWith(key) || key.startsWith(model)) return val;
+  }
+  // Default fallback
+  return { promptPer1M: 3.00, completionPer1M: 15.00 };
+}
+
 module.exports = {
-  complete, completeJSON, batchProcess, getProviderInfo,
+  complete, completeJSON, batchProcess, getProviderInfo, getPricing,
   createTracker, getActiveTracker, getSessionTracker, resetSessionTracker, TokenTracker,
 };

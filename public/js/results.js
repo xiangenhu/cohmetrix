@@ -86,19 +86,7 @@ const Results = (() => {
     document.getElementById('st-awl').textContent = analysisData.layers.find(l => l.layerId === 'L1')?.metrics?.['L1.5']?.value || '—';
     document.getElementById('st-time').textContent = analysisData.analysisTime.toFixed(1) + 's';
 
-    // Token usage
-    const tu = analysisData.tokenUsage;
-    if (tu) {
-      document.getElementById('st-prompt-tokens').textContent = tu.promptTokens.toLocaleString();
-      document.getElementById('st-completion-tokens').textContent = tu.completionTokens.toLocaleString();
-      document.getElementById('st-total-tokens').textContent = tu.totalTokens.toLocaleString();
-    }
-
-    // LLM provider
-    const provider = analysisData.llmProvider;
-    if (provider) {
-      document.getElementById('st-llm-provider').textContent = `${provider.name} · ${provider.model}`;
-    }
+    // Token usage — now shown in cost modal via TokenFooter
   }
 
   function renderSidebar() {
@@ -593,9 +581,33 @@ const Results = (() => {
 
   // ─── Right panel ───────────────────────────────────────────────────────
 
+  function scoreColor(s) {
+    if (s >= 75) return 'var(--teal)';
+    if (s >= 50) return 'var(--amber)';
+    return 'var(--coral)';
+  }
+
   function renderRightPanel() {
     setTimeout(() => Charts.renderRadarChart(analysisData.compositeScores), 100);
     document.getElementById('overall-score-num').textContent = analysisData.overallScore;
+
+    // Factor score breakdown
+    const factorBox = document.getElementById('factor-scores');
+    if (factorBox && analysisData.compositeScores) {
+      const factors = Object.values(analysisData.compositeScores);
+      factorBox.innerHTML = factors.map(f => {
+        const color = scoreColor(f.score);
+        const fId = f.label.split(' ')[0]; // "F1", "F2", etc.
+        return `<div class="factor-row">
+          <span class="factor-label">${f.label}</span>
+          <button class="info-btn" data-info="factor:${fId}">?</button>
+          <div class="factor-bar-track">
+            <div class="factor-bar-fill" style="width:${f.score}%;background:${color}"></div>
+          </div>
+          <span class="factor-val" style="color:${color}">${f.score}</span>
+        </div>`;
+      }).join('');
+    }
 
     const rp = analysisData.readerProfile;
     const readerCard = document.getElementById('reader-profile-card');

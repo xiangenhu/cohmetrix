@@ -83,6 +83,8 @@ const Auth = (() => {
     document.getElementById('s-login').style.display = 'flex';
     document.getElementById('app-content').style.display = 'none';
     document.getElementById('user-bar').style.display = 'none';
+    const fab = document.getElementById('cost-fab');
+    if (fab) fab.style.display = 'none';
   }
 
   function showApp() {
@@ -108,6 +110,7 @@ const Auth = (() => {
     History.init();
     HelpChat.init();
     Rubric.init();
+    TokenFooter.init();
   }
 
   function login() {

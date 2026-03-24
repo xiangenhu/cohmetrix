@@ -23,10 +23,45 @@ app.get('/api/genres', (req, res) => {
   res.json({ categories: GENRE_CATEGORIES });
 });
 
+// App metadata for landing page (no auth needed)
+app.get('/api/meta', (req, res) => {
+  const { layers } = require('./layers');
+  const { getCompositeDefinitions } = require('./services/pipeline');
+  const { LAYER_DEFINITIONS, DISCOURSE_LEVELS } = require('./services/definitions');
+  const { GENRE_CATEGORIES } = require('./services/genres');
+  const genreCount = GENRE_CATEGORIES.reduce((s, c) => s + c.genres.length, 0);
+  const categoryCount = GENRE_CATEGORIES.length;
+
+  res.json({
+    maxEssayWords: config.analysis.maxEssayWords,
+    genres: { count: genreCount, categories: categoryCount },
+    layers: layers.map(l => {
+      const def = LAYER_DEFINITIONS[l.LAYER_ID] || {};
+      return {
+        id: l.LAYER_ID,
+        name: l.LAYER_NAME,
+        metricCount: def.metricCount || l.METRIC_COUNT || null,
+        definition: def.definition || null,
+        why: def.why || null,
+      };
+    }),
+    compositeFactors: getCompositeDefinitions(),
+    discourseLevels: Object.entries(DISCOURSE_LEVELS).map(([key, val]) => ({
+      level: key === 'Meta' ? '+' : key,
+      name: val.name,
+      description: val.description,
+      layers: val.layers,
+    })),
+  });
+});
+
 // Health check (Cloud Run)
 app.get('/health', (req, res) => {
   const llm = require('./services/llm');
-  res.json({ status: 'ok', version: '0.9.0', environment: config.nodeEnv, llm: llm.getProviderInfo() });
+  const info = llm.getProviderInfo();
+  // Attach pricing per 1M tokens for cost estimation
+  info.pricing = llm.getPricing();
+  res.json({ status: 'ok', version: '0.9.0', environment: config.nodeEnv, llm: info });
 });
 
 // ─── Protected routes (require auth) ─────────────────────────────────────────
