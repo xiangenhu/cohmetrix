@@ -636,14 +636,15 @@ fetch('/api/meta').then(r=>r.json()).then(m=>{
   const dCount=disc.filter(d=>d.level!=='+').length;
 
   // Hero subtitle
-  document.getElementById('hero-sub').textContent=
-    `${layers.length}-layer deep text analysis grounded in discourse science. From surface features to argumentation quality — ${total} metrics that reveal how writing truly works.`;
+  const heroSub=document.getElementById('hero-sub');
+  heroSub.textContent=`${layers.length}-layer deep text analysis grounded in discourse science. From surface features to argumentation quality — ${total} metrics that reveal how writing truly works.`;
+  heroSub.setAttribute('data-i18n-dynamic','');
 
   // Stats
   document.getElementById('stats').innerHTML=[
-    {n:total,l:'Metrics',h:'a58da793c7250f1b'},{n:layers.length,l:'Layers',h:'0bcd66e677f4ee72'},
-    {n:factors.length,l:'Factors',h:'d7cf50c1419e5f16'},{n:dCount,l:'Discourse levels',h:'437d56c942fa73ba'}
-  ].map(s=>`<div class="stat-card"><div class="stat-num">${s.n}</div><div class="stat-label" data-i18n-dynamic="${s.h}">${s.l}</div></div>`).join('');
+    {n:total,l:'Metrics'},{n:layers.length,l:'Layers'},
+    {n:factors.length,l:'Factors'},{n:dCount,l:'Discourse levels'}
+  ].map(s=>`<div class="stat-card"><div class="stat-num">${s.n}</div><div class="stat-label" data-i18n-dynamic>${s.l}</div></div>`).join('');
 
   // Discourse
   const ln=id=>layers.find(x=>x.id===id)?.name||id;
@@ -653,18 +654,35 @@ fetch('/api/meta').then(r=>r.json()).then(m=>{
 
   // Genre
   if(genres){
-    document.getElementById('genre-title').innerHTML=`${genres.count}-genre scoring`;
-    document.getElementById('genre-desc').textContent=`Analysis adapts across ${genres.categories} genre categories. A narrative essay is evaluated differently from a lab report or opinion piece.`;
+    const gt=document.getElementById('genre-title');
+    gt.innerHTML=`${genres.count}-genre scoring`;
+    gt.setAttribute('data-i18n-dynamic','');
+    const gd=document.getElementById('genre-desc');
+    gd.textContent=`Analysis adapts across ${genres.categories} genre categories. A narrative essay is evaluated differently from a lab report or opinion piece.`;
+    gd.setAttribute('data-i18n-dynamic','');
   }
 
   // CTA
-  document.getElementById('cta-sub').textContent=`Create a project, import your essays, and get the full ${layers.length}-layer breakdown in minutes.`;
+  const ctaSub=document.getElementById('cta-sub');
+  ctaSub.textContent=`Create a project, import your essays, and get the full ${layers.length}-layer breakdown in minutes.`;
+  ctaSub.setAttribute('data-i18n-dynamic','');
 
   // Layers grid
   document.getElementById('layers').innerHTML=layers.map(l=>{
     const desc=l.definition?l.definition.split('. ').slice(0,2).join('. ')+'.':'';
     return `<div class="layer-card"><div class="layer-id">${l.id}</div><div class="layer-name" data-i18n-dynamic>${l.name}</div>${desc?`<div class="layer-desc" data-i18n-dynamic>${desc}</div>`:''}${l.metricCount?`<div class="layer-count" data-i18n-dynamic>${l.metricCount} metrics</div>`:''}</div>`;
   }).join('');
+
+  // Resolve dynamic i18n hashes then translate if non-English
+  if (typeof I18nUtils !== 'undefined') {
+    I18nUtils.resolveDynamic().then(()=>{
+      if (typeof I18nEngine !== 'undefined' && I18nConfig.getLanguage() !== 'en') {
+        document.querySelectorAll('[data-i18n]:not([data-i18n-state])').forEach(el=>{
+          I18nEngine.translateElement(el);
+        });
+      }
+    });
+  }
 }).catch(()=>{});
 
 // Scroll fade-in
