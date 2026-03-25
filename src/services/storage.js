@@ -569,60 +569,162 @@ async function migrateStorageLayout() {
 // ─── Per-project usage log ───────────────────────────────────────────────────
 // Stored at: users/{email}/projects/{projectId}/usage.json
 // Structure: { entries: [{ timestamp, action, fileName, tokens: {prompt,completion}, cost, model }], totals: { ... } }
+//
+// Usage entries are buffered in memory and flushed to GCS in a single write
+// to avoid hitting GCS per-object mutation rate limits (~1/sec).
+
+const EMPTY_USAGE = () => ({ entries: [], totals: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } });
+
+// In-memory buffer: key = "userId:projectId", value = [entry, ...]
+const usageBuffer = new Map();
+const usageFlushTimers = new Map();
+const USAGE_FLUSH_DELAY_MS = 5000; // flush 5s after last write
 
 async function loadProjectUsage(userId, projectId) {
   initStorage();
+  let usage;
   if (bucket) {
     const file = bucket.file(projectPath(userId, projectId, 'usage.json'));
     const [exists] = await file.exists();
-    if (!exists) return { entries: [], totals: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } };
-    const [contents] = await file.download();
-    return JSON.parse(contents.toString());
-  }
-  const data = memoryStore.get(`proj:${userId}:${projectId}:usage`);
-  return data ? JSON.parse(data) : { entries: [], totals: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } };
-}
-
-async function appendProjectUsage(userId, projectId, entry) {
-  initStorage();
-  const usage = await loadProjectUsage(userId, projectId);
-  usage.entries.push(entry);
-  // Update totals
-  usage.totals.promptTokens += entry.tokens?.prompt || 0;
-  usage.totals.completionTokens += entry.tokens?.completion || 0;
-  usage.totals.totalTokens += (entry.tokens?.prompt || 0) + (entry.tokens?.completion || 0);
-  usage.totals.totalCost += entry.cost || 0;
-  usage.totals.calls++;
-  const payload = JSON.stringify(usage);
-  if (bucket) {
-    await bucket.file(projectPath(userId, projectId, 'usage.json')).save(payload, { contentType: 'application/json' });
+    if (!exists) usage = EMPTY_USAGE();
+    else { const [contents] = await file.download(); usage = JSON.parse(contents.toString()); }
   } else {
-    memoryStore.set(`proj:${userId}:${projectId}:usage`, payload);
+    const data = memoryStore.get(`proj:${userId}:${projectId}:usage`);
+    usage = data ? JSON.parse(data) : EMPTY_USAGE();
+  }
+  // Merge any buffered entries not yet flushed
+  const bufKey = `${userId}:${projectId}`;
+  const pending = usageBuffer.get(bufKey);
+  if (pending && pending.length > 0) {
+    for (const entry of pending) {
+      usage.entries.push(entry);
+      usage.totals.promptTokens += entry.tokens?.prompt || 0;
+      usage.totals.completionTokens += entry.tokens?.completion || 0;
+      usage.totals.totalTokens += (entry.tokens?.prompt || 0) + (entry.tokens?.completion || 0);
+      usage.totals.totalCost += entry.cost || 0;
+      usage.totals.calls++;
+    }
   }
   return usage;
+}
+
+function appendProjectUsage(userId, projectId, entry) {
+  const bufKey = `${userId}:${projectId}`;
+  if (!usageBuffer.has(bufKey)) usageBuffer.set(bufKey, []);
+  usageBuffer.get(bufKey).push(entry);
+
+  // Debounce: reset the flush timer so we batch writes
+  if (usageFlushTimers.has(bufKey)) clearTimeout(usageFlushTimers.get(bufKey));
+  usageFlushTimers.set(bufKey, setTimeout(() => flushProjectUsage(userId, projectId), USAGE_FLUSH_DELAY_MS));
+}
+
+async function flushProjectUsage(userId, projectId) {
+  const bufKey = `${userId}:${projectId}`;
+  const pending = usageBuffer.get(bufKey);
+  if (!pending || pending.length === 0) return;
+  usageBuffer.delete(bufKey);
+  usageFlushTimers.delete(bufKey);
+
+  try {
+    initStorage();
+    // Load existing usage from storage (not from loadProjectUsage to avoid re-merging buffer)
+    let usage;
+    if (bucket) {
+      const file = bucket.file(projectPath(userId, projectId, 'usage.json'));
+      const [exists] = await file.exists();
+      if (!exists) usage = EMPTY_USAGE();
+      else { const [contents] = await file.download(); usage = JSON.parse(contents.toString()); }
+    } else {
+      const data = memoryStore.get(`proj:${userId}:${projectId}:usage`);
+      usage = data ? JSON.parse(data) : EMPTY_USAGE();
+    }
+
+    // Merge buffered entries
+    for (const entry of pending) {
+      usage.entries.push(entry);
+      usage.totals.promptTokens += entry.tokens?.prompt || 0;
+      usage.totals.completionTokens += entry.tokens?.completion || 0;
+      usage.totals.totalTokens += (entry.tokens?.prompt || 0) + (entry.tokens?.completion || 0);
+      usage.totals.totalCost += entry.cost || 0;
+      usage.totals.calls++;
+    }
+
+    const payload = JSON.stringify(usage);
+    if (bucket) {
+      await bucket.file(projectPath(userId, projectId, 'usage.json')).save(payload, { contentType: 'application/json' });
+    } else {
+      memoryStore.set(`proj:${userId}:${projectId}:usage`, payload);
+    }
+    console.log(`[USAGE] Flushed ${pending.length} entries for ${userId}/${projectId}`);
+  } catch (err) {
+    console.error(`[USAGE] Flush failed for ${userId}/${projectId}:`, err.message);
+    // Re-buffer entries for next attempt
+    const existing = usageBuffer.get(bufKey) || [];
+    usageBuffer.set(bufKey, [...pending, ...existing]);
+    usageFlushTimers.set(bufKey, setTimeout(() => flushProjectUsage(userId, projectId), USAGE_FLUSH_DELAY_MS * 2));
+  }
+}
+
+/** Flush all pending usage buffers immediately (e.g. on shutdown) */
+async function flushAllUsage() {
+  const promises = [];
+  for (const [bufKey] of usageBuffer) {
+    const [userId, projectId] = bufKey.split(':');
+    promises.push(flushProjectUsage(userId, projectId));
+  }
+  await Promise.allSettled(promises);
 }
 
 // ─── Admin audit log ─────────────────────────────────────────────────────────
 // Stored at: admin/audit/{YYYY-MM}/{userId}/{projectId}/{timestamp}-{seq}.json
 // Contains full LLM interactions: system prompt, user prompt, response, tokens, context
+//
+// Audit entries are buffered and flushed in batches to avoid overwhelming GCS.
 
-async function saveAuditEntry(entry) {
-  initStorage();
-  const date = new Date(entry.timestamp || Date.now());
-  const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  const userId = entry.userId || 'anonymous';
-  const projectId = entry.projectId || '_standalone';
-  const ts = date.toISOString().replace(/[:.]/g, '-');
-  const seq = String(Math.random()).slice(2, 8);
-  const auditPath = `admin/audit/${month}/${userId}/${projectId}/${ts}-${seq}.json`;
+const auditBuffer = [];
+let auditFlushTimer = null;
+const AUDIT_FLUSH_DELAY_MS = 3000;
+const AUDIT_FLUSH_MAX = 50; // flush if buffer reaches this size
 
-  const payload = JSON.stringify(entry);
-  if (bucket) {
-    await bucket.file(auditPath).save(payload, { contentType: 'application/json' });
-  } else {
-    memoryStore.set(`audit:${auditPath}`, payload);
+function saveAuditEntry(entry) {
+  auditBuffer.push(entry);
+  // Flush immediately if buffer is large, otherwise debounce
+  if (auditBuffer.length >= AUDIT_FLUSH_MAX) {
+    flushAuditBuffer();
+  } else if (!auditFlushTimer) {
+    auditFlushTimer = setTimeout(flushAuditBuffer, AUDIT_FLUSH_DELAY_MS);
   }
-  return auditPath;
+}
+
+async function flushAuditBuffer() {
+  if (auditFlushTimer) { clearTimeout(auditFlushTimer); auditFlushTimer = null; }
+  if (auditBuffer.length === 0) return;
+  const batch = auditBuffer.splice(0);
+  initStorage();
+
+  let saved = 0;
+  // Write each entry to its own file (different paths, no rate limit issue)
+  await Promise.allSettled(batch.map(async (entry) => {
+    try {
+      const date = new Date(entry.timestamp || Date.now());
+      const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const userId = entry.userId || 'anonymous';
+      const projectId = entry.projectId || '_standalone';
+      const ts = date.toISOString().replace(/[:.]/g, '-');
+      const seq = String(Math.random()).slice(2, 8);
+      const auditPath = `admin/audit/${month}/${userId}/${projectId}/${ts}-${seq}.json`;
+      const payload = JSON.stringify(entry);
+      if (bucket) {
+        await bucket.file(auditPath).save(payload, { contentType: 'application/json' });
+      } else {
+        memoryStore.set(`audit:${auditPath}`, payload);
+      }
+      saved++;
+    } catch (err) {
+      console.error('[AUDIT] Failed to save entry:', err.message);
+    }
+  }));
+  if (saved > 0) console.log(`[AUDIT] Flushed ${saved}/${batch.length} entries`);
 }
 
 async function listAuditEntries({ userId, projectId, month } = {}) {
@@ -670,6 +772,6 @@ module.exports = {
   saveProjectFileMeta, loadProjectFileMeta,
   listProjectResults, saveProjectResult, loadProjectResult, deleteProjectResult,
   listAllUsers, transferProject, migrateStorageLayout,
-  loadProjectUsage, appendProjectUsage,
-  saveAuditEntry, listAuditEntries, loadAuditEntry,
+  loadProjectUsage, appendProjectUsage, flushProjectUsage, flushAllUsage,
+  saveAuditEntry, listAuditEntries, loadAuditEntry, flushAuditBuffer,
 };

@@ -116,16 +116,16 @@ app.get('*', (req, res) => {
 const llmService = require('./services/llm');
 const storage = require('./services/storage');
 
-llmService.setAuditCallback(async (entry) => {
-  // 1. Save full interaction to admin audit log
-  await storage.saveAuditEntry(entry);
+llmService.setAuditCallback((entry) => {
+  // 1. Buffer full interaction for admin audit log (fire-and-forget, flushed in batches)
+  storage.saveAuditEntry(entry);
 
-  // 2. Append usage summary to per-project usage log
+  // 2. Buffer usage summary for per-project usage log (flushed after debounce)
   if (entry.userId && entry.projectId) {
     const pricing = llmService.getPricing();
     const promptCost = ((entry.tokens?.prompt || 0) / 1_000_000) * pricing.promptPer1M;
     const completionCost = ((entry.tokens?.completion || 0) / 1_000_000) * pricing.completionPer1M;
-    await storage.appendProjectUsage(entry.userId, entry.projectId, {
+    storage.appendProjectUsage(entry.userId, entry.projectId, {
       timestamp: entry.timestamp,
       action: entry.action || 'llm_call',
       fileName: entry.fileName || null,
@@ -145,6 +145,13 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`[NeoCohMetrix] GCS bucket: ${config.gcs.bucketName}`);
   console.log(`[NeoCohMetrix] OAuth: ${config.oauth.provider} via ${config.oauth.gatewayUrl}`);
   console.log(`[NeoCohMetrix] Audit logging: enabled`);
+});
+
+// Flush audit & usage buffers on graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('[NeoCohMetrix] SIGTERM received, flushing buffers...');
+  await Promise.allSettled([storage.flushAllUsage(), storage.flushAuditBuffer()]);
+  process.exit(0);
 });
 
 module.exports = app;

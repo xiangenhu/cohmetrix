@@ -60,10 +60,10 @@ function setAuditCallback(cb) {
   auditCallback = cb;
 }
 
-async function emitAuditEntry(entry) {
+function emitAuditEntry(entry) {
   if (auditCallback) {
-    try { await auditCallback(entry); } catch (err) {
-      console.error('[AUDIT] Failed to write audit entry:', err.message);
+    try { auditCallback(entry); } catch (err) {
+      console.error('[AUDIT] Failed to buffer audit entry:', err.message);
     }
   }
 }
