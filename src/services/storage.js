@@ -220,22 +220,23 @@ async function deleteDocument(filePath) {
 // ─── Project-scoped Storage ─────────────────────────────────────────────────
 
 function getUserId(user) {
-  return (user.email || 'anonymous').replace(/@/g, '-at-').replace(/\./g, '-');
+  return (user.email || 'anonymous').toLowerCase();
 }
 
 function projectPath(userId, projectId, ...parts) {
   return ['users', userId, 'projects', projectId, ...parts].join('/');
 }
 
+
 async function listProjects(userId) {
   initStorage();
   const prefix = `users/${userId}/projects/`;
 
   if (bucket) {
-    const [files] = await bucket.getFiles({ prefix, matchGlob: '**/meta.json' });
+    const [files] = await bucket.getFiles({ prefix, matchGlob: '**/config.json' });
     const projects = [];
     for (const f of files) {
-      if (!f.name.endsWith('/meta.json')) continue;
+      if (!f.name.endsWith('/config.json')) continue;
       try {
         const [contents] = await f.download();
         projects.push(JSON.parse(contents.toString()));
@@ -246,7 +247,7 @@ async function listProjects(userId) {
 
   // Memory fallback
   return Array.from(memoryStore.entries())
-    .filter(([k]) => k.startsWith(`proj:${userId}:`) && k.endsWith(':meta'))
+    .filter(([k]) => k.startsWith(`proj:${userId}:`) && k.endsWith(':config'))
     .map(([, v]) => JSON.parse(v))
     .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
 }
@@ -254,13 +255,13 @@ async function listProjects(userId) {
 async function getProject(userId, projectId) {
   initStorage();
   if (bucket) {
-    const file = bucket.file(projectPath(userId, projectId, 'meta.json'));
+    const file = bucket.file(projectPath(userId, projectId, 'config.json'));
     const [exists] = await file.exists();
     if (!exists) return null;
     const [contents] = await file.download();
     return JSON.parse(contents.toString());
   }
-  const data = memoryStore.get(`proj:${userId}:${projectId}:meta`);
+  const data = memoryStore.get(`proj:${userId}:${projectId}:config`);
   return data ? JSON.parse(data) : null;
 }
 
@@ -268,9 +269,9 @@ async function saveProject(userId, projectId, meta) {
   initStorage();
   const payload = JSON.stringify(meta);
   if (bucket) {
-    await bucket.file(projectPath(userId, projectId, 'meta.json')).save(payload, { contentType: 'application/json' });
+    await bucket.file(projectPath(userId, projectId, 'config.json')).save(payload, { contentType: 'application/json' });
   } else {
-    memoryStore.set(`proj:${userId}:${projectId}:meta`, payload);
+    memoryStore.set(`proj:${userId}:${projectId}:config`, payload);
   }
 }
 
@@ -291,7 +292,7 @@ async function deleteProject(userId, projectId) {
 
 async function listProjectFiles(userId, projectId) {
   initStorage();
-  const prefix = projectPath(userId, projectId, 'files') + '/';
+  const prefix = projectPath(userId, projectId, 'documents') + '/';
   if (bucket) {
     const [files] = await bucket.getFiles({ prefix });
     return files.filter(f => !f.name.endsWith('/') && !f.name.endsWith('.meta.json')).map(f => ({
@@ -302,7 +303,7 @@ async function listProjectFiles(userId, projectId) {
       contentType: f.metadata.contentType || 'application/octet-stream',
     }));
   }
-  const pfx = `proj:${userId}:${projectId}:file:`;
+  const pfx = `proj:${userId}:${projectId}:doc:`;
   return Array.from(memoryStore.entries())
     .filter(([k]) => k.startsWith(pfx))
     .map(([k, v]) => {
@@ -313,26 +314,26 @@ async function listProjectFiles(userId, projectId) {
 
 async function saveProjectFile(userId, projectId, filename, buffer, contentType) {
   initStorage();
-  const filePath = projectPath(userId, projectId, 'files', filename);
+  const filePath = projectPath(userId, projectId, 'documents', filename);
   if (bucket) {
     await bucket.file(filePath).save(buffer, { contentType: contentType || 'application/octet-stream' });
     return filePath;
   }
-  memoryStore.set(`proj:${userId}:${projectId}:file:${filename}`, { buffer, contentType, updated: new Date().toISOString() });
+  memoryStore.set(`proj:${userId}:${projectId}:doc:${filename}`, { buffer, contentType, updated: new Date().toISOString() });
   return filePath;
 }
 
 async function loadProjectFile(userId, projectId, filename) {
   initStorage();
   if (bucket) {
-    const file = bucket.file(projectPath(userId, projectId, 'files', filename));
+    const file = bucket.file(projectPath(userId, projectId, 'documents', filename));
     const [exists] = await file.exists();
     if (!exists) return null;
     const [buffer] = await file.download();
     const [metadata] = await file.getMetadata();
     return { buffer, contentType: metadata.contentType, name: filename };
   }
-  const entry = memoryStore.get(`proj:${userId}:${projectId}:file:${filename}`);
+  const entry = memoryStore.get(`proj:${userId}:${projectId}:doc:${filename}`);
   if (!entry) return null;
   return { buffer: entry.buffer, contentType: entry.contentType, name: filename };
 }
@@ -340,24 +341,24 @@ async function loadProjectFile(userId, projectId, filename) {
 async function saveProjectFileMeta(userId, projectId, filename, meta) {
   initStorage();
   const payload = JSON.stringify(meta);
-  const metaPath = projectPath(userId, projectId, 'files', filename + '.meta.json');
+  const metaPath = projectPath(userId, projectId, 'documents', filename + '.meta.json');
   if (bucket) {
     await bucket.file(metaPath).save(payload, { contentType: 'application/json' });
   } else {
-    memoryStore.set(`proj:${userId}:${projectId}:filemeta:${filename}`, payload);
+    memoryStore.set(`proj:${userId}:${projectId}:docmeta:${filename}`, payload);
   }
 }
 
 async function loadProjectFileMeta(userId, projectId, filename) {
   initStorage();
   if (bucket) {
-    const file = bucket.file(projectPath(userId, projectId, 'files', filename + '.meta.json'));
+    const file = bucket.file(projectPath(userId, projectId, 'documents', filename + '.meta.json'));
     const [exists] = await file.exists();
     if (!exists) return null;
     const [contents] = await file.download();
     return JSON.parse(contents.toString());
   }
-  const data = memoryStore.get(`proj:${userId}:${projectId}:filemeta:${filename}`);
+  const data = memoryStore.get(`proj:${userId}:${projectId}:docmeta:${filename}`);
   return data ? JSON.parse(data) : null;
 }
 
@@ -365,22 +366,22 @@ async function deleteProjectFile(userId, projectId, filename) {
   initStorage();
   // Also delete metadata file
   if (bucket) {
-    const file = bucket.file(projectPath(userId, projectId, 'files', filename));
+    const file = bucket.file(projectPath(userId, projectId, 'documents', filename));
     const [exists] = await file.exists();
     if (!exists) return false;
     await file.delete();
-    const metaFile = bucket.file(projectPath(userId, projectId, 'files', filename + '.meta.json'));
+    const metaFile = bucket.file(projectPath(userId, projectId, 'documents', filename + '.meta.json'));
     const [metaExists] = await metaFile.exists();
     if (metaExists) await metaFile.delete();
     return true;
   }
-  memoryStore.delete(`proj:${userId}:${projectId}:filemeta:${filename}`);
-  return memoryStore.delete(`proj:${userId}:${projectId}:file:${filename}`);
+  memoryStore.delete(`proj:${userId}:${projectId}:docmeta:${filename}`);
+  return memoryStore.delete(`proj:${userId}:${projectId}:doc:${filename}`);
 }
 
 async function listProjectResults(userId, projectId) {
   initStorage();
-  const prefix = projectPath(userId, projectId, 'results') + '/';
+  const prefix = projectPath(userId, projectId, 'analysis') + '/';
   if (bucket) {
     const [files] = await bucket.getFiles({ prefix });
     return files.filter(f => f.name.endsWith('.json')).map(f => ({
@@ -389,7 +390,7 @@ async function listProjectResults(userId, projectId) {
       updated: f.metadata.updated || f.metadata.timeCreated,
     })).sort((a, b) => new Date(b.updated) - new Date(a.updated));
   }
-  const pfx = `proj:${userId}:${projectId}:result:`;
+  const pfx = `proj:${userId}:${projectId}:analysis:`;
   return Array.from(memoryStore.keys())
     .filter(k => k.startsWith(pfx))
     .map(k => ({ id: k.replace(pfx, ''), size: 0, updated: new Date().toISOString() }));
@@ -399,35 +400,35 @@ async function saveProjectResult(userId, projectId, resultId, data) {
   initStorage();
   const payload = JSON.stringify(data);
   if (bucket) {
-    await bucket.file(projectPath(userId, projectId, 'results', `${resultId}.json`)).save(payload, { contentType: 'application/json' });
+    await bucket.file(projectPath(userId, projectId, 'analysis', `${resultId}.json`)).save(payload, { contentType: 'application/json' });
   } else {
-    memoryStore.set(`proj:${userId}:${projectId}:result:${resultId}`, payload);
+    memoryStore.set(`proj:${userId}:${projectId}:analysis:${resultId}`, payload);
   }
 }
 
 async function loadProjectResult(userId, projectId, resultId) {
   initStorage();
   if (bucket) {
-    const file = bucket.file(projectPath(userId, projectId, 'results', `${resultId}.json`));
+    const file = bucket.file(projectPath(userId, projectId, 'analysis', `${resultId}.json`));
     const [exists] = await file.exists();
     if (!exists) return null;
     const [contents] = await file.download();
     return JSON.parse(contents.toString());
   }
-  const data = memoryStore.get(`proj:${userId}:${projectId}:result:${resultId}`);
+  const data = memoryStore.get(`proj:${userId}:${projectId}:analysis:${resultId}`);
   return data ? JSON.parse(data) : null;
 }
 
 async function deleteProjectResult(userId, projectId, resultId) {
   initStorage();
   if (bucket) {
-    const file = bucket.file(projectPath(userId, projectId, 'results', `${resultId}.json`));
+    const file = bucket.file(projectPath(userId, projectId, 'analysis', `${resultId}.json`));
     const [exists] = await file.exists();
     if (!exists) return false;
     await file.delete();
     return true;
   }
-  return memoryStore.delete(`proj:${userId}:${projectId}:result:${resultId}`);
+  return memoryStore.delete(`proj:${userId}:${projectId}:analysis:${resultId}`);
 }
 
 /**
@@ -437,17 +438,18 @@ async function deleteProjectResult(userId, projectId, resultId) {
 async function listAllUsers() {
   initStorage();
   if (bucket) {
-    const [files] = await bucket.getFiles({ prefix: 'users/', delimiter: '/' });
-    // With delimiter, apiResponse.prefixes has user folders
-    // But GCS getFiles with delimiter doesn't return prefixes in files array.
-    // Instead, list all meta.json files and extract user IDs.
-    const [allFiles] = await bucket.getFiles({ prefix: 'users/', matchGlob: '**/meta.json' });
+    // List all config.json files and extract user emails from path
+    // Path: users/{email}/projects/{projectId}/config.json
+    const [allFiles] = await bucket.getFiles({ prefix: 'users/', matchGlob: '**/config.json' });
     const userIds = new Set();
     for (const f of allFiles) {
-      // Path: users/{userId}/projects/{projectId}/meta.json
       const parts = f.name.split('/');
       if (parts.length >= 2 && parts[0] === 'users') {
-        userIds.add(parts[1]);
+        // Email may contain dots/@ so reconstruct from path
+        // Path structure: users/{email}/projects/{projectId}/config.json
+        // The email is everything between 'users/' and '/projects/'
+        const match = f.name.match(/^users\/(.+?)\/projects\//);
+        if (match) userIds.add(match[1]);
       }
     }
     return Array.from(userIds).sort();
@@ -464,6 +466,201 @@ async function listAllUsers() {
   return Array.from(userIds).sort();
 }
 
+/**
+ * Transfer a project from one user to another.
+ * Copies all files under the old user path to the new user path, then deletes the old ones.
+ */
+async function transferProject(fromUserId, toUserId, projectId) {
+  initStorage();
+  if (fromUserId === toUserId) return true;
+
+  if (bucket) {
+    const oldPrefix = projectPath(fromUserId, projectId) + '/';
+    const newPrefix = projectPath(toUserId, projectId) + '/';
+    const [files] = await bucket.getFiles({ prefix: oldPrefix });
+    if (files.length === 0) return false;
+    // Copy all files to new path
+    await Promise.all(files.map(async (f) => {
+      const newName = f.name.replace(oldPrefix, newPrefix);
+      await f.copy(newName);
+    }));
+    // Delete old files
+    await Promise.all(files.map(f => f.delete()));
+    return true;
+  }
+
+  // Memory fallback: re-key all entries
+  const oldPrefix = `proj:${fromUserId}:${projectId}:`;
+  const newPrefix = `proj:${toUserId}:${projectId}:`;
+  const keys = Array.from(memoryStore.keys()).filter(k => k.startsWith(oldPrefix));
+  if (keys.length === 0) return false;
+  for (const k of keys) {
+    const val = memoryStore.get(k);
+    memoryStore.set(k.replace(oldPrefix, newPrefix), val);
+    memoryStore.delete(k);
+  }
+  return true;
+}
+
+/**
+ * Migrate existing GCS data from old layout to new layout.
+ * Old: users/{sanitized-id}/projects/{id}/meta.json, .../files/..., .../results/...
+ * New: users/{email}/projects/{id}/config.json, .../documents/..., .../analysis/...
+ * Returns { migrated, skipped, errors }
+ */
+async function migrateStorageLayout() {
+  initStorage();
+  if (!bucket) return { migrated: 0, skipped: 0, errors: 0, message: 'No GCS bucket — in-memory store needs no migration' };
+
+  const stats = { migrated: 0, skipped: 0, errors: 0, details: [] };
+
+  // Find all files under users/ with old layout markers
+  const [allFiles] = await bucket.getFiles({ prefix: 'users/' });
+
+  for (const f of allFiles) {
+    let newName = f.name;
+    let needsMove = false;
+
+    // 1. Convert sanitized userId (contains -at- and -) back to email
+    const userMatch = f.name.match(/^users\/([^/]+)\//);
+    if (userMatch) {
+      const userId = userMatch[1];
+      if (userId.includes('-at-')) {
+        const email = userId.replace(/-at-/g, '@').replace(/-/g, '.');
+        newName = newName.replace(`users/${userId}/`, `users/${email}/`);
+        needsMove = true;
+      }
+    }
+
+    // 2. Rename folder segments
+    if (newName.includes('/files/')) {
+      newName = newName.replace('/files/', '/documents/');
+      needsMove = true;
+    }
+    if (newName.includes('/results/')) {
+      newName = newName.replace('/results/', '/analysis/');
+      needsMove = true;
+    }
+    // 3. Rename project config file (only the project-level meta.json, not file .meta.json)
+    if (newName.endsWith('/meta.json') && !newName.includes('/documents/') && !newName.includes('/files/')) {
+      newName = newName.replace(/\/meta\.json$/, '/config.json');
+      needsMove = true;
+    }
+
+    if (!needsMove) {
+      stats.skipped++;
+      continue;
+    }
+
+    try {
+      await f.copy(newName);
+      await f.delete();
+      stats.migrated++;
+      stats.details.push(`${f.name} → ${newName}`);
+    } catch (err) {
+      stats.errors++;
+      stats.details.push(`ERROR ${f.name}: ${err.message}`);
+    }
+  }
+
+  return stats;
+}
+
+// ─── Per-project usage log ───────────────────────────────────────────────────
+// Stored at: users/{email}/projects/{projectId}/usage.json
+// Structure: { entries: [{ timestamp, action, fileName, tokens: {prompt,completion}, cost, model }], totals: { ... } }
+
+async function loadProjectUsage(userId, projectId) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(projectPath(userId, projectId, 'usage.json'));
+    const [exists] = await file.exists();
+    if (!exists) return { entries: [], totals: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } };
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString());
+  }
+  const data = memoryStore.get(`proj:${userId}:${projectId}:usage`);
+  return data ? JSON.parse(data) : { entries: [], totals: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } };
+}
+
+async function appendProjectUsage(userId, projectId, entry) {
+  initStorage();
+  const usage = await loadProjectUsage(userId, projectId);
+  usage.entries.push(entry);
+  // Update totals
+  usage.totals.promptTokens += entry.tokens?.prompt || 0;
+  usage.totals.completionTokens += entry.tokens?.completion || 0;
+  usage.totals.totalTokens += (entry.tokens?.prompt || 0) + (entry.tokens?.completion || 0);
+  usage.totals.totalCost += entry.cost || 0;
+  usage.totals.calls++;
+  const payload = JSON.stringify(usage);
+  if (bucket) {
+    await bucket.file(projectPath(userId, projectId, 'usage.json')).save(payload, { contentType: 'application/json' });
+  } else {
+    memoryStore.set(`proj:${userId}:${projectId}:usage`, payload);
+  }
+  return usage;
+}
+
+// ─── Admin audit log ─────────────────────────────────────────────────────────
+// Stored at: admin/audit/{YYYY-MM}/{userId}/{projectId}/{timestamp}-{seq}.json
+// Contains full LLM interactions: system prompt, user prompt, response, tokens, context
+
+async function saveAuditEntry(entry) {
+  initStorage();
+  const date = new Date(entry.timestamp || Date.now());
+  const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const userId = entry.userId || 'anonymous';
+  const projectId = entry.projectId || '_standalone';
+  const ts = date.toISOString().replace(/[:.]/g, '-');
+  const seq = String(Math.random()).slice(2, 8);
+  const auditPath = `admin/audit/${month}/${userId}/${projectId}/${ts}-${seq}.json`;
+
+  const payload = JSON.stringify(entry);
+  if (bucket) {
+    await bucket.file(auditPath).save(payload, { contentType: 'application/json' });
+  } else {
+    memoryStore.set(`audit:${auditPath}`, payload);
+  }
+  return auditPath;
+}
+
+async function listAuditEntries({ userId, projectId, month } = {}) {
+  initStorage();
+  let prefix = 'admin/audit/';
+  if (month) prefix += `${month}/`;
+  if (month && userId) prefix += `${userId}/`;
+  if (month && userId && projectId) prefix += `${projectId}/`;
+
+  if (bucket) {
+    const [files] = await bucket.getFiles({ prefix });
+    return files
+      .filter(f => f.name.endsWith('.json'))
+      .map(f => ({
+        path: f.name,
+        size: parseInt(f.metadata.size, 10) || 0,
+        updated: f.metadata.updated || f.metadata.timeCreated,
+      }))
+      .sort((a, b) => new Date(b.updated) - new Date(a.updated));
+  }
+  return Array.from(memoryStore.keys())
+    .filter(k => k.startsWith(`audit:${prefix}`))
+    .map(k => ({ path: k.replace('audit:', ''), size: 0, updated: new Date().toISOString() }));
+}
+
+async function loadAuditEntry(auditPath) {
+  initStorage();
+  if (bucket) {
+    const file = bucket.file(auditPath);
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString());
+  }
+  const data = memoryStore.get(`audit:${auditPath}`);
+  return data ? JSON.parse(data) : null;
+}
+
 module.exports = {
   saveResult, loadResult, saveUpload, listResults, deleteResult,
   listDocuments, saveDocument, loadDocument, deleteDocument,
@@ -472,5 +669,7 @@ module.exports = {
   listProjectFiles, saveProjectFile, loadProjectFile, deleteProjectFile,
   saveProjectFileMeta, loadProjectFileMeta,
   listProjectResults, saveProjectResult, loadProjectResult, deleteProjectResult,
-  listAllUsers,
+  listAllUsers, transferProject, migrateStorageLayout,
+  loadProjectUsage, appendProjectUsage,
+  saveAuditEntry, listAuditEntries, loadAuditEntry,
 };

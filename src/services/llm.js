@@ -43,6 +43,31 @@ let activeTracker = new TokenTracker();
 // (analysis, interpretation, help chat, rubric evaluation, etc.)
 const sessionTracker = new TokenTracker();
 
+// ─── Audit context & logger ─────────────────────────────────────────────────
+// Set before each LLM-calling action to tag interactions with user/project/file info.
+let auditContext = { userId: null, projectId: null, fileName: null, action: null };
+let auditCallback = null; // async (entry) => {} — set by server startup
+
+function setAuditContext(ctx) {
+  auditContext = { ...auditContext, ...ctx };
+}
+
+function getAuditContext() {
+  return { ...auditContext };
+}
+
+function setAuditCallback(cb) {
+  auditCallback = cb;
+}
+
+async function emitAuditEntry(entry) {
+  if (auditCallback) {
+    try { await auditCallback(entry); } catch (err) {
+      console.error('[AUDIT] Failed to write audit entry:', err.message);
+    }
+  }
+}
+
 function createTracker() {
   const tracker = new TokenTracker();
   activeTracker = tracker;
@@ -85,7 +110,18 @@ const providers = {
         const usage = response.usage || {};
         activeTracker.record(usage.input_tokens, usage.output_tokens);
         sessionTracker.record(usage.input_tokens, usage.output_tokens);
-        return response.content[0].text;
+        const responseText = response.content[0].text;
+        // Audit log
+        emitAuditEntry({
+          timestamp: new Date().toISOString(),
+          provider: 'anthropic', model: config.anthropic.model,
+          systemPrompt: systemPrompt || 'You are an expert NLP analyst. Return only valid JSON unless instructed otherwise.',
+          userPrompt: prompt,
+          response: responseText,
+          tokens: { prompt: usage.input_tokens || 0, completion: usage.output_tokens || 0 },
+          ...auditContext,
+        });
+        return responseText;
       },
     };
   })(),
@@ -117,7 +153,17 @@ const providers = {
         const usage = data.usage || {};
         activeTracker.record(usage.prompt_tokens, usage.completion_tokens);
         sessionTracker.record(usage.prompt_tokens, usage.completion_tokens);
-        return data.choices[0].message.content;
+        const responseText = data.choices[0].message.content;
+        emitAuditEntry({
+          timestamp: new Date().toISOString(),
+          provider: 'openai', model: config.openai.model,
+          systemPrompt: systemPrompt || 'You are an expert NLP analyst. Return only valid JSON unless instructed otherwise.',
+          userPrompt: prompt,
+          response: responseText,
+          tokens: { prompt: usage.prompt_tokens || 0, completion: usage.completion_tokens || 0 },
+          ...auditContext,
+        });
+        return responseText;
       },
     };
   })(),
@@ -149,7 +195,17 @@ const providers = {
         const usage = data.usage || {};
         activeTracker.record(usage.prompt_tokens, usage.completion_tokens);
         sessionTracker.record(usage.prompt_tokens, usage.completion_tokens);
-        return data.choices[0].message.content;
+        const responseText = data.choices[0].message.content;
+        emitAuditEntry({
+          timestamp: new Date().toISOString(),
+          provider: 'azure', model: config.azure.deployment,
+          systemPrompt: systemPrompt || 'You are an expert NLP analyst. Return only valid JSON unless instructed otherwise.',
+          userPrompt: prompt,
+          response: responseText,
+          tokens: { prompt: usage.prompt_tokens || 0, completion: usage.completion_tokens || 0 },
+          ...auditContext,
+        });
+        return responseText;
       },
     };
   })(),
@@ -267,4 +323,5 @@ module.exports = {
   complete, completeJSON, batchProcess, getProviderInfo, getPricing,
   createTracker, getActiveTracker, getSessionTracker, resetSessionTracker, TokenTracker,
   getRequestLanguage,
+  setAuditContext, getAuditContext, setAuditCallback,
 };

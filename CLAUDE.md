@@ -61,10 +61,10 @@ Copy `.env.example` to `.env`. Required: `ANTHROPIC_API_KEY`. Optional: `GCS_BUC
 ### Storage Path Hierarchy (GCS / in-memory)
 
 ```
-users/{userId}/projects/{projectId}/meta.json
-users/{userId}/projects/{projectId}/files/{filename}
-users/{userId}/projects/{projectId}/files/{filename}.meta.json
-users/{userId}/projects/{projectId}/results/{resultId}.json
+users/{email}/projects/{projectId}/config.json           # project configuration
+users/{email}/projects/{projectId}/documents/{filename}   # uploaded documents
+users/{email}/projects/{projectId}/documents/{filename}.meta.json
+users/{email}/projects/{projectId}/analysis/{resultId}.json  # analysis results
 results/{analysisId}.json          # standalone (non-project) results
 documents/{filename}               # shared document library
 ```

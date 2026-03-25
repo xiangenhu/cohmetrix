@@ -112,15 +112,39 @@ app.get('*', (req, res) => {
 });
 
 // Start server
+// ─── Initialize LLM audit logging ────────────────────────────────────────────
+const llmService = require('./services/llm');
+const storage = require('./services/storage');
+
+llmService.setAuditCallback(async (entry) => {
+  // 1. Save full interaction to admin audit log
+  await storage.saveAuditEntry(entry);
+
+  // 2. Append usage summary to per-project usage log
+  if (entry.userId && entry.projectId) {
+    const pricing = llmService.getPricing();
+    const promptCost = ((entry.tokens?.prompt || 0) / 1_000_000) * pricing.promptPer1M;
+    const completionCost = ((entry.tokens?.completion || 0) / 1_000_000) * pricing.completionPer1M;
+    await storage.appendProjectUsage(entry.userId, entry.projectId, {
+      timestamp: entry.timestamp,
+      action: entry.action || 'llm_call',
+      fileName: entry.fileName || null,
+      model: entry.model,
+      tokens: entry.tokens,
+      cost: promptCost + completionCost,
+    });
+  }
+});
+
 const PORT = config.port;
 app.listen(PORT, '0.0.0.0', () => {
-  const llm = require('./services/llm');
-  const info = llm.getProviderInfo();
+  const info = llmService.getProviderInfo();
   console.log(`[NeoCohMetrix] Server running on port ${PORT}`);
   console.log(`[NeoCohMetrix] Environment: ${config.nodeEnv}`);
   console.log(`[NeoCohMetrix] LLM provider: ${info.name} (${info.model})`);
   console.log(`[NeoCohMetrix] GCS bucket: ${config.gcs.bucketName}`);
   console.log(`[NeoCohMetrix] OAuth: ${config.oauth.provider} via ${config.oauth.gatewayUrl}`);
+  console.log(`[NeoCohMetrix] Audit logging: enabled`);
 });
 
 module.exports = app;

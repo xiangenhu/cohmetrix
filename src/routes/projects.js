@@ -71,14 +71,30 @@ router.get('/:id', async (req, res) => {
   try {
     const project = await storage.getProject(uid(req.user), req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
-    const [rawFiles, results] = await Promise.all([
-      storage.listProjectFiles(uid(req.user), req.params.id),
-      storage.listProjectResults(uid(req.user), req.params.id),
+    const userId = uid(req.user);
+    const [rawFiles, rawResults] = await Promise.all([
+      storage.listProjectFiles(userId, req.params.id),
+      storage.listProjectResults(userId, req.params.id),
     ]);
-    const files = await Promise.all(rawFiles.map(async (f) => {
-      const meta = await storage.loadProjectFileMeta(uid(req.user), req.params.id, f.name);
-      return { ...f, sizeLabel: formatSize(f.size), ext: path.extname(f.name).toLowerCase(), meta: meta || null };
-    }));
+    const [files, results] = await Promise.all([
+      Promise.all(rawFiles.map(async (f) => {
+        const meta = await storage.loadProjectFileMeta(userId, req.params.id, f.name);
+        return { ...f, sizeLabel: formatSize(f.size), ext: path.extname(f.name).toLowerCase(), meta: meta || null };
+      })),
+      Promise.all(rawResults.map(async (r) => {
+        try {
+          const data = await storage.loadProjectResult(userId, req.params.id, r.id);
+          if (data) {
+            r.sourceFile = data.sourceFile || null;
+            r.overallScore = data.overallScore != null ? data.overallScore : null;
+            r.timestamp = data.timestamp || r.updated;
+            r.wordCount = data.document?.wordCount || null;
+            r.language = data.language || null;
+          }
+        } catch {}
+        return r;
+      })),
+    ]);
     res.json({ project, files, results });
   } catch (err) {
     console.error('[GET /api/projects/:id]', err);
@@ -406,7 +422,22 @@ router.get('/:id/summary', async (req, res) => {
 
 router.get('/:id/results', async (req, res) => {
   try {
-    const results = await storage.listProjectResults(uid(req.user), req.params.id);
+    const userId = uid(req.user);
+    const raw = await storage.listProjectResults(userId, req.params.id);
+    // Enrich each result with sourceFile, overallScore, timestamp, wordCount
+    const results = await Promise.all(raw.map(async (r) => {
+      try {
+        const data = await storage.loadProjectResult(userId, req.params.id, r.id);
+        if (data) {
+          r.sourceFile = data.sourceFile || null;
+          r.overallScore = data.overallScore != null ? data.overallScore : null;
+          r.timestamp = data.timestamp || r.updated;
+          r.wordCount = data.document?.wordCount || null;
+          r.language = data.language || null;
+        }
+      } catch {}
+      return r;
+    }));
     res.json({ results });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -428,6 +459,17 @@ router.delete('/:id/results/:resultId', async (req, res) => {
     const deleted = await storage.deleteProjectResult(uid(req.user), req.params.id, req.params.resultId);
     if (!deleted) return res.status(404).json({ error: 'Result not found' });
     res.json({ message: 'Result deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Project Usage / Cost Tracking ──────────────────────────────────────────
+
+router.get('/:id/usage', async (req, res) => {
+  try {
+    const usage = await storage.loadProjectUsage(uid(req.user), req.params.id);
+    res.json(usage);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -517,6 +559,8 @@ router.post('/:id/analyze', async (req, res) => {
         if (!doc) { send({ type: 'batch_file_error', fileIndex: i, fileName, error: 'File not found' }); continue; }
 
         const text = await extractText(doc.buffer, doc.name);
+        // Set audit context for LLM call tracking
+        llm.setAuditContext({ userId, projectId: req.params.id, fileName, action: 'analysis' });
         // Per-file metadata overrides project config
         const fileMeta = await storage.loadProjectFileMeta(userId, req.params.id, fileName) || {};
         const result = await runAnalysis(text, {

@@ -57,6 +57,10 @@ router.post('/', upload.single('file'), async (req, res) => {
     // Return analysis ID immediately
     res.json({ analysisId });
 
+    // Set audit context for standalone analysis
+    const userId = storage.getUserId(req.user || {});
+    llm.setAuditContext({ userId, projectId: null, fileName: req.file?.originalname || null, action: 'standalone_analysis' });
+
     // Run analysis in background
     runAnalysis(text, {
       promptText,

@@ -39,7 +39,7 @@ router.get('/users', async (req, res) => {
       }
       return {
         userId,
-        email: userId.replace(/-at-/g, '@').replace(/-/g, '.'),
+        email: userId, // userId is now the raw email
         projectCount: projects.length,
         totalFiles,
         totalResults,
@@ -48,6 +48,31 @@ router.get('/users', async (req, res) => {
     res.json({ users });
   } catch (err) {
     console.error('[GET /api/admin/users]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── List all projects across all users ────────────────────────────────────
+
+router.get('/projects', async (req, res) => {
+  try {
+    const userIds = await storage.listAllUsers();
+    const allProjects = [];
+    await Promise.all(userIds.map(async (userId) => {
+      const projects = await storage.listProjects(userId);
+      await Promise.all(projects.map(async (p) => {
+        const [files, results] = await Promise.all([
+          storage.listProjectFiles(userId, p.id),
+          storage.listProjectResults(userId, p.id),
+        ]);
+        allProjects.push({ ...p, userId, ownerEmail: userId, fileCount: files.length, resultCount: results.length });
+      }));
+    }));
+    // Sort by most recently updated
+    allProjects.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    res.json({ projects: allProjects });
+  } catch (err) {
+    console.error('[GET /api/admin/projects]', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -89,6 +114,29 @@ router.get('/users/:userId/projects/:projectId', async (req, res) => {
     res.json({ project, files, results });
   } catch (err) {
     console.error('[GET /api/admin/users/:userId/projects/:projectId]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Assign project to a different owner ───────────────────────────────────
+
+router.put('/users/:userId/projects/:projectId/owner', async (req, res) => {
+  try {
+    const { ownerEmail } = req.body;
+    if (!ownerEmail || !ownerEmail.trim()) return res.status(400).json({ error: 'ownerEmail is required' });
+    const fromUserId = req.params.userId;
+    const toUserId = ownerEmail.trim().toLowerCase();
+    if (fromUserId === toUserId) return res.json({ message: 'Already owned by this user' });
+
+    const project = await storage.getProject(fromUserId, req.params.projectId);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    const transferred = await storage.transferProject(fromUserId, toUserId, req.params.projectId);
+    if (!transferred) return res.status(500).json({ error: 'Transfer failed' });
+
+    res.json({ message: `Project transferred to ${ownerEmail}`, newUserId: toUserId });
+  } catch (err) {
+    console.error('[PUT /api/admin/.../owner]', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -173,6 +221,65 @@ router.delete('/users/:userId/projects/:projectId/results/:resultId', async (req
     const deleted = await storage.deleteProjectResult(req.params.userId, req.params.projectId, req.params.resultId);
     if (!deleted) return res.status(404).json({ error: 'Result not found' });
     res.json({ message: 'Result deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Storage Migration ────────────────────────────────────────────────────
+
+router.post('/migrate', async (req, res) => {
+  try {
+    const stats = await storage.migrateStorageLayout();
+    console.log('[MIGRATION]', JSON.stringify(stats));
+    res.json(stats);
+  } catch (err) {
+    console.error('[POST /api/admin/migrate]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Audit Log Browsing ───────────────────────────────────────────────────
+
+router.get('/audit', async (req, res) => {
+  try {
+    const { userId, projectId, month } = req.query;
+    const entries = await storage.listAuditEntries({ userId, projectId, month });
+    res.json({ entries, count: entries.length });
+  } catch (err) {
+    console.error('[GET /api/admin/audit]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/audit/entry', async (req, res) => {
+  try {
+    const { path: auditPath } = req.query;
+    if (!auditPath) return res.status(400).json({ error: 'path query param required' });
+    const entry = await storage.loadAuditEntry(auditPath);
+    if (!entry) return res.status(404).json({ error: 'Audit entry not found' });
+    res.json(entry);
+  } catch (err) {
+    console.error('[GET /api/admin/audit/entry]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Per-user usage overview (all projects) ───────────────────────────────
+
+router.get('/users/:userId/usage', async (req, res) => {
+  try {
+    const projects = await storage.listProjects(req.params.userId);
+    const usage = await Promise.all(projects.map(async (p) => {
+      const u = await storage.loadProjectUsage(req.params.userId, p.id);
+      return { projectId: p.id, projectName: p.name, ...u.totals };
+    }));
+    const grandTotal = usage.reduce((acc, u) => {
+      acc.promptTokens += u.promptTokens; acc.completionTokens += u.completionTokens;
+      acc.totalTokens += u.totalTokens; acc.totalCost += u.totalCost; acc.calls += u.calls;
+      return acc;
+    }, { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 });
+    res.json({ projects: usage, grandTotal });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

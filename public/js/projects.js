@@ -21,6 +21,10 @@ const Projects = (() => {
   let selectedFiles = [];
   let wizardConfig = {};
 
+  // Background batch analysis state
+  // { projectId, files: [name,...], progress: { name: { status, pct, score, error } }, totalFiles, doneCount }
+  let batchState = null;
+
   function init() {
     loadProjects();
   }
@@ -107,7 +111,6 @@ const Projects = (() => {
       currentProject = data.project;
       currentFiles = data.files || [];
       currentResults = data.results || [];
-      await enrichResults();
       selectedFiles = [];
       wizardConfig = { ...(currentProject.config || {}) };
       App.showScreen('project');
@@ -124,19 +127,7 @@ const Projects = (() => {
       currentProject = d.project;
       currentFiles = d.files || [];
       currentResults = d.results || [];
-      await enrichResults();
     } catch {}
-  }
-
-  async function enrichResults() {
-    for (const r of currentResults) {
-      if (!r.sourceFile) {
-        try {
-          const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/results/${r.id}`);
-          if (resp.ok) { const d = await resp.json(); r.sourceFile = d.sourceFile; r.overallScore = d.overallScore; }
-        } catch {}
-      }
-    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -144,6 +135,10 @@ const Projects = (() => {
   // ═══════════════════════════════════════════════════════════════════════
 
   function fileExt(name) { return name.split('.').pop().toUpperCase(); }
+
+  function latestResultForFile(fileName) {
+    return currentResults.find(r => r.sourceFile === fileName) || null;
+  }
 
   function metaStatus(meta) {
     const mc = countMetaFields(meta);
@@ -166,7 +161,8 @@ const Projects = (() => {
     const readyFiles = currentFiles.filter(f => countMetaFields(f.meta).filled >= 4);
     const noMetaFiles = currentFiles.filter(f => countMetaFields(f.meta).filled === 0);
     const cfgSt = configStatus();
-    const canAnalyze = readyFiles.length > 0 && cfgSt.ready;
+    const batchRunning = batchState && batchState.projectId === currentProject.id;
+    const canAnalyze = readyFiles.length > 0 && cfgSt.ready && !batchRunning;
 
     s.innerHTML = `
       ${header('&larr; <span data-i18n="193a6d1722fc259d">Projects</span>', currentProject.name)}
@@ -216,6 +212,7 @@ const Projects = (() => {
               <th data-i18n="1af851907331c0ed">Size</th>
               <th>Lang</th>
               <th data-i18n="9eddf573cb509f1f">Metadata</th>
+              <th>Score</th>
               <th></th>
             </tr>
           </thead>
@@ -232,6 +229,7 @@ const Projects = (() => {
                 <td class="proj-ft-size">${f.sizeLabel || ''}</td>
                 <td style="font-size:10px;font-weight:600;color:var(--text-secondary);text-transform:uppercase">${(f.meta && f.meta.language) || 'en'}</td>
                 <td class="proj-ft-meta ${ms.cls}" title="Click to edit metadata"><span class="proj-ft-meta-icon">${ms.icon}</span> ${ms.label}${metaHint}</td>
+                <td style="text-align:center">${(() => { const lr = latestResultForFile(f.name); return lr && lr.overallScore != null ? `<span class="proj-file-score" data-rid="${lr.id}" title="Click to view result" style="cursor:pointer;font-weight:600;font-family:var(--font-mono);font-size:12px;color:${scoreColor(lr.overallScore)}">${lr.overallScore}</span>` : '<span style="font-size:10px;color:var(--text-tertiary)">\u2014</span>'; })()}</td>
                 <td style="white-space:nowrap">
                   <button class="proj-file-view" data-vname="${escAttr(f.name)}" title="View document" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:13px;padding:2px 4px">&#128065;</button>
                   <button class="proj-file-del" data-fname="${escAttr(f.name)}" title="Delete">&#10005;</button>
@@ -290,10 +288,43 @@ const Projects = (() => {
           <button class="nav-btn" id="proj-go-summary" style="font-size:12px">
             &#128202; Project Summary
           </button>` : ''}
-          ${currentResults.length > 0 ? `
-          <button class="nav-btn" id="proj-go-results" style="font-size:12px">
-            &#128202; <span data-i18n="04f2e6324046f8f1">Past Results</span> (${currentResults.length})
-          </button>` : ''}
+        </div>
+
+        <!-- ═══ ACTIVE ANALYSIS PROGRESS ═══ -->
+        ${batchState && batchState.projectId === currentProject.id ? `
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:600;color:var(--text-primary)">Analysis In Progress</div>
+          </div>
+          <div id="proj-batch-progress" class="proj-batch-panel"></div>
+        </div>` : ''}
+
+        <!-- ═══ PAST RESULTS SECTION ═══ -->
+        ${currentResults.length > 0 ? `
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:600;color:var(--text-primary)" data-i18n="04f2e6324046f8f1">Past Results</div>
+            <span style="font-size:11px;color:var(--text-tertiary)">${currentResults.length} result${currentResults.length !== 1 ? 's' : ''}</span>
+            <button class="nav-btn" id="proj-go-results" style="margin-left:auto;font-size:11px">View All</button>
+          </div>
+          <div id="proj-results-preview">
+            ${currentResults.slice(0, 5).map(r => `
+            <div class="proj-result-row" data-rid="${r.id}" style="cursor:pointer">
+              <span class="proj-result-file">${esc(r.sourceFile || r.id)}</span>
+              <span class="proj-result-score" style="color:${scoreColor(r.overallScore)}">${r.overallScore != null ? r.overallScore : '\u2014'}</span>
+              <span style="font-size:10px;color:var(--text-tertiary);font-family:var(--font-mono)">${r.wordCount ? r.wordCount + 'w' : ''}</span>
+              <span class="proj-result-date">${r.timestamp ? new Date(r.timestamp).toLocaleDateString() : ''}</span>
+            </div>`).join('')}
+            ${currentResults.length > 5 ? `<div style="text-align:center;font-size:11px;color:var(--text-tertiary);padding:6px">+${currentResults.length - 5} more</div>` : ''}
+          </div>
+        </div>` : ''}
+
+        <!-- ═══ USAGE / COST ═══ -->
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:600;color:var(--text-primary)">LLM Usage</div>
+          </div>
+          <div id="proj-usage-panel" style="font-size:12px;color:var(--text-tertiary)">Loading usage data...</div>
         </div>
       </div>`;
 
@@ -309,11 +340,43 @@ const Projects = (() => {
     bindUpload(() => refreshProject().then(renderStep0));
     bindDriveImport(s);
 
+    // If batch is active, populate progress panel
+    if (batchState && batchState.projectId === currentProject.id) {
+      updateBatchProgressUI();
+    }
+
+    // Result preview rows — click to open result
+    s.querySelectorAll('#proj-results-preview .proj-result-row').forEach(row => {
+      row.addEventListener('click', async () => {
+        try {
+          const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/results/${row.dataset.rid}`);
+          if (!resp.ok) return;
+          Results.show(await resp.json());
+          App.showScreen('results');
+          App.enableNav('btn-results');
+        } catch {}
+      });
+    });
+
     // View document buttons
     s.querySelectorAll('.proj-file-view').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         openDocumentViewer(s, btn.dataset.vname);
+      });
+    });
+
+    // Score cells — click to open result
+    s.querySelectorAll('.proj-file-score').forEach(el => {
+      el.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/results/${el.dataset.rid}`);
+          if (!resp.ok) return;
+          Results.show(await resp.json());
+          App.showScreen('results');
+          App.enableNav('btn-results');
+        } catch {}
       });
     });
 
@@ -375,6 +438,34 @@ const Projects = (() => {
         await refreshProject(); renderStep0();
       });
     });
+
+    // Load usage data asynchronously
+    loadProjectUsage(s);
+  }
+
+  async function loadProjectUsage(s) {
+    const panel = s.querySelector('#proj-usage-panel');
+    if (!panel || !currentProject) return;
+    try {
+      const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/usage`);
+      if (!resp.ok) { panel.textContent = 'Unable to load usage data.'; return; }
+      const usage = await resp.json();
+      const t = usage.totals;
+      if (t.calls === 0) {
+        panel.innerHTML = '<span style="color:var(--text-tertiary)">No LLM usage yet.</span>';
+        return;
+      }
+      panel.innerHTML = `
+        <div style="display:flex;gap:16px;flex-wrap:wrap;padding:10px 12px;background:var(--bg-primary);border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md)">
+          <div><span style="color:var(--text-tertiary)">LLM Calls</span><div style="font-size:14px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">${t.calls}</div></div>
+          <div><span style="color:var(--text-tertiary)">Prompt Tokens</span><div style="font-size:14px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">${t.promptTokens.toLocaleString()}</div></div>
+          <div><span style="color:var(--text-tertiary)">Completion Tokens</span><div style="font-size:14px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">${t.completionTokens.toLocaleString()}</div></div>
+          <div><span style="color:var(--text-tertiary)">Total Tokens</span><div style="font-size:14px;font-weight:600;color:var(--teal);font-family:var(--font-mono)">${t.totalTokens.toLocaleString()}</div></div>
+          <div><span style="color:var(--text-tertiary)">Est. Cost</span><div style="font-size:14px;font-weight:600;color:var(--amber);font-family:var(--font-mono)">$${t.totalCost.toFixed(4)}</div></div>
+        </div>
+        ${usage.entries.length > 0 ? `<div style="margin-top:8px;font-size:10px;color:var(--text-tertiary)">${usage.entries.length} LLM call${usage.entries.length !== 1 ? 's' : ''} recorded · Last: ${new Date(usage.entries[usage.entries.length - 1].timestamp).toLocaleString()}</div>` : ''}
+      `;
+    } catch { panel.textContent = ''; }
   }
 
   function renderConfigPreview() {
@@ -1021,21 +1112,19 @@ const Projects = (() => {
     const isSingle = selectedFiles.length === 1;
     let singleResult = null;
 
-    App.showScreen('process');
-    App.enableNav('btn-process');
-
     if (isSingle) {
-      // Use the nice processing UI with layer progress bars
+      // Single file: use the full processing screen with layer progress bars
+      App.showScreen('process');
+      App.enableNav('btn-process');
       Processing.initUI();
       document.getElementById('proc-title').innerHTML = `<span data-i18n="70e435752ac235c3">Analyzing:</span> ${esc(selectedFiles[0])}`;
       document.getElementById('proc-sub').textContent = 'Preparing analysis modules'; document.getElementById('proc-sub').setAttribute('data-i18n', '1db4bfea9970ee04');
     } else {
-      const procTitle = document.getElementById('proc-title');
-      const procSub = document.getElementById('proc-sub');
-      const procLog = document.getElementById('proc-log');
-      if (procTitle) procTitle.innerHTML = `<span data-i18n="0141ee9533e133b3">Analyzing</span> ${selectedFiles.length} <span data-i18n="e3b816898ca5ba5f">files</span>`;
-      if (procSub) { procSub.textContent = 'Results will be saved to the project\u2019s Past Results when complete.'; procSub.setAttribute('data-i18n', '198d6689fcc8da7c'); }
-      if (procLog) procLog.innerHTML = '';
+      // Multi-file: init background batch state and stay on project screen
+      const progress = {};
+      for (const f of selectedFiles) progress[f] = { status: 'pending', pct: 0, score: null, error: null };
+      batchState = { projectId: currentProject.id, files: [...selectedFiles], progress, totalFiles: selectedFiles.length, doneCount: 0 };
+      renderStep0(); // re-render to show progress section
     }
 
     try {
@@ -1064,7 +1153,7 @@ const Projects = (() => {
                 singleResult = evt.resultData;
               }
             } else {
-              handleBatchEvent(evt);
+              handleBackgroundBatchEvent(evt);
             }
           } catch {}
         }
@@ -1079,9 +1168,136 @@ const Projects = (() => {
         }, 600);
       }
     } catch (err) {
-      document.getElementById('spinner').style.display = 'none';
-      const errTitle = document.getElementById('proc-title'); errTitle.textContent = isSingle ? 'Analysis failed' : 'Failed'; errTitle.setAttribute('data-i18n', isSingle ? '4d6ac1bfe5d253f3' : '031a8f0f659df890');
-      document.getElementById('proc-sub').textContent = err.message;
+      if (isSingle) {
+        document.getElementById('spinner').style.display = 'none';
+        const errTitle = document.getElementById('proc-title'); errTitle.textContent = 'Analysis failed'; errTitle.setAttribute('data-i18n', '4d6ac1bfe5d253f3');
+        document.getElementById('proc-sub').textContent = err.message;
+      } else if (batchState) {
+        // Mark all pending files as error
+        for (const f of batchState.files) {
+          if (batchState.progress[f].status !== 'done') {
+            batchState.progress[f].status = 'error';
+            batchState.progress[f].error = err.message;
+          }
+        }
+        updateBatchProgressUI();
+      }
+    }
+  }
+
+  /** Handle SSE events for background multi-file analysis */
+  function handleBackgroundBatchEvent(evt) {
+    if (!batchState) return;
+    const p = batchState.progress;
+
+    switch (evt.type) {
+      case 'batch_file_start':
+        if (p[evt.fileName]) {
+          p[evt.fileName].status = 'analyzing';
+          p[evt.fileName].pct = 0;
+        }
+        break;
+      case 'layer_start':
+        if (evt.fileName && p[evt.fileName]) {
+          p[evt.fileName].currentLayer = evt.layerName || evt.layerId;
+        }
+        break;
+      case 'layer_done':
+        if (evt.fileName && p[evt.fileName]) {
+          const totalLayers = (wizardConfig.enabledLayers || []).length || 11;
+          // +1 for evidence enrichment pass
+          if (!p[evt.fileName]._layersDone) p[evt.fileName]._layersDone = 0;
+          p[evt.fileName]._layersDone++;
+          p[evt.fileName].pct = Math.min(95, Math.round((p[evt.fileName]._layersDone / (totalLayers + 1)) * 95));
+        }
+        break;
+      case 'batch_file_done':
+        if (p[evt.fileName]) {
+          p[evt.fileName].status = 'done';
+          p[evt.fileName].pct = 100;
+          p[evt.fileName].score = evt.overallScore;
+          p[evt.fileName].resultId = evt.resultId;
+        }
+        batchState.doneCount++;
+        break;
+      case 'batch_file_error':
+        if (p[evt.fileName]) {
+          p[evt.fileName].status = 'error';
+          p[evt.fileName].pct = 0;
+          p[evt.fileName].error = evt.error;
+        }
+        batchState.doneCount++;
+        break;
+      case 'batch_complete':
+        // All done — refresh project data and clear batch state
+        refreshProject().then(() => {
+          batchState = null;
+          renderStep0();
+        });
+        return;
+    }
+    updateBatchProgressUI();
+  }
+
+  /** Re-render the batch progress panel in the project home screen */
+  function updateBatchProgressUI() {
+    const container = document.getElementById('proj-batch-progress');
+    if (!container || !batchState) return;
+
+    const pct = batchState.totalFiles > 0
+      ? Math.round((batchState.doneCount / batchState.totalFiles) * 100)
+      : 0;
+
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div class="proj-batch-spinner"></div>
+        <span style="font-size:13px;font-weight:600;color:var(--text-primary)">
+          Analyzing ${batchState.doneCount}/${batchState.totalFiles} files (${pct}%)
+        </span>
+      </div>
+      <div style="width:100%;height:4px;background:var(--bg-secondary);border-radius:2px;margin-bottom:10px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:var(--teal);border-radius:2px;transition:width 0.3s"></div>
+      </div>
+      ${batchState.files.map(f => {
+        const s = batchState.progress[f];
+        let icon, label, color;
+        if (s.status === 'done') {
+          icon = '\u2713'; color = 'var(--teal)';
+          label = `<span style="font-weight:600;font-family:var(--font-mono);color:${scoreColor(s.score)}">${s.score}</span>`;
+        } else if (s.status === 'error') {
+          icon = '\u2717'; color = 'var(--coral)';
+          label = `<span style="color:var(--coral)">${esc(s.error || 'Failed')}</span>`;
+        } else if (s.status === 'analyzing') {
+          icon = '\u25b6'; color = 'var(--amber)';
+          label = `<span style="color:var(--amber)">${s.pct}%${s.currentLayer ? ' \u2014 ' + esc(s.currentLayer) : ''}</span>`;
+        } else {
+          icon = '\u25cb'; color = 'var(--text-tertiary)';
+          label = '<span style="color:var(--text-tertiary)">Queued</span>';
+        }
+        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px">
+          <span style="color:${color};width:14px;text-align:center">${icon}</span>
+          <span style="flex:1;color:var(--text-primary)">${esc(f)}</span>
+          ${label}
+        </div>`;
+      }).join('')}
+    `;
+
+    // Also update score cells in the file table for completed files
+    for (const f of batchState.files) {
+      const s = batchState.progress[f];
+      // Find the score cell for this file in the file table
+      const scoreEls = document.querySelectorAll(`.proj-file-table-row[data-editname="${CSS.escape(f)}"] td`);
+      // Score column is the 7th td (index 6)
+      if (scoreEls.length >= 7) {
+        const scoreCell = scoreEls[6];
+        if (s.status === 'done' && s.score != null) {
+          scoreCell.innerHTML = `<span style="font-weight:600;font-family:var(--font-mono);font-size:12px;color:${scoreColor(s.score)}">${s.score}</span>`;
+        } else if (s.status === 'analyzing') {
+          scoreCell.innerHTML = `<span style="font-size:10px;color:var(--amber)">${s.pct}%</span>`;
+        } else if (s.status === 'error') {
+          scoreCell.innerHTML = `<span style="font-size:10px;color:var(--coral)">\u2717</span>`;
+        }
+      }
     }
   }
 
@@ -1125,59 +1341,6 @@ const Projects = (() => {
     }
   }
 
-  /** Multi-file: simple text log */
-  function handleBatchEvent(evt) {
-    const procTitle = document.getElementById('proc-title');
-    const procSub = document.getElementById('proc-sub');
-    const procLog = document.getElementById('proc-log');
-
-    switch (evt.type) {
-      case 'batch_file_start':
-        if (procTitle) procTitle.innerHTML = `<span data-i18n="50009ce1da4d15e1">File</span> ${evt.fileIndex+1} <span data-i18n="28391d3bc64ec15c">of</span> ${evt.totalFiles}: ${esc(evt.fileName)}`;
-        if (procSub) { procSub.textContent = 'Initializing…'; procSub.setAttribute('data-i18n', '83f1e8a4e5b3b3db'); }
-        break;
-      case 'init': case 'log':
-        if (procSub) procSub.textContent = evt.message || '';
-        addLog(procLog, `[${evt.fileName||''}] ${evt.message||''}`, 'var(--text-tertiary)');
-        break;
-      case 'layer_done':
-        if (procSub) procSub.innerHTML = `${esc(evt.layerName||evt.layerId)} <span data-i18n="a4c3ed04a95a3da1">done</span> (${evt.score}/100)`;
-        break;
-      case 'batch_file_done':
-        addLog(procLog, `\u2713 ${evt.fileName}: score ${evt.overallScore}`, 'var(--teal)', true);
-        break;
-      case 'batch_file_error':
-        addLog(procLog, `\u2717 ${evt.fileName}: ${evt.error}`, 'var(--coral)', true);
-        break;
-      case 'batch_complete':
-        if (procTitle) { procTitle.textContent = 'Analysis complete'; procTitle.setAttribute('data-i18n', '60ffb9b9006a07df'); }
-        if (procSub) procSub.innerHTML = `${(evt.results||[]).length} file${(evt.results||[]).length!==1?'s':''} <span data-i18n="8db72550fce2d86a">analyzed</span>`;
-        if (procLog) {
-          const div = document.createElement('div');
-          div.style.cssText = 'margin-top:16px;display:flex;gap:8px';
-          const btn = document.createElement('button');
-          btn.textContent = '\u2190 View results in project'; btn.setAttribute('data-i18n', '5015fd159057549b');
-          btn.className = 'run-btn';
-          btn.style.cssText = 'font-size:13px;padding:10px 24px';
-          btn.addEventListener('click', async () => {
-            await refreshProject();
-            App.showScreen('project');
-            renderResultsList();
-          });
-          div.appendChild(btn);
-          procLog.appendChild(div);
-        }
-        break;
-    }
-  }
-
-  function addLog(el, text, color, bold) {
-    if (!el) return;
-    const d = document.createElement('div');
-    d.textContent = text;
-    d.style.cssText = `font-size:${bold?'11':'10'}px;color:${color};${bold?'font-weight:500':''}`;
-    el.appendChild(d); el.scrollTop = el.scrollHeight;
-  }
 
   // ═══════════════════════════════════════════════════════════════════════
   // RESULTS LIST
@@ -1185,18 +1348,42 @@ const Projects = (() => {
 
   function renderResultsList() {
     const s = screen();
+    // Group results by sourceFile for clarity
+    const grouped = {};
+    for (const r of currentResults) {
+      const key = r.sourceFile || 'Unknown';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    }
+
     s.innerHTML = `
-      ${header('&larr; ' + esc(currentProject.name), '<span data-i18n="04f2e6324046f8f1">Past Results</span>')}
+      ${header('&larr; ' + esc(currentProject.name), '<span data-i18n="04f2e6324046f8f1">Past Results</span> (' + currentResults.length + ')')}
       <div class="proj-step-body">
         ${currentResults.length === 0
           ? '<div class="proj-empty" data-i18n="b04754ee48e64b1e">No results yet. Run a New Analysis first.</div>'
-          : currentResults.map(r => `
-            <div class="proj-result-row" data-rid="${r.id}">
-              <span class="proj-result-file">${esc(r.sourceFile||r.id)}</span>
-              <span class="proj-result-score" style="color:${scoreColor(r.overallScore)}">${r.overallScore!=null?r.overallScore:'\u2014'}</span>
-              <span class="proj-result-date">${r.updated ? new Date(r.updated).toLocaleDateString() : ''}</span>
-              <button class="proj-result-del" data-rdel="${r.id}" title="Delete">&#10005;</button>
-            </div>`).join('')
+          : `<table class="proj-results-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left">File</th>
+                  <th style="text-align:center;width:70px">Score</th>
+                  <th style="text-align:right;width:70px">Words</th>
+                  <th style="text-align:center;width:50px">Lang</th>
+                  <th style="text-align:right;width:120px">Date</th>
+                  <th style="width:32px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${currentResults.map(r => `
+                <tr class="proj-result-row" data-rid="${r.id}">
+                  <td class="proj-result-file">${esc(r.sourceFile || r.id)}</td>
+                  <td style="text-align:center"><span class="proj-result-score" style="color:${scoreColor(r.overallScore)}">${r.overallScore != null ? r.overallScore : '\u2014'}</span></td>
+                  <td style="text-align:right;font-size:11px;color:var(--text-secondary);font-family:var(--font-mono)">${r.wordCount || '\u2014'}</td>
+                  <td style="text-align:center;font-size:10px;color:var(--text-secondary);text-transform:uppercase">${r.language || '\u2014'}</td>
+                  <td style="text-align:right;font-size:11px;color:var(--text-tertiary)">${r.timestamp ? new Date(r.timestamp).toLocaleString() : (r.updated ? new Date(r.updated).toLocaleDateString() : '')}</td>
+                  <td><button class="proj-result-del" data-rdel="${r.id}" title="Delete">&#10005;</button></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>`
         }
       </div>`;
 
