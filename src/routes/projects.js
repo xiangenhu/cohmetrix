@@ -596,9 +596,9 @@ router.post('/:id/analyze', async (req, res) => {
         }
         results.push({ resultId, fileName, overallScore: result.overallScore });
 
-        // For single-file (non-save) mode, include full result data so frontend can display immediately
+        // Include full result data for single-file analysis so frontend can display immediately
         const doneEvt = { type: 'batch_file_done', fileIndex: i, fileName, resultId, overallScore: result.overallScore };
-        if (!saveToProject) doneEvt.resultData = result;
+        if (selectedNames.length === 1) doneEvt.resultData = result;
         send(doneEvt);
       } catch (err) {
         send({ type: 'batch_file_error', fileIndex: i, fileName, error: err.message });

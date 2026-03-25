@@ -317,25 +317,27 @@ const Projects = (() => {
           <div id="proj-batch-progress" class="proj-batch-panel"></div>
         </div>` : ''}
 
-        <!-- ═══ PAST RESULTS SECTION ═══ -->
-        ${currentResults.length > 0 ? `
+        <!-- ═══ ANALYSIS RESULTS ═══ -->
         <div style="margin-top:24px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="font-size:15px;font-weight:600;color:var(--text-primary)" data-i18n="04f2e6324046f8f1">Past Results</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text-primary)" data-i18n="04f2e6324046f8f1">Analysis Results</div>
             <span style="font-size:11px;color:var(--text-tertiary)">${currentResults.length} result${currentResults.length !== 1 ? 's' : ''}</span>
-            <button class="nav-btn" id="proj-go-results" style="margin-left:auto;font-size:11px">View All</button>
+            ${currentResults.length > 0 ? `<button class="nav-btn" id="proj-go-results" style="margin-left:auto;font-size:11px">View All</button>` : ''}
           </div>
           <div id="proj-results-preview">
-            ${currentResults.slice(0, 5).map(r => `
+            ${currentResults.length > 0 ? currentResults.slice(0, 5).map(r => `
             <div class="proj-result-row" data-rid="${r.id}" style="cursor:pointer">
               <span class="proj-result-file">${esc(r.sourceFile || r.id)}</span>
               <span class="proj-result-score" style="color:${scoreColor(r.overallScore)}">${r.overallScore != null ? r.overallScore : '\u2014'}</span>
               <span style="font-size:10px;color:var(--text-tertiary);font-family:var(--font-mono)">${r.wordCount ? r.wordCount + 'w' : ''}</span>
               <span class="proj-result-date">${r.timestamp ? new Date(r.timestamp).toLocaleDateString() : ''}</span>
-            </div>`).join('')}
-            ${currentResults.length > 5 ? `<div style="text-align:center;font-size:11px;color:var(--text-tertiary);padding:6px">+${currentResults.length - 5} more</div>` : ''}
+            </div>`).join('') + (currentResults.length > 5 ? `<div style="text-align:center;font-size:11px;color:var(--text-tertiary);padding:6px">+${currentResults.length - 5} more</div>` : '')
+            : `<div class="proj-results-empty" style="padding:16px;text-align:center;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md)">
+              <div style="font-size:20px;margin-bottom:6px;opacity:0.4">&#128202;</div>
+              <div style="font-size:12px;color:var(--text-tertiary)">No analysis results yet. Select files and click <strong>Analyze Selected</strong> to run your first analysis.</div>
+            </div>`}
           </div>
-        </div>` : ''}
+        </div>
 
         <!-- ═══ USAGE / COST ═══ -->
         <div style="margin-top:24px">
@@ -1148,7 +1150,7 @@ const Projects = (() => {
     try {
       const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/analyze`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileNames: selectedFiles, saveToProject: !isSingle }),
+        body: JSON.stringify({ fileNames: selectedFiles, saveToProject: true }),
       });
 
       const reader = resp.body.getReader();
