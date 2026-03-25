@@ -46,22 +46,40 @@ const Projects = (() => {
     const body = document.getElementById('projects-body');
     if (!body) return;
     const badge = document.getElementById('projects-badge');
-    if (badge) badge.textContent = projects.length;
+    const panel = document.getElementById('projects-panel');
 
-    body.innerHTML = projects.map(p => `
-      <div class="proj-item" data-id="${p.id}">
-        <span class="proj-item-icon">&#128194;</span>
-        <div class="proj-item-info">
-          <div class="proj-item-name">${esc(p.name)}</div>
-          <div class="proj-item-meta">${p.fileCount||0} files · ${p.resultCount||0} results</div>
+    if (projects.length === 0) {
+      // New user: hide the projects panel header, show empty state with create prompt
+      if (badge) badge.textContent = '0';
+      if (panel) panel.classList.add('empty');
+      body.innerHTML = `
+        <div class="proj-empty-state">
+          <div class="proj-empty-icon">&#128194;</div>
+          <div class="proj-empty-title">No projects yet</div>
+          <div class="proj-empty-desc">Create your first project to organize files and run batch analyses.</div>
+          <div class="proj-create-row proj-create-row--empty">
+            <input class="proj-create-input" id="proj-create-input" placeholder="Enter project name…" data-i18n-placeholder="6c6a959bab27ef7a">
+            <button class="proj-create-btn" id="proj-create-btn" data-i18n="4759498ac2a719c6">Create</button>
+          </div>
+        </div>`;
+    } else {
+      if (badge) badge.textContent = projects.length;
+      if (panel) panel.classList.remove('empty');
+      body.innerHTML = projects.map(p => `
+        <div class="proj-item" data-id="${p.id}">
+          <span class="proj-item-icon">&#128194;</span>
+          <div class="proj-item-info">
+            <div class="proj-item-name">${esc(p.name)}</div>
+            <div class="proj-item-meta">${p.fileCount||0} files · ${p.resultCount||0} results</div>
+          </div>
+          <button class="proj-item-del" data-del="${p.id}" title="Delete">&#10005;</button>
         </div>
-        <button class="proj-item-del" data-del="${p.id}" title="Delete">&#10005;</button>
-      </div>
-    `).join('') + `
-      <div class="proj-create-row">
-        <input class="proj-create-input" id="proj-create-input" placeholder="New project name…" data-i18n-placeholder="6c6a959bab27ef7a">
-        <button class="proj-create-btn" id="proj-create-btn" data-i18n="4759498ac2a719c6">Create</button>
-      </div>`;
+      `).join('') + `
+        <div class="proj-create-row">
+          <input class="proj-create-input" id="proj-create-input" placeholder="New project name…" data-i18n-placeholder="6c6a959bab27ef7a">
+          <button class="proj-create-btn" id="proj-create-btn" data-i18n="4759498ac2a719c6">Create</button>
+        </div>`;
+    }
 
     body.querySelectorAll('.proj-item').forEach(el => {
       el.addEventListener('click', (e) => {
@@ -90,7 +108,7 @@ const Projects = (() => {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
-      if (resp.ok) { input.value = ''; await loadProjects(); openProject((await resp.json()).project?.id); }
+      if (resp.ok) { const data = await resp.json(); input.value = ''; await loadProjects(); openProject(data.project?.id); }
     } catch {}
   }
 

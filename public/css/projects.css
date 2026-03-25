@@ -53,6 +53,19 @@
 }
 .proj-item-del:hover { background: var(--coral-light); color: var(--coral); }
 
+/* Empty state — hide accordion header, show friendly onboarding */
+.projects-panel.empty .projects-header { display: none; }
+.projects-panel.empty .projects-body { display: block; border-top: none; }
+
+.proj-empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 28px 20px 18px; text-align: center;
+}
+.proj-empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+.proj-empty-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.proj-empty-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; max-width: 320px; }
+.proj-create-row--empty { border-top: none; justify-content: center; padding: 0; }
+
 .proj-create-row {
   display: flex; gap: 6px; padding: 8px 14px;
   border-top: 0.5px solid var(--border-tertiary);
