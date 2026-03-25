@@ -51,6 +51,20 @@ router.post('/', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: `Text too long (${wordCount} words). Maximum: ${config.analysis.maxEssayWords} words.` });
     }
 
+    // Check user quota before starting analysis
+    const userId = storage.getUserId(req.user);
+    const quota = await storage.loadUserQuota(userId);
+    const remaining = quota.quota - quota.spent;
+    if (remaining <= 0) {
+      return res.status(402).json({
+        error: 'Insufficient balance. Please add funds to continue.',
+        quota_exceeded: true,
+        quota: quota.quota,
+        spent: +quota.spent.toFixed(6),
+        remaining: 0,
+      });
+    }
+
     // Initialize progress tracking
     analysisProgress.set(analysisId, []);
 
@@ -58,7 +72,6 @@ router.post('/', upload.single('file'), async (req, res) => {
     res.json({ analysisId });
 
     // Set audit context for standalone analysis
-    const userId = storage.getUserId(req.user || {});
     llm.setAuditContext({ userId, projectId: null, fileName: req.file?.originalname || null, action: 'standalone_analysis' });
 
     // Run analysis in background

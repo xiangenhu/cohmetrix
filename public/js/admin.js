@@ -555,17 +555,21 @@ const Admin = (() => {
     bindAdminTabs(s);
 
     try {
-      // Load all users first, then get usage per user
+      // Load all users, then get usage + quota per user
       const usersResp = await Auth.apiFetch('/api/admin/users');
       if (!usersResp.ok) throw new Error('Failed to load users');
       const allUsers = (await usersResp.json()).users || [];
 
       const usageByUser = await Promise.all(allUsers.map(async (u) => {
         try {
-          const resp = await Auth.apiFetch(`/api/admin/users/${encodeURIComponent(u.userId)}/usage`);
-          if (!resp.ok) return { ...u, projects: [], grandTotal: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } };
-          return { ...u, ...(await resp.json()) };
-        } catch { return { ...u, projects: [], grandTotal: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } }; }
+          const [usageResp, quotaResp] = await Promise.all([
+            Auth.apiFetch(`/api/admin/users/${encodeURIComponent(u.userId)}/usage`),
+            Auth.apiFetch(`/api/admin/users/${encodeURIComponent(u.userId)}/quota`),
+          ]);
+          const usage = usageResp.ok ? await usageResp.json() : { projects: [], grandTotal: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 } };
+          const quota = quotaResp.ok ? await quotaResp.json() : { quota: 0, spent: 0, remaining: 0 };
+          return { ...u, ...usage, quota };
+        } catch { return { ...u, projects: [], grandTotal: { promptTokens: 0, completionTokens: 0, totalTokens: 0, totalCost: 0, calls: 0 }, quota: { quota: 0, spent: 0, remaining: 0 } }; }
       }));
 
       const body = s.querySelector('.admin-body');
@@ -574,30 +578,106 @@ const Admin = (() => {
         return acc;
       }, { calls: 0, totalTokens: 0, totalCost: 0 });
 
+      const fmtUsd = (n) => n < 0.005 ? '$0.00' : n < 0.10 ? '$' + n.toFixed(3) : '$' + n.toFixed(2);
+
       body.innerHTML = `
         <div style="padding:16px">
           <div style="display:flex;gap:24px;margin-bottom:20px;padding:12px 16px;background:var(--bg-secondary);border-radius:var(--radius-md)">
             <div><span style="font-size:11px;color:var(--text-tertiary)">Total LLM Calls</span><div style="font-size:18px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">${grandTotal.calls.toLocaleString()}</div></div>
             <div><span style="font-size:11px;color:var(--text-tertiary)">Total Tokens</span><div style="font-size:18px;font-weight:600;color:var(--teal);font-family:var(--font-mono)">${grandTotal.totalTokens.toLocaleString()}</div></div>
-            <div><span style="font-size:11px;color:var(--text-tertiary)">Total Cost</span><div style="font-size:18px;font-weight:600;color:var(--amber);font-family:var(--font-mono)">$${grandTotal.totalCost.toFixed(4)}</div></div>
+            <div><span style="font-size:11px;color:var(--text-tertiary)">Total Cost</span><div style="font-size:18px;font-weight:600;color:var(--amber);font-family:var(--font-mono)">${fmtUsd(grandTotal.totalCost)}</div></div>
           </div>
           <table class="admin-table">
-            <thead><tr><th>User</th><th style="text-align:right">Calls</th><th style="text-align:right">Prompt</th><th style="text-align:right">Completion</th><th style="text-align:right">Total Tokens</th><th style="text-align:right">Cost</th></tr></thead>
+            <thead><tr>
+              <th>User</th>
+              <th style="text-align:right">Calls</th>
+              <th style="text-align:right">Tokens</th>
+              <th style="text-align:right">Cost</th>
+              <th style="text-align:right">Quota</th>
+              <th style="text-align:right">Balance</th>
+              <th style="text-align:center">Actions</th>
+            </tr></thead>
             <tbody>
-              ${usageByUser.filter(u => u.grandTotal.calls > 0).map(u => `<tr class="admin-row">
+              ${usageByUser.map(u => `<tr class="admin-row">
                 <td>${esc(u.email)}</td>
                 <td style="text-align:right;font-family:var(--font-mono)">${u.grandTotal.calls}</td>
-                <td style="text-align:right;font-family:var(--font-mono);font-size:11px">${u.grandTotal.promptTokens.toLocaleString()}</td>
-                <td style="text-align:right;font-family:var(--font-mono);font-size:11px">${u.grandTotal.completionTokens.toLocaleString()}</td>
-                <td style="text-align:right;font-family:var(--font-mono);color:var(--teal)">${u.grandTotal.totalTokens.toLocaleString()}</td>
-                <td style="text-align:right;font-family:var(--font-mono);color:var(--amber)">$${u.grandTotal.totalCost.toFixed(4)}</td>
-              </tr>`).join('') || '<tr><td colspan="6" style="color:var(--text-tertiary)">No usage recorded yet.</td></tr>'}
+                <td style="text-align:right;font-family:var(--font-mono);color:var(--teal);font-size:11px">${u.grandTotal.totalTokens.toLocaleString()}</td>
+                <td style="text-align:right;font-family:var(--font-mono);color:var(--amber)">${fmtUsd(u.grandTotal.totalCost)}</td>
+                <td style="text-align:right;font-family:var(--font-mono)">${fmtUsd(u.quota.quota)}</td>
+                <td style="text-align:right;font-family:var(--font-mono);color:${u.quota.remaining <= 0 ? 'var(--coral)' : 'var(--teal)'}">${fmtUsd(u.quota.remaining)}</td>
+                <td style="text-align:center">
+                  <button class="admin-quota-btn" data-uid="${esc(u.userId)}" title="Add quota">+$</button>
+                  <button class="admin-reset-btn" data-uid="${esc(u.userId)}" title="Reset spending">Reset</button>
+                </td>
+              </tr>`).join('') || '<tr><td colspan="7" style="color:var(--text-tertiary)">No users found.</td></tr>'}
             </tbody>
           </table>
         </div>`;
+
+      // Bind admin quota buttons
+      body.querySelectorAll('.admin-quota-btn').forEach(btn => {
+        btn.addEventListener('click', () => showAdminQuotaDialog(btn.dataset.uid));
+      });
+      body.querySelectorAll('.admin-reset-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm(`Reset spending for ${btn.dataset.uid}? This sets their spent amount to $0.`)) return;
+          try {
+            const resp = await Auth.apiFetch(`/api/admin/users/${encodeURIComponent(btn.dataset.uid)}/reset-spending`, { method: 'POST' });
+            if (resp.ok) renderUsageOverview();
+            else alert('Failed to reset');
+          } catch (e) { alert(e.message); }
+        });
+      });
     } catch (err) {
       s.querySelector('.admin-body').innerHTML = `<div style="color:var(--coral);font-size:12px;padding:16px">${esc(err.message)}</div>`;
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // ADMIN QUOTA DIALOG
+  // ═══════════════════════════════════════════════════════════════════════
+
+  function showAdminQuotaDialog(userId) {
+    document.getElementById('admin-quota-dialog')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'admin-quota-dialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000';
+
+    overlay.innerHTML = `
+      <div style="background:var(--bg-primary);border:1px solid var(--border-tertiary);border-radius:var(--radius-lg);padding:24px;min-width:340px;max-width:420px">
+        <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px">Adjust Quota</div>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:16px">${esc(userId)}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Add amount (USD):</div>
+        <input id="admin-quota-amount" type="number" min="0.01" step="0.01" value="5.00" style="width:100%;padding:8px 10px;font-size:13px;border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);margin-bottom:16px;font-family:var(--font-mono);box-sizing:border-box">
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="admin-quota-cancel" style="padding:6px 16px;font-size:12px;border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-secondary);cursor:pointer">Cancel</button>
+          <button id="admin-quota-confirm" style="padding:6px 16px;font-size:12px;border:none;border-radius:var(--radius-md);background:var(--teal);color:white;cursor:pointer;font-weight:500">Add Quota</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#admin-quota-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#admin-quota-confirm').addEventListener('click', async () => {
+      const amount = parseFloat(overlay.querySelector('#admin-quota-amount').value);
+      if (!amount || amount <= 0) return alert('Enter a valid amount');
+      try {
+        const resp = await Auth.apiFetch(`/api/admin/users/${encodeURIComponent(userId)}/quota`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ addAmount: amount }),
+        });
+        if (resp.ok) {
+          overlay.remove();
+          renderUsageOverview();
+        } else {
+          const err = await resp.json();
+          alert(err.error || 'Failed');
+        }
+      } catch (e) { alert(e.message); }
+    });
   }
 
   // ═══════════════════════════════════════════════════════════════════════

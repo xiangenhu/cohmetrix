@@ -61,3 +61,19 @@
   font-weight: 500;
   color: var(--text-primary);
 }
+
+/* Admin quota/reset action buttons */
+.admin-quota-btn, .admin-reset-btn {
+  font-size: 10px;
+  font-family: var(--font-sans);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 0.5px solid var(--border-tertiary);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.admin-quota-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal); }
+.admin-reset-btn:hover { background: var(--coral-light); color: var(--coral); border-color: var(--coral); }

@@ -90,6 +90,7 @@ app.use('/api/documents', requireAuth, require('./routes/documents'));
 app.use('/api/help', requireAuth, require('./routes/help'));
 app.use('/api/rubrics', requireAuth, require('./routes/rubric'));
 app.use('/api/projects', requireAuth, require('./routes/projects'));
+app.use('/api/quota', requireAuth, require('./routes/quota'));
 app.use('/api/admin', requireAuth, require('./routes/admin'));
 
 // ─── Session token usage endpoint ───────────────────────────────────────────
@@ -100,11 +101,8 @@ app.get('/api/tokens', requireAuth, (req, res) => {
   res.json({ session, analysis });
 });
 
-app.post('/api/tokens/reset', requireAuth, (req, res) => {
-  const llm = require('./services/llm');
-  llm.resetSessionTracker();
-  res.json({ ok: true });
-});
+// Token reset removed for regular users — spending is cumulative.
+// Super admin can reset via PUT /api/admin/users/:userId/reset-spending
 
 // SPA fallback — serve app.html for unmatched routes
 app.get('*', (req, res) => {
@@ -120,18 +118,28 @@ llmService.setAuditCallback((entry) => {
   // 1. Buffer full interaction for admin audit log (fire-and-forget, flushed in batches)
   storage.saveAuditEntry(entry);
 
-  // 2. Buffer usage summary for per-project usage log (flushed after debounce)
+  // 2. Calculate cost for this LLM call
+  const pricing = llmService.getPricing();
+  const promptCost = ((entry.tokens?.prompt || 0) / 1_000_000) * pricing.promptPer1M;
+  const completionCost = ((entry.tokens?.completion || 0) / 1_000_000) * pricing.completionPer1M;
+  const cost = promptCost + completionCost;
+
+  // 3. Buffer usage summary for per-project usage log (flushed after debounce)
   if (entry.userId && entry.projectId) {
-    const pricing = llmService.getPricing();
-    const promptCost = ((entry.tokens?.prompt || 0) / 1_000_000) * pricing.promptPer1M;
-    const completionCost = ((entry.tokens?.completion || 0) / 1_000_000) * pricing.completionPer1M;
     storage.appendProjectUsage(entry.userId, entry.projectId, {
       timestamp: entry.timestamp,
       action: entry.action || 'llm_call',
       fileName: entry.fileName || null,
       model: entry.model,
       tokens: entry.tokens,
-      cost: promptCost + completionCost,
+      cost,
+    });
+  }
+
+  // 4. Record spending against user quota
+  if (entry.userId && cost > 0) {
+    storage.recordUserSpending(entry.userId, cost).catch(err => {
+      console.error('[QUOTA] Failed to record spending:', err.message);
     });
   }
 });

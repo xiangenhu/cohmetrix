@@ -285,4 +285,58 @@ router.get('/users/:userId/usage', async (req, res) => {
   }
 });
 
+// ─── Quota management (super admin) ──────────────────────────────────────────
+
+router.get('/users/:userId/quota', async (req, res) => {
+  try {
+    const quota = await storage.loadUserQuota(req.params.userId);
+    const remaining = Math.max(0, quota.quota - quota.spent);
+    res.json({ ...quota, remaining });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/users/:userId/quota', async (req, res) => {
+  try {
+    const { quota: newQuota, addAmount } = req.body;
+    const quotaData = await storage.loadUserQuota(req.params.userId);
+
+    if (typeof newQuota === 'number' && newQuota >= 0) {
+      quotaData.quota = newQuota;
+    } else if (typeof addAmount === 'number' && addAmount > 0) {
+      quotaData.quota = (quotaData.quota || 0) + addAmount;
+    } else {
+      return res.status(400).json({ error: 'Provide quota (absolute) or addAmount (increment)' });
+    }
+
+    quotaData.deposits = quotaData.deposits || [];
+    quotaData.deposits.push({
+      amount: typeof newQuota === 'number' ? newQuota - (quotaData.quota - (typeof addAmount === 'number' ? addAmount : 0)) : addAmount,
+      method: 'admin',
+      ref: `admin:${req.user?.user?.email || req.user?.email || 'unknown'}`,
+      ts: new Date().toISOString(),
+    });
+
+    await storage.saveUserQuota(req.params.userId, quotaData);
+    const remaining = Math.max(0, quotaData.quota - quotaData.spent);
+    res.json({ success: true, quota: quotaData.quota, spent: +quotaData.spent.toFixed(6), remaining: +remaining.toFixed(6) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Reset user spending (super admin) ───────────────────────────────────────
+
+router.post('/users/:userId/reset-spending', async (req, res) => {
+  try {
+    const quotaData = await storage.loadUserQuota(req.params.userId);
+    quotaData.spent = 0;
+    await storage.saveUserQuota(req.params.userId, quotaData);
+    res.json({ success: true, quota: quotaData.quota, spent: 0, remaining: quotaData.quota });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

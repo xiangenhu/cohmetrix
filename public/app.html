@@ -332,43 +332,80 @@
   <div class="cost-backdrop" id="cost-backdrop"></div>
   <div class="cost-modal">
     <div class="cost-header">
-      <div class="cost-header-title"><span data-i18n="15ea7f184e0bfd29">Token Usage & Cost</span></div>
+      <div class="cost-header-title"><span>Usage & Balance</span></div>
       <span class="cost-provider" id="tf-provider"></span>
       <button class="cost-close-btn" id="cost-close-btn">&times;</button>
     </div>
     <div class="cost-body">
-      <div class="cost-total-row">
-        <div class="cost-total-amount" id="cost-total-usd">$0.00</div>
-        <div class="cost-total-label"><span data-i18n="6fdd75a55cd6ac56">Estimated session cost</span></div>
-      </div>
-      <div class="cost-grid">
-        <div class="cost-card">
-          <div class="cost-card-label"><span data-i18n="6959b4159575d8dd">Session</span></div>
-          <div class="cost-card-row"><span data-i18n="5f7864d17c245382">LLM calls</span><strong id="tf-session-calls">0</strong></div>
-          <div class="cost-card-row"><span data-i18n="b8fbf83c69d10704">Prompt tokens</span><strong id="tf-session-prompt">0</strong></div>
-          <div class="cost-card-row"><span data-i18n="f5ad1c5b775f969a">Completion tokens</span><strong id="tf-session-completion">0</strong></div>
-          <div class="cost-card-row total"><span data-i18n="e7601ca1178ad955">Total tokens</span><strong id="tf-session-total">0</strong></div>
-          <div class="cost-card-row cost"><span data-i18n="204a5eb2cd28bcfd">Cost</span><strong id="cost-session-usd">$0.00</strong></div>
+      <!-- Balance summary -->
+      <div class="cost-balance-row">
+        <div class="cost-balance-item">
+          <div class="cost-balance-label">Balance</div>
+          <div class="cost-balance-amount cost-balance-remaining" id="quota-remaining">$0.00</div>
         </div>
-        <div class="cost-card">
-          <div class="cost-card-label"><span data-i18n="b08c40a13bd61b5a">Last Analysis</span></div>
-          <div class="cost-card-row"><span data-i18n="5f7864d17c245382">LLM calls</span><strong id="tf-analysis-calls">0</strong></div>
-          <div class="cost-card-row"><span data-i18n="b8fbf83c69d10704">Prompt tokens</span><strong id="tf-analysis-prompt">0</strong></div>
-          <div class="cost-card-row"><span data-i18n="f5ad1c5b775f969a">Completion tokens</span><strong id="tf-analysis-completion">0</strong></div>
-          <div class="cost-card-row total"><span data-i18n="e7601ca1178ad955">Total tokens</span><strong id="tf-analysis-total">0</strong></div>
-          <div class="cost-card-row cost"><span data-i18n="204a5eb2cd28bcfd">Cost</span><strong id="cost-analysis-usd">$0.00</strong></div>
+        <div class="cost-balance-item">
+          <div class="cost-balance-label">Quota</div>
+          <div class="cost-balance-amount" id="quota-total">$0.00</div>
         </div>
-        <div class="cost-card">
-          <div class="cost-card-label"><span data-i18n="5453c4353174fee1">Post-Analysis</span></div>
-          <div class="cost-card-row"><span data-i18n="5f7864d17c245382">LLM calls</span><strong id="tf-post-calls">0</strong></div>
-          <div class="cost-card-row total"><span data-i18n="e7601ca1178ad955">Total tokens</span><strong id="tf-post-total">0</strong></div>
-          <div class="cost-card-row cost"><span data-i18n="204a5eb2cd28bcfd">Cost</span><strong id="cost-post-usd">$0.00</strong></div>
+        <div class="cost-balance-item">
+          <div class="cost-balance-label">Spent</div>
+          <div class="cost-balance-amount cost-balance-spent" id="quota-spent">$0.00</div>
         </div>
       </div>
-      <div class="cost-note" id="cost-note"><span data-i18n="f5ad17ba0462dc0c">Pricing based on published API rates</span></div>
+      <!-- Per-project usage table -->
+      <div class="cost-projects-section">
+        <div class="cost-section-title">Usage by Project</div>
+        <div class="cost-projects-table" id="cost-projects-table">
+          <div class="cost-projects-loading">Loading...</div>
+        </div>
+      </div>
+      <!-- Session tokens (current browser session) -->
+      <div class="cost-session-section">
+        <div class="cost-section-title">Current Session</div>
+        <div class="cost-grid">
+          <div class="cost-card">
+            <div class="cost-card-row"><span>LLM calls</span><strong id="tf-session-calls">0</strong></div>
+            <div class="cost-card-row"><span>Prompt tokens</span><strong id="tf-session-prompt">0</strong></div>
+            <div class="cost-card-row"><span>Completion tokens</span><strong id="tf-session-completion">0</strong></div>
+            <div class="cost-card-row total"><span>Total tokens</span><strong id="tf-session-total">0</strong></div>
+            <div class="cost-card-row cost"><span>Session cost</span><strong id="cost-session-usd">$0.00</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="cost-note" id="cost-note">Pricing based on published API rates</div>
     </div>
     <div class="cost-footer">
-      <button class="cost-reset-btn" id="tf-reset-btn"><span data-i18n="28318be464b400aa">Reset session</span></button>
+      <button class="cost-topup-btn" id="cost-topup-btn">Add Funds</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUOTA EXCEEDED / ADD FUNDS MODAL ══ -->
+<div class="cost-overlay" id="quota-overlay">
+  <div class="cost-backdrop" id="quota-backdrop"></div>
+  <div class="cost-modal quota-modal">
+    <div class="cost-header">
+      <div class="cost-header-title"><span>Add Funds</span></div>
+      <button class="cost-close-btn" id="quota-close-btn">&times;</button>
+    </div>
+    <div class="cost-body">
+      <div class="quota-message" id="quota-message">Your balance is low. Add funds to continue analyzing documents.</div>
+      <div class="quota-balance-display">
+        <span>Current balance:</span>
+        <strong id="quota-modal-balance">$0.00</strong>
+      </div>
+      <div class="quota-amount-row">
+        <label>Amount (USD)</label>
+        <div class="quota-amount-options">
+          <button class="quota-amount-btn" data-amount="1">$1</button>
+          <button class="quota-amount-btn" data-amount="2">$2</button>
+          <button class="quota-amount-btn active" data-amount="5">$5</button>
+          <button class="quota-amount-btn" data-amount="10">$10</button>
+          <button class="quota-amount-btn" data-amount="20">$20</button>
+        </div>
+      </div>
+      <div class="quota-paypal-container" id="quota-paypal-container"></div>
+      <div class="quota-status" id="quota-status"></div>
     </div>
   </div>
 </div>
@@ -378,6 +415,7 @@
 
 <!-- Modular JS -->
 <script src="/js/auth.js"></script>
+<script src="/js/quota.js"></script>
 <script src="/js/token-footer.js"></script>
 <script src="/js/helpchat.js"></script>
 <script src="/js/charts.js"></script>

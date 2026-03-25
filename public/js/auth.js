@@ -111,6 +111,7 @@ const Auth = (() => {
     Rubric.init();
     Projects.init();
     if (typeof Admin !== 'undefined') Admin.init(currentUser);
+    Quota.init();
     TokenFooter.init();
   }
 
@@ -160,6 +161,17 @@ const Auth = (() => {
       currentUser = null;
       showLogin();
       throw new Error('Session expired. Please log in again.');
+    }
+
+    // Quota exceeded — show add-funds modal
+    if (resp.status === 402) {
+      try {
+        const clone = resp.clone();
+        const data = await clone.json();
+        if (data.quota_exceeded && typeof Quota !== 'undefined') {
+          Quota.handleQuotaExceeded(data);
+        }
+      } catch { /* ignore parse errors */ }
     }
 
     return resp;

@@ -84,4 +84,14 @@ module.exports = {
   admin: {
     superAdminEmail: process.env.SUPER_ADMIN_EMAIL || '',
   },
+
+  quota: {
+    defaultQuota: parseFloat(process.env.DEFAULT_USER_QUOTA) || 0.50,
+  },
+
+  paypal: {
+    clientId: process.env.PAYPAL_CLIENT_ID || '',
+    clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
+    mode: process.env.PAYPAL_MODE || 'sandbox', // 'sandbox' or 'live'
+  },
 };

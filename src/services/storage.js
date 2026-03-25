@@ -220,7 +220,12 @@ async function deleteDocument(filePath) {
 // ─── Project-scoped Storage ─────────────────────────────────────────────────
 
 function getUserId(user) {
-  return (user.email || 'anonymous').toLowerCase();
+  // OAuth gateway returns { user: { email, name, ... }, authenticated: true }
+  const email = user?.email || user?.user?.email;
+  if (!email) {
+    throw new Error('Authentication required — no user email available');
+  }
+  return email.toLowerCase();
 }
 
 function projectPath(userId, projectId, ...parts) {
@@ -763,6 +768,52 @@ async function loadAuditEntry(auditPath) {
   return data ? JSON.parse(data) : null;
 }
 
+// ─── User quota ──────────────────────────────────────────────────────────────
+// Stored at: users/{email}/quota.json
+// Structure: { quota, spent, deposits: [{ amount, method, ref, ts }], createdAt, updatedAt }
+
+function quotaPath(userId) { return `users/${userId}/quota.json`; }
+
+const EMPTY_QUOTA = (defaultAmount) => ({
+  quota: defaultAmount,
+  spent: 0,
+  deposits: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+async function loadUserQuota(userId) {
+  initStorage();
+  const defaultQuota = config.quota.defaultQuota;
+  if (bucket) {
+    const file = bucket.file(quotaPath(userId));
+    const [exists] = await file.exists();
+    if (!exists) return EMPTY_QUOTA(defaultQuota);
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString());
+  }
+  const data = memoryStore.get(`quota:${userId}`);
+  return data ? JSON.parse(data) : EMPTY_QUOTA(defaultQuota);
+}
+
+async function saveUserQuota(userId, quotaData) {
+  initStorage();
+  quotaData.updatedAt = new Date().toISOString();
+  const payload = JSON.stringify(quotaData);
+  if (bucket) {
+    await bucket.file(quotaPath(userId)).save(payload, { contentType: 'application/json' });
+  } else {
+    memoryStore.set(`quota:${userId}`, payload);
+  }
+}
+
+async function recordUserSpending(userId, cost) {
+  if (!cost || cost <= 0) return;
+  const quota = await loadUserQuota(userId);
+  quota.spent = (quota.spent || 0) + cost;
+  await saveUserQuota(userId, quota);
+}
+
 module.exports = {
   saveResult, loadResult, saveUpload, listResults, deleteResult,
   listDocuments, saveDocument, loadDocument, deleteDocument,
@@ -774,4 +825,5 @@ module.exports = {
   listAllUsers, transferProject, migrateStorageLayout,
   loadProjectUsage, appendProjectUsage, flushProjectUsage, flushAllUsage,
   saveAuditEntry, listAuditEntries, loadAuditEntry, flushAuditBuffer,
+  loadUserQuota, saveUserQuota, recordUserSpending,
 };

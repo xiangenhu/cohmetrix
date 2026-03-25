@@ -1,14 +1,15 @@
 /* ═══ Cost FAB & Modal ═══ */
 
-/* Topbar cost button */
+/* Topbar cost button — shows balance */
 .cost-topbar-btn {
-  width: 28px;
+  min-width: 48px;
   height: 28px;
+  padding: 0 8px;
   border-radius: var(--radius-md);
   border: 0.5px solid var(--border-tertiary);
   background: transparent;
   color: var(--teal);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
   font-family: var(--font-mono);
   cursor: pointer;
@@ -19,6 +20,19 @@
 .cost-topbar-btn:hover {
   background: var(--teal-light);
   border-color: var(--teal);
+}
+
+.cost-topbar-btn.quota-low {
+  color: var(--coral);
+  border-color: var(--coral);
+}
+
+.cost-topbar-btn.quota-low:hover {
+  background: var(--coral-light);
+}
+
+.cost-topbar-btn.quota-ok {
+  color: var(--teal);
 }
 
 /* Overlay */
@@ -46,14 +60,14 @@
 /* Modal */
 .cost-modal {
   position: relative;
-  width: 480px;
+  width: 520px;
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 64px);
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-tertiary);
   box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-  overflow: hidden;
+  overflow-y: auto;
   animation: costSlideIn 0.2s ease-out;
 }
 
@@ -108,31 +122,115 @@
   padding: 20px;
 }
 
-/* Big total */
-.cost-total-row {
-  text-align: center;
-  padding: 16px 0 24px;
+/* ── Balance row ── */
+.cost-balance-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-tertiary);
 }
 
-.cost-total-amount {
-  font-size: 36px;
+.cost-balance-item { text-align: center; }
+
+.cost-balance-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+}
+
+.cost-balance-amount {
+  font-size: 22px;
   font-weight: 700;
   font-family: var(--font-mono);
-  color: var(--teal);
-  letter-spacing: -1px;
-  line-height: 1;
+  color: var(--text-primary);
 }
 
-.cost-total-label {
+.cost-balance-remaining { color: var(--teal); }
+.cost-balance-spent { color: var(--amber); }
+
+/* ── Per-project usage ── */
+.cost-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+.cost-projects-section {
+  margin-bottom: 20px;
+}
+
+.cost-proj-tbl {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.cost-proj-tbl th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-tertiary);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-tertiary);
+}
+
+.cost-proj-tbl th:not(:first-child) { text-align: right; }
+
+.cost-proj-tbl td {
+  padding: 7px 8px;
+  color: var(--text-primary);
+  border-bottom: 0.5px solid var(--border-tertiary);
+}
+
+.cost-proj-tbl td:not(:first-child) {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.cost-proj-tbl tbody tr { cursor: pointer; transition: background 0.1s; }
+.cost-proj-tbl tbody tr:hover { background: var(--bg-secondary); }
+
+.cost-proj-total td {
+  border-top: 1px solid var(--border-tertiary);
+  border-bottom: none;
+  padding-top: 8px;
+}
+
+.cost-proj-total td:last-child { color: var(--amber); }
+
+.cost-projects-loading,
+.cost-projects-empty {
   font-size: 12px;
   color: var(--text-tertiary);
-  margin-top: 4px;
+  padding: 12px 0;
+  text-align: center;
+}
+
+/* ── Session section ── */
+.cost-session-section {
+  margin-bottom: 12px;
+}
+
+.cost-session-section .cost-grid {
+  grid-template-columns: 1fr;
 }
 
 /* Grid of cards */
 .cost-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
@@ -141,6 +239,9 @@
   border: 1px solid var(--border-tertiary);
   border-radius: var(--radius-md);
   padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 4px 16px;
 }
 
 .cost-card-label {
@@ -149,7 +250,8 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-tertiary);
-  margin-bottom: 10px;
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
 }
 
 .cost-card-row {
@@ -158,7 +260,7 @@
   align-items: center;
   font-size: 11px;
   color: var(--text-secondary);
-  padding: 3px 0;
+  padding: 2px 0;
 }
 
 .cost-card-row strong {
@@ -168,30 +270,14 @@
   color: var(--text-primary);
 }
 
-.cost-card-row.total {
-  border-top: 1px solid var(--border-tertiary);
-  margin-top: 4px;
-  padding-top: 6px;
-}
-
-.cost-card-row.total strong {
-  color: var(--teal);
-}
-
-.cost-card-row.cost {
-  margin-top: 2px;
-}
-
-.cost-card-row.cost strong {
-  color: var(--amber);
-  font-weight: 700;
-}
+.cost-card-row.total strong { color: var(--teal); }
+.cost-card-row.cost strong { color: var(--amber); font-weight: 700; }
 
 .cost-note {
   text-align: center;
   font-size: 11px;
   color: var(--text-tertiary);
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 /* Footer */
@@ -202,23 +288,113 @@
   border-top: 1px solid var(--border-tertiary);
 }
 
-.cost-reset-btn {
-  font-size: 12px;
+.cost-topup-btn {
+  font-size: 13px;
+  font-weight: 600;
   font-family: var(--font-sans);
-  color: var(--text-tertiary);
-  background: none;
-  border: 1px solid var(--border-tertiary);
+  color: #fff;
+  background: var(--teal);
+  border: none;
   border-radius: 6px;
-  padding: 6px 16px;
+  padding: 8px 28px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.cost-reset-btn:hover {
-  color: var(--coral);
-  border-color: var(--coral);
-  background: var(--coral-light);
+.cost-topup-btn:hover {
+  background: #0d9488;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
 }
+
+/* ═══ Quota / Add Funds Modal ═══ */
+
+.quota-modal {
+  width: 420px;
+}
+
+.quota-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.quota-balance-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.quota-balance-display strong {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--teal);
+}
+
+.quota-amount-row label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.quota-amount-options {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.quota-amount-btn {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.quota-amount-btn:hover {
+  border-color: var(--teal);
+  background: var(--teal-light);
+}
+
+.quota-amount-btn.active {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+
+.quota-paypal-container {
+  min-height: 50px;
+  margin-bottom: 12px;
+}
+
+.quota-status {
+  text-align: center;
+  font-size: 12px;
+  min-height: 20px;
+  margin-top: 8px;
+}
+
+.quota-status-info { color: var(--text-tertiary); }
+.quota-status-error { color: var(--coral); }
+.quota-status-success { color: var(--teal); font-weight: 600; }
 
 /* Pulse animation when tokens update */
 @keyframes tf-pulse {
@@ -233,12 +409,8 @@
 
 /* Responsive */
 @media (max-width: 520px) {
-  .cost-grid {
-    grid-template-columns: 1fr;
-  }
-  .cost-modal {
-    width: 100%;
-    max-width: none;
-    margin: 16px;
-  }
+  .cost-modal { width: 100%; max-width: none; margin: 16px; }
+  .quota-modal { width: 100%; }
+  .cost-balance-row { flex-direction: column; gap: 12px; }
+  .quota-amount-options { flex-wrap: wrap; }
 }

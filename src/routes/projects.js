@@ -528,6 +528,20 @@ router.post('/:id/estimate', async (req, res) => {
 router.post('/:id/analyze', async (req, res) => {
   try {
     const userId = uid(req.user);
+
+    // Check user quota before starting batch analysis
+    const quota = await storage.loadUserQuota(userId);
+    const remaining = quota.quota - quota.spent;
+    if (remaining <= 0) {
+      return res.status(402).json({
+        error: 'Insufficient balance. Please add funds to continue.',
+        quota_exceeded: true,
+        quota: quota.quota,
+        spent: +quota.spent.toFixed(6),
+        remaining: 0,
+      });
+    }
+
     const project = await storage.getProject(userId, req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
