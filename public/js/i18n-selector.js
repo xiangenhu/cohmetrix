@@ -142,5 +142,13 @@ const I18nSelector = (() => {
     ];
   }
 
-  return { init };
+  function getCurrentLang() { return currentLang; }
+
+  function switchLang(code) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', code);
+    window.location.href = url.toString();
+  }
+
+  return { init, getCurrentLang, switchLang };
 })();

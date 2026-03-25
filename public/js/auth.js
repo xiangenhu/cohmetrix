@@ -110,6 +110,7 @@ const Auth = (() => {
     HelpChat.init();
     Rubric.init();
     Projects.init();
+    if (typeof Admin !== 'undefined') Admin.init(currentUser);
     TokenFooter.init();
   }
 

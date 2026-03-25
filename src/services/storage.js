@@ -430,6 +430,40 @@ async function deleteProjectResult(userId, projectId, resultId) {
   return memoryStore.delete(`proj:${userId}:${projectId}:result:${resultId}`);
 }
 
+/**
+ * List all distinct user IDs (for admin).
+ * Scans the users/ prefix in GCS or memory store.
+ */
+async function listAllUsers() {
+  initStorage();
+  if (bucket) {
+    const [files] = await bucket.getFiles({ prefix: 'users/', delimiter: '/' });
+    // With delimiter, apiResponse.prefixes has user folders
+    // But GCS getFiles with delimiter doesn't return prefixes in files array.
+    // Instead, list all meta.json files and extract user IDs.
+    const [allFiles] = await bucket.getFiles({ prefix: 'users/', matchGlob: '**/meta.json' });
+    const userIds = new Set();
+    for (const f of allFiles) {
+      // Path: users/{userId}/projects/{projectId}/meta.json
+      const parts = f.name.split('/');
+      if (parts.length >= 2 && parts[0] === 'users') {
+        userIds.add(parts[1]);
+      }
+    }
+    return Array.from(userIds).sort();
+  }
+
+  // Memory fallback
+  const userIds = new Set();
+  for (const key of memoryStore.keys()) {
+    if (key.startsWith('proj:')) {
+      const parts = key.split(':');
+      if (parts.length >= 2) userIds.add(parts[1]);
+    }
+  }
+  return Array.from(userIds).sort();
+}
+
 module.exports = {
   saveResult, loadResult, saveUpload, listResults, deleteResult,
   listDocuments, saveDocument, loadDocument, deleteDocument,
@@ -438,4 +472,5 @@ module.exports = {
   listProjectFiles, saveProjectFile, loadProjectFile, deleteProjectFile,
   saveProjectFileMeta, loadProjectFileMeta,
   listProjectResults, saveProjectResult, loadProjectResult, deleteProjectResult,
+  listAllUsers,
 };

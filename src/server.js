@@ -90,6 +90,7 @@ app.use('/api/documents', requireAuth, require('./routes/documents'));
 app.use('/api/help', requireAuth, require('./routes/help'));
 app.use('/api/rubrics', requireAuth, require('./routes/rubric'));
 app.use('/api/projects', requireAuth, require('./routes/projects'));
+app.use('/api/admin', requireAuth, require('./routes/admin'));
 
 // ─── Session token usage endpoint ───────────────────────────────────────────
 app.get('/api/tokens', requireAuth, (req, res) => {

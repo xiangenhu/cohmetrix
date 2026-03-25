@@ -20,7 +20,7 @@ const AUDIENCE_INSTRUCTIONS = {
 /**
  * Generate evidence and plain descriptions for a single layer.
  */
-async function generateLayerEvidence(layer, documentText, audience) {
+async function generateLayerEvidence(layer, documentText, audience, language) {
   const audienceInstruction = AUDIENCE_INSTRUCTIONS[audience] || AUDIENCE_INSTRUCTIONS.general;
 
   // Build metric list for the prompt
@@ -59,7 +59,7 @@ Essay text:
 ${documentText.substring(0, 4000)}`;
 
   try {
-    return await llm.completeJSON(prompt, { maxTokens: 2000 });
+    return await llm.completeJSON(prompt, { maxTokens: 2000, language });
   } catch (err) {
     console.error(`[Evidence] Failed for ${layer.layerId}:`, err.message);
     return null;
@@ -70,11 +70,11 @@ ${documentText.substring(0, 4000)}`;
  * Enrich all layer results with evidence and plain descriptions.
  * Runs in parallel for efficiency.
  */
-async function enrichWithEvidence(layers, documentText, audience) {
+async function enrichWithEvidence(layers, documentText, audience, language) {
   const targetAudience = audience || config.targetAudience;
 
   const enrichmentPromises = layers.map(async (layer) => {
-    const evidence = await generateLayerEvidence(layer, documentText, targetAudience);
+    const evidence = await generateLayerEvidence(layer, documentText, targetAudience, language);
     if (!evidence) return layer;
 
     // Merge evidence into each metric

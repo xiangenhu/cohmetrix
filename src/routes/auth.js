@@ -1,6 +1,6 @@
 const express = require('express');
 const config = require('../config');
-const { verifyToken } = require('../services/auth');
+const { verifyToken, isSuperAdmin } = require('../services/auth');
 
 const router = express.Router();
 const GATEWAY = config.oauth.gatewayUrl;
@@ -29,7 +29,7 @@ router.get('/me', async (req, res) => {
     return res.status(401).json({ authenticated: false });
   }
 
-  res.json({ authenticated: true, ...user });
+  res.json({ authenticated: true, ...user, isAdmin: isSuperAdmin(user) });
 });
 
 /**

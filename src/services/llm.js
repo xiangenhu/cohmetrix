@@ -155,6 +155,24 @@ const providers = {
   })(),
 };
 
+// ─── Language names (for LLM response language instructions) ─────────────────
+
+const LANGUAGE_NAMES = {
+  en: 'English', zh: 'Chinese', es: 'Spanish', fr: 'French', de: 'German',
+  ja: 'Japanese', ko: 'Korean', ar: 'Arabic', pt: 'Portuguese', ru: 'Russian',
+  hi: 'Hindi', vi: 'Vietnamese', th: 'Thai', he: 'Hebrew', fa: 'Persian',
+};
+
+/**
+ * Build a language instruction to append to system prompts.
+ * Returns empty string for English or unrecognized codes.
+ */
+function buildLanguageInstruction(lang) {
+  if (!lang || lang === 'en') return '';
+  const name = LANGUAGE_NAMES[lang] || lang;
+  return `\n\nIMPORTANT: You MUST respond entirely in ${name}. All output text, explanations, labels, and descriptions must be in ${name}. Keep JSON keys, metric IDs, and technical identifiers in English, but all human-readable text must be in ${name}.`;
+}
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 function getProvider() {
@@ -167,7 +185,12 @@ function getProvider() {
 }
 
 async function complete(prompt, opts = {}) {
-  return getProvider().complete(prompt, opts);
+  const { language, ...providerOpts } = opts;
+  const langInstruction = buildLanguageInstruction(language);
+  if (langInstruction) {
+    providerOpts.systemPrompt = (providerOpts.systemPrompt || 'You are an expert NLP analyst.') + langInstruction;
+  }
+  return getProvider().complete(prompt, providerOpts);
 }
 
 async function completeJSON(prompt, opts = {}) {
@@ -176,13 +199,13 @@ async function completeJSON(prompt, opts = {}) {
   return JSON.parse(jsonMatch[1].trim());
 }
 
-async function batchProcess(items, promptFn, { batchSize } = {}) {
+async function batchProcess(items, promptFn, { batchSize, language } = {}) {
   const size = batchSize || config.llm.batchSize;
   const results = [];
   for (let i = 0; i < items.length; i += size) {
     const batch = items.slice(i, i + size);
     const prompt = promptFn(batch);
-    const result = await completeJSON(prompt);
+    const result = await completeJSON(prompt, { language });
     results.push(...(Array.isArray(result) ? result : [result]));
   }
   return results;
@@ -223,7 +246,25 @@ function getPricing() {
   return { promptPer1M: 3.00, completionPer1M: 15.00 };
 }
 
+/**
+ * Extract preferred language from an Express request.
+ * Priority: req.body.language > cookie 'ncm_i18n_lang' > 'en'
+ */
+function getRequestLanguage(req) {
+  if (req.body && req.body.language) return req.body.language;
+  if (req.query && req.query.language) return req.query.language;
+  if (req.cookies && req.cookies.ncm_i18n_lang) return req.cookies.ncm_i18n_lang;
+  // Parse cookie manually if cookie-parser not available
+  const cookieHeader = req.headers && req.headers.cookie;
+  if (cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)ncm_i18n_lang=([^;]*)/);
+    if (match) return decodeURIComponent(match[1]);
+  }
+  return 'en';
+}
+
 module.exports = {
   complete, completeJSON, batchProcess, getProviderInfo, getPricing,
   createTracker, getActiveTracker, getSessionTracker, resetSessionTracker, TokenTracker,
+  getRequestLanguage,
 };

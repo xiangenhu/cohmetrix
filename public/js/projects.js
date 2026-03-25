@@ -164,6 +164,7 @@ const Projects = (() => {
   function renderStep0() {
     const s = screen();
     const readyFiles = currentFiles.filter(f => countMetaFields(f.meta).filled >= 4);
+    const noMetaFiles = currentFiles.filter(f => countMetaFields(f.meta).filled === 0);
     const cfgSt = configStatus();
     const canAnalyze = readyFiles.length > 0 && cfgSt.ready;
 
@@ -171,11 +172,28 @@ const Projects = (() => {
       ${header('&larr; <span data-i18n="193a6d1722fc259d">Projects</span>', currentProject.name)}
       <div class="proj-step-body">
 
+        <!-- ═══ WORKFLOW HELP BANNER ═══ -->
+        ${!localStorage.getItem('proj-help-dismissed') ? `
+        <div class="proj-help-banner" id="proj-help-banner">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <span style="font-size:16px;line-height:1">&#128161;</span>
+            <div style="flex:1;font-size:12px;line-height:1.6;color:var(--text-secondary)">
+              <strong style="color:var(--text-primary)">Getting started:</strong>
+              <span style="color:var(--teal)">&#10102;</span> Upload files using <strong>+ Upload</strong> or <strong>Drive</strong>
+              &rarr; <span style="color:var(--teal)">&#10103;</span> Click a file's <strong>Metadata</strong> cell to add context (or use <strong>Auto-detect All</strong> to fill automatically)
+              &rarr; <span style="color:var(--teal)">&#10104;</span> Select files with checkboxes
+              &rarr; <span style="color:var(--teal)">&#10105;</span> Click <strong>Analyze</strong>
+            </div>
+            <button id="proj-help-dismiss" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:14px;padding:0;line-height:1" title="Dismiss">&times;</button>
+          </div>
+        </div>` : ''}
+
         <!-- ═══ FILES TABLE with selection ═══ -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div style="font-size:15px;font-weight:600;color:var(--text-primary)" data-i18n="abc7e9892806b047">Files</div>
           <span style="font-size:11px;color:var(--text-tertiary)">${currentFiles.length} <span data-i18n="e8353a02697faf99">total,</span> ${readyFiles.length} <span data-i18n="d72b47966b9e026b">ready</span></span>
           <div style="margin-left:auto;display:flex;gap:6px">
+            ${noMetaFiles.length > 0 ? `<button class="proj-upload-btn" id="proj-autodetect-all" style="background:var(--bg-primary);color:var(--amber);border:0.5px solid var(--amber);font-size:11px" title="Auto-detect metadata for all files without metadata">&#9733; Auto-detect All</button>` : ''}
             <button class="proj-upload-btn" id="proj-upload-trigger"><span data-i18n="51d77b5cf7a49bdc">+ Upload</span></button>
             <button class="proj-upload-btn" id="proj-drive-trigger" style="background:var(--bg-primary);color:var(--text-secondary);border:0.5px solid var(--border-secondary)">&#9729; <span data-i18n="6312b4b9baf12770">Drive</span></button>
           </div>
@@ -196,6 +214,7 @@ const Projects = (() => {
               <th data-i18n="50009ce1da4d15e1">File</th>
               <th data-i18n="baaddf70fb5d432b">Type</th>
               <th data-i18n="1af851907331c0ed">Size</th>
+              <th>Lang</th>
               <th data-i18n="9eddf573cb509f1f">Metadata</th>
               <th></th>
             </tr>
@@ -205,21 +224,36 @@ const Projects = (() => {
               const mc = countMetaFields(f.meta);
               const isReady = mc.filled >= 4;
               const ms = metaStatus(f.meta);
-              return `<tr class="proj-file-table-row${!isReady ? ' proj-file-row-disabled' : ''}" data-editname="${esc(f.name)}">
-                <td><input type="checkbox" class="proj-file-check" data-name="${esc(f.name)}" ${!isReady ? 'disabled title="Complete metadata first (min 4 fields)" data-i18n-title="408fb158f6c52c70"' : ''}></td>
+              const metaHint = mc.filled === 0 ? '<span style="font-size:9px;color:var(--amber);margin-left:4px">Click to set up</span>' : '';
+              return `<tr class="proj-file-table-row${!isReady ? ' proj-file-row-disabled' : ''}" data-editname="${escAttr(f.name)}">
+                <td><input type="checkbox" class="proj-file-check" data-name="${escAttr(f.name)}" ${!isReady ? 'disabled title="Complete metadata first (min 4 fields)" data-i18n-title="408fb158f6c52c70"' : ''}></td>
                 <td class="proj-ft-name">${esc(f.name)}</td>
                 <td class="proj-ft-type">${fileExt(f.name)}</td>
                 <td class="proj-ft-size">${f.sizeLabel || ''}</td>
-                <td class="proj-ft-meta ${ms.cls}"><span class="proj-ft-meta-icon">${ms.icon}</span> ${ms.label}</td>
-                <td><button class="proj-file-del" data-fname="${esc(f.name)}" title="Delete">&#10005;</button></td>
+                <td style="font-size:10px;font-weight:600;color:var(--text-secondary);text-transform:uppercase">${(f.meta && f.meta.language) || 'en'}</td>
+                <td class="proj-ft-meta ${ms.cls}" title="Click to edit metadata"><span class="proj-ft-meta-icon">${ms.icon}</span> ${ms.label}${metaHint}</td>
+                <td style="white-space:nowrap">
+                  <button class="proj-file-view" data-vname="${escAttr(f.name)}" title="View document" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:13px;padding:2px 4px">&#128065;</button>
+                  <button class="proj-file-del" data-fname="${escAttr(f.name)}" title="Delete">&#10005;</button>
+                </td>
               </tr>`;
             }).join('')}
           </tbody>
         </table>
-        ` : '<div class="proj-empty" data-i18n="8507a9389fcfc601">No files yet. Upload documents or import from Google Drive.</div>'}
+        ` : `<div class="proj-empty" style="text-align:center;padding:24px 16px">
+          <div style="font-size:32px;margin-bottom:8px">&#128196;</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:6px" data-i18n="8507a9389fcfc601">No files yet</div>
+          <div style="font-size:12px;color:var(--text-tertiary);line-height:1.6">
+            Click <strong>+ Upload</strong> to add PDF, DOCX, or TXT files<br>
+            or use <strong>Drive</strong> to import from Google Drive
+          </div>
+        </div>`}
 
         <!-- File metadata editor (hidden) -->
         <div id="proj-file-meta-panel" style="display:none"></div>
+
+        <!-- Document viewer (hidden) -->
+        <div id="proj-doc-viewer" style="display:none"></div>
 
         <!-- Google Drive import (hidden) -->
         <div id="proj-drive-panel" style="display:none">
@@ -248,10 +282,14 @@ const Projects = (() => {
         </div>
 
         <!-- ═══ ACTIONS ═══ -->
-        <div style="display:flex;gap:10px;margin-top:16px;align-items:center">
+        <div style="display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap">
           <button class="run-btn" id="proj-analyze-selected" disabled style="padding:10px 28px;font-size:13px;opacity:0.5">
             &#9654; <span data-i18n="a2f94cd82e1fc10f">Analyze Selected</span>
           </button>
+          ${currentFiles.length > 0 ? `
+          <button class="nav-btn" id="proj-go-summary" style="font-size:12px">
+            &#128202; Project Summary
+          </button>` : ''}
           ${currentResults.length > 0 ? `
           <button class="nav-btn" id="proj-go-results" style="font-size:12px">
             &#128202; <span data-i18n="04f2e6324046f8f1">Past Results</span> (${currentResults.length})
@@ -261,10 +299,26 @@ const Projects = (() => {
 
     // Bindings
     s.querySelector('#proj-go-results')?.addEventListener('click', () => { if (currentResults.length > 0) renderResultsList(); });
+    s.querySelector('#proj-go-summary')?.addEventListener('click', () => renderSummaryView());
     s.querySelector('.proj-detail-header .proj-back-btn')?.addEventListener('click', () => { App.showScreen('upload'); loadProjects(); });
     s.querySelector('#proj-edit-config')?.addEventListener('click', () => renderConfigEditor());
+    s.querySelector('#proj-help-dismiss')?.addEventListener('click', () => {
+      localStorage.setItem('proj-help-dismissed', '1');
+      s.querySelector('#proj-help-banner')?.remove();
+    });
     bindUpload(() => refreshProject().then(renderStep0));
     bindDriveImport(s);
+
+    // View document buttons
+    s.querySelectorAll('.proj-file-view').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDocumentViewer(s, btn.dataset.vname);
+      });
+    });
+
+    // Auto-detect all metadata
+    s.querySelector('#proj-autodetect-all')?.addEventListener('click', () => runAutoDetectAll(s));
 
     // Checkbox selection logic
     const analyzeBtn = s.querySelector('#proj-analyze-selected');
@@ -423,9 +477,56 @@ const Projects = (() => {
   }
 
   function openFileMetaEditor(s, filename, meta) {
-    const panel = s.querySelector('#proj-file-meta-panel');
-    if (!panel) return;
-    panel.style.display = '';
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'proj-modal-overlay';
+    overlay.innerHTML = `
+      <div class="proj-modal-backdrop"></div>
+      <div class="proj-modal" style="width:620px">
+        <div class="proj-modal-header">
+          <div class="proj-modal-header-title">&#128221; ${esc(filename)}</div>
+          <button class="proj-modal-close">&times;</button>
+        </div>
+        <div class="proj-modal-body" id="proj-meta-modal-body"></div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const panel = overlay.querySelector('#proj-meta-modal-body');
+    const closeModal = () => { overlay.remove(); };
+    overlay.querySelector('.proj-modal-backdrop').addEventListener('click', closeModal);
+    overlay.querySelector('.proj-modal-close').addEventListener('click', closeModal);
+
+    const languages = [
+      { value: 'en', label: 'English' },
+      { value: 'es', label: 'Spanish / Español' },
+      { value: 'fr', label: 'French / Français' },
+      { value: 'de', label: 'German / Deutsch' },
+      { value: 'it', label: 'Italian / Italiano' },
+      { value: 'pt', label: 'Portuguese / Português' },
+      { value: 'nl', label: 'Dutch / Nederlands' },
+      { value: 'ru', label: 'Russian / Русский' },
+      { value: 'zh', label: 'Chinese / 中文' },
+      { value: 'ja', label: 'Japanese / 日本語' },
+      { value: 'ko', label: 'Korean / 한국어' },
+      { value: 'ar', label: 'Arabic / العربية' },
+      { value: 'hi', label: 'Hindi / हिन्दी' },
+      { value: 'th', label: 'Thai / ไทย' },
+      { value: 'vi', label: 'Vietnamese / Tiếng Việt' },
+      { value: 'id', label: 'Indonesian / Bahasa Indonesia' },
+      { value: 'ms', label: 'Malay / Bahasa Melayu' },
+      { value: 'tr', label: 'Turkish / Türkçe' },
+      { value: 'pl', label: 'Polish / Polski' },
+      { value: 'uk', label: 'Ukrainian / Українська' },
+      { value: 'sv', label: 'Swedish / Svenska' },
+      { value: 'da', label: 'Danish / Dansk' },
+      { value: 'no', label: 'Norwegian / Norsk' },
+      { value: 'fi', label: 'Finnish / Suomi' },
+      { value: 'el', label: 'Greek / Ελληνικά' },
+      { value: 'he', label: 'Hebrew / עברית' },
+      { value: 'cs', label: 'Czech / Čeština' },
+      { value: 'ro', label: 'Romanian / Română' },
+      { value: 'hu', label: 'Hungarian / Magyar' },
+      { value: 'other', label: 'Other' },
+    ];
 
     const readingLevels = [
       { value: '', label: 'Not specified', hash: 'dc12bec5d71f167b' },
@@ -468,11 +569,6 @@ const Projects = (() => {
     const metaComplete = countMetaFields(meta);
 
     panel.innerHTML = `
-      <div class="upload-card" style="padding:16px;max-height:70vh;overflow-y:auto">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div class="field-label" style="margin:0;font-size:14px">File: ${esc(filename)}</div>
-          <button id="proj-meta-close" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:16px">&times;</button>
-        </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px" data-i18n="c96b478ed71a1ffc">
           The more complete the metadata, the better the analysis. Each field gives the LLM context that improves accuracy and reduces wasted tokens.
         </div>
@@ -486,6 +582,15 @@ const Projects = (() => {
         <div style="display:flex;flex-direction:column;gap:12px">
           <!-- Document context -->
           <div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding-top:4px" data-i18n="e2b5bca76104eebf">Document context</div>
+          <div>
+            <div class="field-label" style="display:flex;align-items:center;gap:6px">
+              <span>&#127760; Language</span>
+              <span style="font-weight:400;color:var(--amber);font-size:10px">(determines analysis language)</span>
+            </div>
+            <select id="proj-meta-language" class="proj-input" style="border-color:var(--amber);font-weight:500">
+              ${languages.map(l => `<option value="${l.value}"${l.value === (meta.language||'en') ? ' selected' : ''}>${l.label}</option>`).join('')}
+            </select>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
               <div class="field-label" data-i18n="6da795a8664f37f6">Genre</div>
@@ -560,8 +665,7 @@ const Projects = (() => {
             <button class="nav-btn" id="proj-meta-cancel" data-i18n="19766ed6ccb2f4a3">Cancel</button>
             <button class="proj-upload-btn" id="proj-meta-save" data-i18n="06d1ae6bcb25c522">Save metadata</button>
           </div>
-        </div>
-      </div>`;
+        </div>`;
 
     // Populate genres
     fetch('/api/genres').then(r => r.json()).then(data => {
@@ -582,8 +686,7 @@ const Projects = (() => {
     }).catch(() => {});
 
     // Close
-    panel.querySelector('#proj-meta-close').addEventListener('click', () => { panel.style.display = 'none'; });
-    panel.querySelector('#proj-meta-cancel').addEventListener('click', () => { panel.style.display = 'none'; });
+    panel.querySelector('#proj-meta-cancel').addEventListener('click', closeModal);
 
     // Auto-detect with AI
     panel.querySelector('#proj-meta-autodetect').addEventListener('click', async () => {
@@ -613,6 +716,7 @@ const Projects = (() => {
           }
         };
 
+        selectIfEmpty('#proj-meta-language', s.language);
         selectIfEmpty('#proj-meta-genre', s.genre);
         selectIfEmpty('#proj-meta-level', s.readingLevel);
         selectIfEmpty('#proj-meta-assignment', s.assignmentType);
@@ -622,9 +726,17 @@ const Projects = (() => {
         setIfEmpty('#proj-meta-focus', s.focusAreas);
         setIfEmpty('#proj-meta-issues', s.knownIssues);
 
+        // If detected language differs from current UI language, suggest switching
+        if (s.language && s.language !== 'en') {
+          const langEl = panel.querySelector('#proj-meta-language');
+          const langLabel = langEl ? langEl.options[langEl.selectedIndex]?.text : s.language;
+          showLanguageSuggestion(panel, s.language, langLabel);
+        }
+
         // Auto-save after populating
         btn.textContent = 'Saving…'; btn.setAttribute('data-i18n', '23e39291d6135814');
         const autoMeta = {
+          language: panel.querySelector('#proj-meta-language').value,
           genre: panel.querySelector('#proj-meta-genre').value,
           readingLevel: panel.querySelector('#proj-meta-level').value,
           assignmentType: panel.querySelector('#proj-meta-assignment').value,
@@ -668,6 +780,7 @@ const Projects = (() => {
     // Save
     panel.querySelector('#proj-meta-save').addEventListener('click', async () => {
       const newMeta = {
+        language: panel.querySelector('#proj-meta-language').value,
         genre: panel.querySelector('#proj-meta-genre').value,
         readingLevel: panel.querySelector('#proj-meta-level').value,
         assignmentType: panel.querySelector('#proj-meta-assignment').value,
@@ -693,7 +806,7 @@ const Projects = (() => {
         if (localFile) localFile.meta = newMeta;
         saveBtn.textContent = 'Saved!'; saveBtn.setAttribute('data-i18n', 'ed9b760289e614c9');
         setTimeout(() => {
-          panel.style.display = 'none';
+          closeModal();
           renderStep0();
         }, 500);
       } catch {
@@ -728,7 +841,7 @@ const Projects = (() => {
             const isReady = mc.filled >= 4;
             const ms = metaStatus(f.meta);
             return `<div class="proj-file-row${!isReady ? ' proj-file-row-disabled' : ''}">
-              <input type="checkbox" class="proj-file-check" data-name="${esc(f.name)}" ${isReady && selectedFiles.includes(f.name) ? 'checked' : ''} ${!isReady ? 'disabled' : ''}>
+              <input type="checkbox" class="proj-file-check" data-name="${escAttr(f.name)}" ${isReady && selectedFiles.includes(f.name) ? 'checked' : ''} ${!isReady ? 'disabled' : ''}>
               <span class="proj-file-name">${esc(f.name)}</span>
               <span class="proj-ft-meta ${ms.cls}" style="font-size:10px"><span class="proj-ft-meta-icon">${ms.icon}</span> ${ms.label}</span>
               <span class="proj-file-size">${f.sizeLabel||''}</span>
@@ -1198,7 +1311,7 @@ const Projects = (() => {
         <div style="display:flex;flex-direction:column;gap:4px">
           ${data.files.map(f => `
             <div class="proj-file-row">
-              <input type="checkbox" class="proj-drive-check" data-id="${f.id}" data-name="${esc(f.name)}" data-mime="${f.mimeType}" data-gdoc="${f.isGoogleDoc}" checked>
+              <input type="checkbox" class="proj-drive-check" data-id="${f.id}" data-name="${escAttr(f.name)}" data-mime="${f.mimeType}" data-gdoc="${f.isGoogleDoc}" checked>
               <span class="proj-file-name">${esc(f.name)}${f.isGoogleDoc ? ' <span style="font-size:9px;color:var(--text-tertiary)">(Google Doc &rarr; .docx)</span>' : ''}</span>
               <span class="proj-file-size">${f.sizeLabel}</span>
             </div>
@@ -1273,6 +1386,243 @@ const Projects = (() => {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
+  // DOCUMENT VIEWER
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function openDocumentViewer(s, filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const token = Auth.getToken ? Auth.getToken() : '';
+    const baseUrl = `/api/projects/${currentProject.id}/files/${encodeURIComponent(filename)}/content`;
+    // Build authenticated URL for iframe src
+    const authParam = token ? `token=${encodeURIComponent(token)}` : '';
+
+    // Determine which view modes are available
+    const isPdf = ext === 'pdf';
+    const isDocx = ext === 'docx';
+    const isTxt = ext === 'txt';
+
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'proj-modal-overlay';
+    overlay.innerHTML = `
+      <div class="proj-modal-backdrop"></div>
+      <div class="proj-modal proj-doc-modal" style="width:750px;height:80vh">
+        <div class="proj-modal-header">
+          <div class="proj-modal-header-title">&#128065; ${esc(filename)}</div>
+          <div style="display:flex;gap:4px">
+            <button class="proj-doc-tab active" data-tab="original">${isPdf ? 'PDF' : isDocx ? 'Document' : 'Original'}</button>
+            <button class="proj-doc-tab" data-tab="text">Plain Text</button>
+          </div>
+          <button class="proj-doc-maximize" title="Maximize" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:16px;padding:2px 4px">&#9723;</button>
+          <button class="proj-modal-close">&times;</button>
+        </div>
+        <div class="proj-modal-body" style="padding:0;flex:1;display:flex;flex-direction:column">
+          <div id="proj-doc-original" style="flex:1;display:flex;flex-direction:column">
+            <div style="font-size:12px;color:var(--text-tertiary);padding:16px;text-align:center">Loading...</div>
+          </div>
+          <div id="proj-doc-text" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+            <div style="font-size:12px;color:var(--text-tertiary);padding:16px;text-align:center">Loading...</div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const closeModal = () => overlay.remove();
+    overlay.querySelector('.proj-modal-backdrop').addEventListener('click', closeModal);
+    overlay.querySelector('.proj-modal-close').addEventListener('click', closeModal);
+
+    // Maximize toggle
+    const modal = overlay.querySelector('.proj-doc-modal');
+    const maxBtn = overlay.querySelector('.proj-doc-maximize');
+    maxBtn.addEventListener('click', () => {
+      modal.classList.toggle('maximized');
+      maxBtn.innerHTML = modal.classList.contains('maximized') ? '&#9724;' : '&#9723;';
+      maxBtn.title = modal.classList.contains('maximized') ? 'Restore' : 'Maximize';
+    });
+
+    // Tab switching
+    const tabs = overlay.querySelectorAll('.proj-doc-tab');
+    const origPanel = overlay.querySelector('#proj-doc-original');
+    const textPanel = overlay.querySelector('#proj-doc-text');
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (tab.dataset.tab === 'original') {
+        origPanel.style.display = 'flex'; textPanel.style.display = 'none';
+      } else {
+        origPanel.style.display = 'none'; textPanel.style.display = 'flex';
+      }
+    }));
+
+    // Load original view (iframe)
+    if (isPdf) {
+      // PDF: serve raw, browser renders natively
+      origPanel.innerHTML = `<iframe src="${baseUrl}?${authParam}" style="flex:1;border:none;background:#fff"></iframe>`;
+    } else if (isDocx) {
+      // DOCX: convert to HTML via server
+      origPanel.innerHTML = `<iframe src="${baseUrl}?format=html&${authParam}" style="flex:1;border:none;background:#fff"></iframe>`;
+    } else {
+      // TXT: HTML-wrapped for nice display
+      origPanel.innerHTML = `<iframe src="${baseUrl}?format=html&${authParam}" style="flex:1;border:none;background:#fff"></iframe>`;
+    }
+
+    // Load plain text view (lazy, on first tab switch or immediately if text tab clicked)
+    let textLoaded = false;
+    async function loadText() {
+      if (textLoaded) return;
+      textLoaded = true;
+      try {
+        const resp = await Auth.apiFetch(`${baseUrl}?extract=true`);
+        if (!resp.ok) throw new Error('Failed');
+        const data = await resp.json();
+        textPanel.innerHTML = `
+          <div style="font-size:11px;color:var(--text-tertiary);padding:8px 16px;border-bottom:0.5px solid var(--border-tertiary)">${data.wordCount.toLocaleString()} words</div>
+          <pre style="flex:1;overflow-y:auto;padding:16px;margin:0;font-size:12px;font-family:var(--font-sans);color:var(--text-primary);white-space:pre-wrap;word-wrap:break-word;line-height:1.6">${esc(data.text)}</pre>`;
+      } catch (err) {
+        textPanel.innerHTML = `<div style="color:var(--coral);font-size:12px;padding:16px">${esc(err.message)}</div>`;
+      }
+    }
+
+    // Preload text in background
+    loadText();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // PROJECT SUMMARY VIEW
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function renderSummaryView() {
+    const s = screen();
+    s.innerHTML = `
+      ${header('&larr; ' + esc(currentProject.name), '&#128202; Project Summary')}
+      <div class="proj-step-body">
+        <div style="font-size:12px;color:var(--text-tertiary);padding:16px 0">Loading summary...</div>
+      </div>`;
+    s.querySelector('.proj-back-btn').addEventListener('click', renderStep0);
+
+    try {
+      const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/summary`);
+      if (!resp.ok) throw new Error('Failed to load summary');
+      const data = await resp.json();
+      const agg = data.aggregates;
+
+      const genreList = Object.entries(agg.genreBreakdown || {}).map(([g, c]) => `<span style="background:var(--bg-secondary);padding:2px 8px;border-radius:10px;font-size:10px">${esc(g)} (${c})</span>`).join(' ');
+
+      s.innerHTML = `
+        ${header('&larr; ' + esc(currentProject.name), '&#128202; Project Summary')}
+        <div class="proj-step-body">
+          <!-- Stats cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px">
+            <div class="proj-summary-stat">
+              <div class="proj-summary-stat-val">${data.fileCount}</div>
+              <div class="proj-summary-stat-label">Files</div>
+            </div>
+            <div class="proj-summary-stat">
+              <div class="proj-summary-stat-val">${agg.totalWords.toLocaleString()}</div>
+              <div class="proj-summary-stat-label">Total Words</div>
+            </div>
+            <div class="proj-summary-stat">
+              <div class="proj-summary-stat-val" style="color:${agg.avgScore != null ? scoreColor(agg.avgScore) : 'var(--text-tertiary)'}">${agg.avgScore != null ? agg.avgScore : '\u2014'}</div>
+              <div class="proj-summary-stat-label">Avg Score</div>
+            </div>
+            <div class="proj-summary-stat">
+              <div class="proj-summary-stat-val">${agg.metaCompleteness}</div>
+              <div class="proj-summary-stat-label">Metadata</div>
+            </div>
+            <div class="proj-summary-stat">
+              <div class="proj-summary-stat-val">${data.resultCount}</div>
+              <div class="proj-summary-stat-label">Results</div>
+            </div>
+            ${agg.minScore != null ? `<div class="proj-summary-stat">
+              <div class="proj-summary-stat-val">${agg.minScore} – ${agg.maxScore}</div>
+              <div class="proj-summary-stat-label">Score Range</div>
+            </div>` : ''}
+          </div>
+
+          ${genreList ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:4px">GENRES</div><div style="display:flex;flex-wrap:wrap;gap:4px">${genreList}</div></div>` : ''}
+
+          <!-- Per-file table -->
+          <table class="proj-file-table">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Lang</th>
+                <th>Words</th>
+                <th>Genre</th>
+                <th>Level</th>
+                <th>Metadata</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.files.map(f => `<tr class="proj-file-table-row">
+                <td class="proj-ft-name">${esc(f.name)}</td>
+                <td style="font-size:10px;font-weight:600;text-transform:uppercase">${f.language || 'en'}</td>
+                <td style="font-size:11px">${f.wordCount > 0 ? f.wordCount.toLocaleString() : '\u2014'}</td>
+                <td style="font-size:11px">${f.genre ? esc(f.genre) : '\u2014'}</td>
+                <td style="font-size:11px">${f.readingLevel || '\u2014'}</td>
+                <td style="font-size:11px">${f.metaFilled}/${f.metaTotal}</td>
+                <td style="font-size:11px;font-weight:600;color:${scoreColor(f.score)}">${f.score != null ? f.score : '\u2014'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      s.querySelector('.proj-back-btn').addEventListener('click', renderStep0);
+    } catch (err) {
+      s.querySelector('.proj-step-body').innerHTML = `<div style="color:var(--coral);font-size:12px">Error: ${esc(err.message)}</div>`;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // AUTO-DETECT ALL METADATA
+  // ═══════════════════════════════════════════════════════════════════════
+
+  async function runAutoDetectAll(s) {
+    const noMetaFiles = currentFiles.filter(f => countMetaFields(f.meta).filled === 0);
+    if (noMetaFiles.length === 0) return;
+
+    const btn = s.querySelector('#proj-autodetect-all');
+    if (!btn) return;
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    let done = 0;
+
+    for (const f of noMetaFiles) {
+      btn.innerHTML = `&#9733; Detecting ${++done}/${noMetaFiles.length}...`;
+      try {
+        const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/files/${encodeURIComponent(f.name)}/auto-meta`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+        });
+        if (!resp.ok) continue;
+        const data = await resp.json();
+        const suggested = data.suggested || {};
+        if (typeof TokenFooter !== 'undefined') TokenFooter.onApiResponse(data);
+
+        // Build metadata from suggestions
+        const meta = {
+          genre: suggested.genre || '', readingLevel: suggested.readingLevel || '',
+          language: suggested.language || 'en', promptText: suggested.promptText || '',
+          assignmentType: suggested.assignmentType || '', expectedWordCount: suggested.expectedWordCount || '',
+          rubricNotes: '', author: '', authorLevel: suggested.authorLevel || '',
+          course: '', focusAreas: suggested.focusAreas || '', knownIssues: suggested.knownIssues || '',
+          notes: '', updatedAt: new Date().toISOString(),
+        };
+        await Auth.apiFetch(`/api/projects/${currentProject.id}/files/${encodeURIComponent(f.name)}/meta`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(meta),
+        });
+        f.meta = meta;
+      } catch {}
+    }
+
+    btn.innerHTML = '&#10003; Done!';
+    btn.style.color = 'var(--teal)';
+    btn.style.borderColor = 'var(--teal)';
+    await refreshProject();
+    setTimeout(() => renderStep0(), 800);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
   // HELPERS
   // ═══════════════════════════════════════════════════════════════════════
 
@@ -1308,13 +1658,57 @@ const Projects = (() => {
   }
 
   function countMetaFields(meta) {
-    if (!meta) return { filled: 0, total: 12 };
-    const fields = ['genre','readingLevel','assignmentType','promptText','expectedWordCount','course','rubricNotes','author','authorLevel','focusAreas','knownIssues','notes'];
+    if (!meta) return { filled: 0, total: 13 };
+    const fields = ['language','genre','readingLevel','assignmentType','promptText','expectedWordCount','course','rubricNotes','author','authorLevel','focusAreas','knownIssues','notes'];
     const filled = fields.filter(f => meta[f] && meta[f].length > 0).length;
     return { filled, total: fields.length };
   }
 
   function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  /** Escape for use inside HTML attribute values (handles quotes + all Unicode) */
+  function escAttr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+  /**
+   * Show a suggestion banner when document language differs from UI language.
+   */
+  function showLanguageSuggestion(container, langCode, langLabel) {
+    // Don't show if already dismissed for this language
+    if (localStorage.getItem('lang-suggest-dismissed-' + langCode)) return;
+    // Check if current UI language matches
+    const currentLang = (typeof I18nSelector !== 'undefined' && I18nSelector.getCurrentLang) ? I18nSelector.getCurrentLang() : 'en';
+    if (currentLang === langCode) return;
+
+    const existing = container.querySelector('.proj-lang-suggestion');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.className = 'proj-lang-suggestion';
+    banner.innerHTML = `
+      <span style="font-size:14px">&#127760;</span>
+      <div style="flex:1;font-size:12px;line-height:1.5">
+        <strong>Document language detected: ${esc(langLabel)}</strong><br>
+        <span style="color:var(--text-tertiary)">Would you like to switch the app interface to match?</span>
+      </div>
+      <button class="proj-upload-btn proj-lang-switch" style="font-size:11px;padding:5px 14px">Switch to ${esc(langLabel.split('/')[0].trim())}</button>
+      <button class="proj-lang-dismiss" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:14px;padding:2px 4px" title="Dismiss">&times;</button>`;
+    container.insertBefore(banner, container.firstChild);
+
+    banner.querySelector('.proj-lang-switch').addEventListener('click', () => {
+      if (typeof I18nSelector !== 'undefined' && I18nSelector.switchLang) {
+        I18nSelector.switchLang(langCode);
+      } else {
+        // Fallback: set URL param and reload
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', langCode);
+        window.location.href = url.toString();
+      }
+    });
+
+    banner.querySelector('.proj-lang-dismiss').addEventListener('click', () => {
+      localStorage.setItem('lang-suggest-dismissed-' + langCode, '1');
+      banner.remove();
+    });
+  }
 
   /**
    * Quick-start helper: open first project or prompt to create one.

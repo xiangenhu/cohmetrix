@@ -27,4 +27,12 @@ async function extractText(buffer, filename) {
   }
 }
 
-module.exports = { extractText };
+/**
+ * Convert DOCX buffer to HTML for in-browser preview.
+ */
+async function convertDocxToHtml(buffer) {
+  const result = await mammoth.convertToHtml({ buffer });
+  return result.value;
+}
+
+module.exports = { extractText, convertDocxToHtml };

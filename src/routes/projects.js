@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuid } = require('uuid');
 const storage = require('../services/storage');
-const { extractText } = require('../utils/fileParser');
+const { extractText, convertDocxToHtml } = require('../utils/fileParser');
 const { runAnalysis } = require('../services/pipeline');
 const llm = require('../services/llm');
 const config = require('../config');
@@ -219,6 +219,7 @@ Word count: ${wordCount}
 
 Return a JSON object with these fields (use empty string "" if you cannot determine a field):
 {
+  "language": "ISO 639-1 code of the document's language, e.g. en, es, fr, de, zh, ja, ko, ar, etc.",
   "genre": "one of: academic-essay, research-paper, argumentative-essay, expository-essay, narrative-essay, personal-narrative, reflection, lab-report, book-review, literary-analysis, opinion-editorial, creative-fiction, creative-nonfiction, business-report, technical-writing, other",
   "readingLevel": "one of: elementary, middle-school, high-school, college, graduate",
   "assignmentType": "one of: argumentative, expository, narrative, analytical, compare-contrast, research-paper, lab-report, reflection, creative, summary, other",
@@ -229,7 +230,8 @@ Return a JSON object with these fields (use empty string "" if you cannot determ
   "knownIssues": "any obvious issues spotted in the excerpt"
 }`;
 
-    const result = await llm.completeJSON(prompt);
+    const language = llm.getRequestLanguage(req);
+    const result = await llm.completeJSON(prompt, { language });
     res.json({
       suggested: result,
       wordCount,
@@ -241,6 +243,58 @@ Return a JSON object with these fields (use empty string "" if you cannot determ
   }
 });
 
+/**
+ * GET /api/projects/:id/files/:filename/content — View file content.
+ *   ?extract=true  → extracted plain text as JSON { name, text, wordCount }
+ *   ?format=html   → DOCX rendered as HTML, TXT as pre-formatted HTML
+ *   (no params)    → raw file (PDF renders natively in browser iframe)
+ */
+router.get('/:id/files/:filename/content', async (req, res) => {
+  try {
+    const doc = await storage.loadProjectFile(uid(req.user), req.params.id, req.params.filename);
+    if (!doc) return res.status(404).json({ error: 'File not found' });
+    const ext = path.extname(doc.name).toLowerCase();
+
+    // Extracted plain text as JSON
+    if (req.query.extract === 'true') {
+      const text = await extractText(doc.buffer, doc.name);
+      const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+      return res.json({ name: doc.name, text, wordCount });
+    }
+
+    // HTML preview (for DOCX conversion or TXT wrapping)
+    if (req.query.format === 'html') {
+      let html;
+      if (ext === '.docx') {
+        const body = await convertDocxToHtml(doc.buffer);
+        html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:700px;margin:24px auto;padding:0 16px;color:#1a202c;font-size:14px;line-height:1.7}
+          h1,h2,h3{margin:1.2em 0 0.4em}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 10px}
+          img{max-width:100%}blockquote{border-left:3px solid #ccc;margin:1em 0;padding:0.5em 1em;color:#555}
+        </style></head><body>${body}</body></html>`;
+      } else if (ext === '.txt') {
+        const text = doc.buffer.toString('utf-8');
+        html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          body{font-family:monospace;max-width:700px;margin:24px auto;padding:0 16px;color:#1a202c;font-size:13px;line-height:1.6;white-space:pre-wrap}
+        </style></head><body>${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</body></html>`;
+      } else {
+        return res.status(400).json({ error: 'HTML preview not supported for this file type. Use raw view for PDF.' });
+      }
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html);
+    }
+
+    // Raw file — browser renders PDF natively in iframe
+    res.set('Content-Type', doc.contentType || 'application/octet-stream');
+    const basename = path.basename(doc.name);
+    res.set('Content-Disposition', `inline; filename="${encodeURIComponent(basename)}"; filename*=UTF-8''${encodeURIComponent(basename)}`);
+    res.send(doc.buffer);
+  } catch (err) {
+    console.error('[GET /api/projects/:id/files/:filename/content]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id/files/:filename', async (req, res) => {
   try {
     const deleted = await storage.deleteProjectFile(uid(req.user), req.params.id, req.params.filename);
@@ -248,6 +302,102 @@ router.delete('/:id/files/:filename', async (req, res) => {
     res.json({ message: 'File deleted' });
   } catch (err) {
     console.error('[DELETE /api/projects/:id/files/:filename]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Project Summary ───────────────────────────────────────────────────────
+
+/**
+ * GET /api/projects/:id/summary — Aggregate metadata summary across all files and results.
+ */
+router.get('/:id/summary', async (req, res) => {
+  try {
+    const userId = uid(req.user);
+    const project = await storage.getProject(userId, req.params.id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    const [rawFiles, results] = await Promise.all([
+      storage.listProjectFiles(userId, req.params.id),
+      storage.listProjectResults(userId, req.params.id),
+    ]);
+
+    // Load metadata and match results for each file
+    const files = [];
+    let totalWords = 0;
+    let totalMetaFilled = 0;
+    let totalMetaFields = 0;
+    const genreBreakdown = {};
+    const scores = [];
+
+    for (const f of rawFiles) {
+      const meta = await storage.loadProjectFileMeta(userId, req.params.id, f.name) || {};
+      const metaFields = ['genre', 'readingLevel', 'language', 'promptText', 'assignmentType',
+        'expectedWordCount', 'rubricNotes', 'author', 'authorLevel', 'course', 'focusAreas', 'knownIssues'];
+      const filled = metaFields.filter(k => meta[k] && meta[k].trim()).length;
+
+      // Find matching result by sourceFile
+      let score = null;
+      let wordCount = 0;
+      for (const r of results) {
+        // Load result to check sourceFile if not already known
+        if (!r._loaded) {
+          try {
+            const full = await storage.loadProjectResult(userId, req.params.id, r.id);
+            r.sourceFile = full?.sourceFile;
+            r.overallScore = full?.overallScore;
+            r.wordCount = full?.document?.wordCount;
+            r._loaded = true;
+          } catch { r._loaded = true; }
+        }
+        if (r.sourceFile === f.name) {
+          score = r.overallScore;
+          wordCount = r.wordCount || 0;
+          break;
+        }
+      }
+
+      if (score != null) scores.push(score);
+      totalWords += wordCount;
+      totalMetaFilled += filled;
+      totalMetaFields += metaFields.length;
+
+      if (meta.genre) genreBreakdown[meta.genre] = (genreBreakdown[meta.genre] || 0) + 1;
+
+      files.push({
+        name: f.name,
+        size: f.size,
+        sizeLabel: formatSize(f.size),
+        wordCount,
+        language: meta.language || 'en',
+        genre: meta.genre || '',
+        readingLevel: meta.readingLevel || '',
+        authorLevel: meta.authorLevel || '',
+        metaFilled: filled,
+        metaTotal: metaFields.length,
+        score,
+      });
+    }
+
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10 : null;
+    const metaCompleteness = totalMetaFields > 0 ? Math.round(totalMetaFilled / totalMetaFields * 100) : 0;
+
+    res.json({
+      projectName: project.name,
+      fileCount: rawFiles.length,
+      resultCount: results.length,
+      files,
+      aggregates: {
+        totalWords,
+        avgScore,
+        minScore: scores.length > 0 ? Math.min(...scores) : null,
+        maxScore: scores.length > 0 ? Math.max(...scores) : null,
+        genreBreakdown,
+        metaCompleteness: metaCompleteness + '%',
+      },
+    });
+  } catch (err) {
+    console.error('[GET /api/projects/:id/summary]', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -373,6 +523,7 @@ router.post('/:id/analyze', async (req, res) => {
           promptText: fileMeta.promptText || cfg.promptText || '',
           learnerId: cfg.learnerId || '',
           genre: fileMeta.genre || cfg.genre || '',
+          language: fileMeta.language || 'en',
           enabledLayers: cfg.enabledLayers || ['L0','L1','L2','L3','L4','L5','L6','L7','L8','L9','L10'],
           onProgress: (evt) => { send({ ...evt, fileIndex: i, fileName }); },
         });

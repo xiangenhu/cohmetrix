@@ -48,7 +48,7 @@ const METRIC_MAPPING_HINTS = {
  * @returns {object} Structured rubric evaluation
  */
 async function evaluateWithRubric(rubricText, layers, document, options = {}) {
-  const { overallScore, compositeScores, targetAudience } = options;
+  const { overallScore, compositeScores, targetAudience, language } = options;
   const audience = targetAudience || config.targetAudience;
 
   // Build a summary of all metrics with values
@@ -115,7 +115,7 @@ Return JSON:
 }`;
 
   try {
-    const result = await llm.completeJSON(prompt, { maxTokens: 3000 });
+    const result = await llm.completeJSON(prompt, { maxTokens: 3000, language });
     return {
       success: true,
       rubricText,

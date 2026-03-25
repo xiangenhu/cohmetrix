@@ -18,6 +18,7 @@ const AUDIENCE_TONE = {
 router.post('/', async (req, res) => {
   try {
     const { layerId, layerName, score, metrics, targetAudience } = req.body;
+    const language = llm.getRequestLanguage(req);
 
     if (!layerId || !metrics) {
       return res.status(400).json({ error: 'Missing layerId or metrics' });
@@ -51,6 +52,7 @@ Return only the interpretation text.`;
     const interpretation = await llm.complete(prompt, {
       systemPrompt: `You are an expert writing assessment analyst providing feedback to a ${audience}. ${tone}`,
       maxTokens: 300,
+      language,
     });
 
     const session = llm.getSessionTracker().getSummary();

@@ -93,8 +93,9 @@ router.get('/content/*', async (req, res) => {
     }
 
     // Otherwise send raw file
+    const basename = path.basename(doc.name);
     res.set('Content-Type', doc.contentType);
-    res.set('Content-Disposition', `inline; filename="${path.basename(doc.name)}"`);
+    res.set('Content-Disposition', `inline; filename="${encodeURIComponent(basename)}"; filename*=UTF-8''${encodeURIComponent(basename)}`);
     res.send(doc.buffer);
   } catch (err) {
     console.error('[GET /api/documents/content]', err);

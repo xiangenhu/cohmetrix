@@ -5,6 +5,7 @@ const { extractText } = require('../utils/fileParser');
 const { runAnalysis } = require('../services/pipeline');
 const storage = require('../services/storage');
 const config = require('../config');
+const llm = require('../services/llm');
 
 const router = express.Router();
 const upload = multer({
@@ -26,6 +27,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     const promptText = req.body.promptText || '';
     const learnerId = req.body.learnerId || '';
     const genre = req.body.genre || '';
+    const language = llm.getRequestLanguage(req);
     let enabledLayers;
     try {
       enabledLayers = JSON.parse(req.body.enabledLayers || '[]');
@@ -60,6 +62,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       promptText,
       learnerId,
       genre,
+      language,
       enabledLayers,
       onProgress: (event) => {
         const events = analysisProgress.get(analysisId) || [];

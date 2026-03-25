@@ -100,4 +100,23 @@ function optionalAuth(req, res, next) {
   }).catch(() => next());
 }
 
-module.exports = { verifyToken, extractToken, requireAuth, optionalAuth };
+/**
+ * Check if a user is the configured super admin.
+ */
+function isSuperAdmin(user) {
+  const adminEmail = config.admin?.superAdminEmail;
+  return !!(adminEmail && user?.email && user.email.toLowerCase() === adminEmail.toLowerCase());
+}
+
+/**
+ * Express middleware: require super admin.
+ * Must be used after requireAuth.
+ */
+function requireAdmin(req, res, next) {
+  if (!isSuperAdmin(req.user)) {
+    return res.status(403).json({ error: 'Admin access required.' });
+  }
+  next();
+}
+
+module.exports = { verifyToken, extractToken, requireAuth, optionalAuth, isSuperAdmin, requireAdmin };

@@ -80,4 +80,8 @@ module.exports = {
     high: parseInt(process.env.THRESHOLD_HIGH, 10) || 75,
     mid: parseInt(process.env.THRESHOLD_MID, 10) || 60,
   },
+
+  admin: {
+    superAdminEmail: process.env.SUPER_ADMIN_EMAIL || '',
+  },
 };

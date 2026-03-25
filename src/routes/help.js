@@ -21,6 +21,7 @@ router.post('/explain', async (req, res) => {
   try {
     const { id, context } = req.body;
     const audience = req.body.audience || config.targetAudience;
+    const language = llm.getRequestLanguage(req);
     const def = getDefinition(id);
 
     if (!def) {
@@ -63,8 +64,8 @@ Explain what this specific score means in practical terms. Is it high, low, or t
 Write 2-3 sentences. Be specific about THIS score — do not re-explain what the index is. ${audience === 'student' ? 'Be encouraging and constructive.' : ''} Do NOT use metric IDs or technical abbreviations.`;
 
       const [indexResult, scoreResult] = await Promise.all([
-        llm.complete(indexPrompt, { systemPrompt: persona, maxTokens: 250 }),
-        llm.complete(scorePrompt, { systemPrompt: persona, maxTokens: 250 }),
+        llm.complete(indexPrompt, { systemPrompt: persona, maxTokens: 250, language }),
+        llm.complete(scorePrompt, { systemPrompt: persona, maxTokens: 250, language }),
       ]);
 
       const session = llm.getSessionTracker().getSummary();
@@ -84,6 +85,7 @@ Write 2-3 sentences. Be specific about THIS score — do not re-explain what the
     const indexExplanation = await llm.complete(indexPrompt, {
       systemPrompt: persona,
       maxTokens: 250,
+      language,
     });
 
     const session = llm.getSessionTracker().getSummary();
@@ -101,6 +103,7 @@ router.post('/chat', async (req, res) => {
   try {
     const { id, question, history } = req.body;
     const audience = req.body.audience || config.targetAudience;
+    const language = llm.getRequestLanguage(req);
     const def = getDefinition(id);
     const persona = AUDIENCE_PERSONA[audience] || AUDIENCE_PERSONA.general;
 
@@ -122,6 +125,7 @@ Answer clearly and helpfully. Keep it concise (2-4 sentences). ${audience === 's
     const answer = await llm.complete(prompt, {
       systemPrompt: persona,
       maxTokens: 300,
+      language,
     });
 
     const session = llm.getSessionTracker().getSummary();
@@ -140,6 +144,7 @@ router.post('/detect', async (req, res) => {
   try {
     const { layers, document: doc } = req.body;
     const audience = req.body.audience || config.targetAudience;
+    const language = llm.getRequestLanguage(req);
     const persona = AUDIENCE_PERSONA[audience] || AUDIENCE_PERSONA.general;
 
     if (!layers || !layers.length) {
@@ -208,6 +213,7 @@ Do not add any other text.`;
     const result = await llm.complete(detectPrompt, {
       systemPrompt: 'You are a text classification expert. Respond with exactly the format requested.',
       maxTokens: 100,
+      language,
     });
 
     // Parse response
@@ -249,6 +255,7 @@ router.post('/summary', async (req, res) => {
   try {
     const { layers, overallScore, compositeScores, feedback, document: doc, readingLevel } = req.body;
     const audience = req.body.audience || config.targetAudience;
+    const language = llm.getRequestLanguage(req);
     const persona = AUDIENCE_PERSONA[audience] || AUDIENCE_PERSONA.general;
 
     if (!layers || !layers.length) {
@@ -339,8 +346,8 @@ A: [2-3 sentence answer referencing specific findings from the analysis, interpr
 Make questions specific to the actual scores and findings — not generic.`;
 
     const [summaryResult, faqResult] = await Promise.all([
-      llm.complete(summaryPrompt, { systemPrompt: persona, maxTokens: 600 }),
-      llm.complete(faqPrompt, { systemPrompt: persona, maxTokens: 700 }),
+      llm.complete(summaryPrompt, { systemPrompt: persona, maxTokens: 600, language }),
+      llm.complete(faqPrompt, { systemPrompt: persona, maxTokens: 700, language }),
     ]);
 
     // Parse FAQs into structured format

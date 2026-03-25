@@ -38,6 +38,7 @@ async function runAnalysis(text, options = {}) {
     promptText = '',
     learnerId = '',
     genre = '',
+    language = 'en',
     enabledLayers = ALL_LAYER_IDS,
     onProgress = () => {},
   } = options;
@@ -116,7 +117,7 @@ async function runAnalysis(text, options = {}) {
   onProgress({ type: 'log', message: 'Generating evidence and plain-language descriptions…' });
   let enrichedLayers;
   try {
-    enrichedLayers = await enrichWithEvidence(Object.values(layerResults), doc.text);
+    enrichedLayers = await enrichWithEvidence(Object.values(layerResults), doc.text, null, language);
     // Update layerResults with enriched data
     enrichedLayers.forEach(l => { layerResults[l.layerId] = l; });
   } catch (err) {
@@ -133,7 +134,7 @@ async function runAnalysis(text, options = {}) {
   // Generate feedback via LLM
   let feedback = [];
   try {
-    feedback = await generateFeedback(layerResults, doc);
+    feedback = await generateFeedback(layerResults, doc, language);
   } catch (err) {
     console.error('[Pipeline] Feedback generation failed:', err.message);
   }
@@ -151,6 +152,7 @@ async function runAnalysis(text, options = {}) {
     timestamp: new Date().toISOString(),
     analysisTime: totalTime,
     targetAudience: config.targetAudience,
+    language,
     document: {
       wordCount: doc.wordCount,
       sentenceCount: doc.sentenceCount,
@@ -249,7 +251,7 @@ function computeOverallScore(compositeScores) {
 /**
  * Generate 3-point actionable feedback via LLM.
  */
-async function generateFeedback(layerResults, doc) {
+async function generateFeedback(layerResults, doc, language) {
   const get = (layer, metric) => {
     const r = layerResults[layer];
     return r?.metrics?.[metric]?.value ?? 'N/A';
@@ -269,7 +271,7 @@ Write 3 specific, actionable feedback points. Do NOT mention metric names or num
 Return JSON array: [{"point": "feedback text here"}, ...]`;
 
   try {
-    const result = await llm.completeJSON(prompt);
+    const result = await llm.completeJSON(prompt, { language });
     return Array.isArray(result) ? result.map(r => r.point || r.text || JSON.stringify(r)) : [];
   } catch {
     return [

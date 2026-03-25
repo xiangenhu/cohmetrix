@@ -5,6 +5,7 @@ const storage = require('../services/storage');
 const { evaluateWithRubric } = require('../services/rubric');
 const { extractText } = require('../utils/fileParser');
 const config = require('../config');
+const llmService = require('../services/llm');
 
 const router = express.Router();
 const upload = multer({
@@ -123,6 +124,7 @@ router.post('/evaluate', async (req, res) => {
     }
 
     // Run evaluation
+    const language = llmService.getRequestLanguage(req);
     const evaluation = await evaluateWithRubric(
       rubric,
       result.layers,
@@ -131,6 +133,7 @@ router.post('/evaluate', async (req, res) => {
         overallScore: result.overallScore,
         compositeScores: result.compositeScores,
         targetAudience: result.targetAudience || config.targetAudience,
+        language,
       }
     );
 
@@ -140,8 +143,7 @@ router.post('/evaluate', async (req, res) => {
       await storage.saveResult(analysisId, result);
     }
 
-    const llm = require('../services/llm');
-    evaluation.tokenUsage = llm.getSessionTracker().getSummary();
+    evaluation.tokenUsage = llmService.getSessionTracker().getSummary();
     res.json(evaluation);
   } catch (err) {
     console.error('[POST /api/rubrics/evaluate]', err);
