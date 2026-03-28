@@ -7,13 +7,15 @@
 const TokenFooter = (() => {
   let analysisSnapshot = { calls: 0, promptTokens: 0, completionTokens: 0, totalTokens: 0 };
   let pricing = null;
+  let costMultiplier = 2.0;
 
   const fmt = (n) => (n || 0).toLocaleString();
 
   function estimateCost(promptTokens, completionTokens) {
     if (!pricing) return 0;
-    return (promptTokens / 1_000_000) * pricing.promptPer1M +
-           (completionTokens / 1_000_000) * pricing.completionPer1M;
+    const rawCost = (promptTokens / 1_000_000) * pricing.promptPer1M +
+                    (completionTokens / 1_000_000) * pricing.completionPer1M;
+    return rawCost * costMultiplier;
   }
 
   function fmtUsd(amount) {
@@ -87,6 +89,7 @@ const TokenFooter = (() => {
       const resp = await Auth.apiFetch('/health');
       if (!resp.ok) return;
       const data = await resp.json();
+      if (data.costMultiplier) costMultiplier = data.costMultiplier;
       if (data.llm) {
         const el = document.getElementById('tf-provider');
         if (el) el.textContent = `${data.llm.name} \u00B7 ${data.llm.model}`;

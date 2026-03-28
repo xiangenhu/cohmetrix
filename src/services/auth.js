@@ -1,49 +1,68 @@
 /**
- * Auth Service — OAuth proxy gateway integration.
+ * Auth Service — OAuth & SMTP proxy gateway integration.
  *
- * Validates gateway tokens against oauth.skoonline.org
+ * Validates gateway tokens against oauth.xiangenhu.info
  * and provides Express middleware for route protection.
+ * Supports both Google OAuth login and email/password (SMTP) login.
  */
 const config = require('../config');
 
 const GATEWAY = config.oauth.gatewayUrl;
 
-// Simple in-memory cache for token → userinfo (5 min TTL)
+// In-memory cache for token → userinfo (configurable TTL)
 const tokenCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 5 * 60 * 1000;       // 5 min for gateway-verified tokens
+const EMAIL_CACHE_TTL = 60 * 60 * 1000; // 1 hour for email/password tokens
 
 function cleanCache() {
   const now = Date.now();
   for (const [key, entry] of tokenCache) {
-    if (now - entry.ts > CACHE_TTL) tokenCache.delete(key);
+    const ttl = entry.ttl || CACHE_TTL;
+    if (now - entry.ts > ttl) tokenCache.delete(key);
   }
 }
 setInterval(cleanCache, 60000);
 
 /**
+ * Cache a token → user mapping (used by email-login route to pre-populate cache).
+ */
+function cacheToken(token, user) {
+  tokenCache.set(token, { user, ts: Date.now(), ttl: EMAIL_CACHE_TTL });
+}
+
+/**
  * Verify a gateway token and return user info.
+ * Tries cache first, then gateway /auth/userinfo (OAuth tokens),
+ * with cache fallback for email/password tokens.
  */
 async function verifyToken(token) {
   if (!token) return null;
 
-  // Check cache
+  // Check cache first (works for both OAuth and email tokens)
   const cached = tokenCache.get(token);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) {
-    return cached.user;
+  if (cached) {
+    const ttl = cached.ttl || CACHE_TTL;
+    if (Date.now() - cached.ts < ttl) {
+      return cached.user;
+    }
+    tokenCache.delete(token);
   }
 
+  // Try gateway /auth/userinfo (works for OAuth tokens)
   try {
     const resp = await fetch(`${GATEWAY}/auth/userinfo`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    tokenCache.set(token, { user: data, ts: Date.now() });
-    return data;
+    if (resp.ok) {
+      const data = await resp.json();
+      tokenCache.set(token, { user: data, ts: Date.now(), ttl: CACHE_TTL });
+      return data;
+    }
   } catch (err) {
-    console.error('[Auth] Token verification failed:', err.message);
-    return null;
+    console.error('[Auth] Gateway /auth/userinfo failed:', err.message);
   }
+
+  return null;
 }
 
 /**
@@ -119,4 +138,4 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { verifyToken, extractToken, requireAuth, optionalAuth, isSuperAdmin, requireAdmin };
+module.exports = { verifyToken, extractToken, requireAuth, optionalAuth, isSuperAdmin, requireAdmin, cacheToken };

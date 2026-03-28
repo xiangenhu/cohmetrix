@@ -35,4 +35,17 @@ async function convertDocxToHtml(buffer) {
   return result.value;
 }
 
-module.exports = { extractText, convertDocxToHtml };
+/**
+ * Fix multer's latin1-encoded originalname to proper UTF-8.
+ * Browsers send filenames as UTF-8 in multipart form data, but multer
+ * decodes the Content-Disposition filename field as latin1 by default.
+ */
+function fixFilename(name) {
+  try {
+    return Buffer.from(name, 'latin1').toString('utf-8');
+  } catch {
+    return name;
+  }
+}
+
+module.exports = { extractText, convertDocxToHtml, fixFilename };

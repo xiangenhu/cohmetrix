@@ -35,7 +35,7 @@ module.exports = {
   },
 
   oauth: {
-    gatewayUrl: process.env.OAUTH_GATEWAY_URL || 'https://oauth.skoonline.org',
+    gatewayUrl: process.env.OAUTH_GATEWAY_URL || 'https://oauth.xiangenhu.info',
     provider: process.env.OAUTH_PROVIDER || 'google',
   },
 
@@ -87,6 +87,7 @@ module.exports = {
 
   quota: {
     defaultQuota: parseFloat(process.env.DEFAULT_USER_QUOTA) || 0.50,
+    costMultiplier: parseFloat(process.env.COST_MULTIPLIER) || 2.0,
   },
 
   paypal: {

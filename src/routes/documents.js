@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const storage = require('../services/storage');
-const { extractText } = require('../utils/fileParser');
+const { extractText, fixFilename } = require('../utils/fileParser');
 const config = require('../config');
 
 const router = express.Router();
@@ -48,14 +48,15 @@ router.post('/', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file provided.' });
     }
 
-    const ext = path.extname(req.file.originalname).toLowerCase();
+    const fname = fixFilename(req.file.originalname);
+    const ext = path.extname(fname).toLowerCase();
     if (!['.txt', '.docx', '.pdf'].includes(ext)) {
       return res.status(400).json({ error: `Unsupported format: ${ext}. Use .txt, .docx, or .pdf` });
     }
 
     // Use subfolder if provided
     const folder = req.body.folder ? req.body.folder.replace(/^\/|\/$/g, '') + '/' : '';
-    const filename = folder + req.file.originalname;
+    const filename = folder + fname;
     const contentType = CONTENT_TYPES[ext] || 'application/octet-stream';
 
     const result = await storage.saveDocument(filename, req.file.buffer, contentType);

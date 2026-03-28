@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { extractText } = require('../utils/fileParser');
+const { extractText, fixFilename } = require('../utils/fileParser');
 const { runAnalysis } = require('../services/pipeline');
 const storage = require('../services/storage');
 const config = require('../config');
@@ -37,8 +37,9 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     // Extract text from file if uploaded
     if (req.file) {
-      text = await extractText(req.file.buffer, req.file.originalname);
-      await storage.saveUpload(analysisId, req.file.originalname, req.file.buffer);
+      const fname = fixFilename(req.file.originalname);
+      text = await extractText(req.file.buffer, fname);
+      await storage.saveUpload(analysisId, fname, req.file.buffer);
     }
 
     if (!text.trim()) {
@@ -72,7 +73,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     res.json({ analysisId });
 
     // Set audit context for standalone analysis
-    llm.setAuditContext({ userId, projectId: null, fileName: req.file?.originalname || null, action: 'standalone_analysis' });
+    llm.setAuditContext({ userId, projectId: null, fileName: req.file ? fixFilename(req.file.originalname) : null, action: 'standalone_analysis' });
 
     // Run analysis in background
     runAnalysis(text, {

@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const storage = require('../services/storage');
 const { evaluateWithRubric } = require('../services/rubric');
-const { extractText } = require('../utils/fileParser');
+const { extractText, fixFilename } = require('../utils/fileParser');
 const config = require('../config');
 const llmService = require('../services/llm');
 
@@ -43,9 +43,10 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     // Extract text from file if uploaded
     if (req.file) {
-      text = await extractText(req.file.buffer, req.file.originalname);
+      const fname = fixFilename(req.file.originalname);
+      text = await extractText(req.file.buffer, fname);
       if (!req.body.name) {
-        name = path.basename(req.file.originalname, path.extname(req.file.originalname));
+        name = path.basename(fname, path.extname(fname));
       }
     }
 

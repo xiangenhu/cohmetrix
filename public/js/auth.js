@@ -1,5 +1,6 @@
 /**
- * Auth — Handles OAuth authentication via oauth.skoonline.org gateway.
+ * Auth — Handles authentication via oauth.xiangenhu.info gateway.
+ * Supports both Google OAuth and email/password (SMTP) login.
  * Stores gateway token in sessionStorage (cleared on tab close).
  */
 const Auth = (() => {
@@ -45,7 +46,7 @@ const Auth = (() => {
       const resp = await fetch('/api/auth/config');
       authConfig = await resp.json();
     } catch {
-      authConfig = { gatewayUrl: 'https://oauth.skoonline.org', provider: 'google' };
+      authConfig = { gatewayUrl: 'https://oauth.xiangenhu.info', provider: 'google' };
     }
 
     // Check for OAuth callback
@@ -120,6 +121,138 @@ const Auth = (() => {
     window.location.href = `/api/auth/login?redirect_uri=${encodeURIComponent(appUrl)}`;
   }
 
+  /**
+   * Email/password login via SMTP proxy.
+   */
+  async function emailLogin(email, password) {
+    const resp = await fetch('/api/auth/email-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Login failed');
+    if (data.token) {
+      setToken(data.token);
+      const user = await verifyToken(data.token);
+      if (user) {
+        currentUser = user;
+        return user;
+      }
+    }
+    throw new Error(data.message || 'Login failed');
+  }
+
+  /**
+   * Register new account via SMTP proxy.
+   */
+  async function register(email, password, name) {
+    const resp = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Registration failed');
+    return data;
+  }
+
+  /**
+   * Verify email with 6-digit code.
+   */
+  async function verifyEmail(email, code) {
+    const resp = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Verification failed');
+    if (data.token) {
+      setToken(data.token);
+      const user = await verifyToken(data.token);
+      if (user) {
+        currentUser = user;
+        return { ...data, verified: true };
+      }
+    }
+    return data;
+  }
+
+  /**
+   * Resend verification code.
+   */
+  async function resendCode(email) {
+    const resp = await fetch('/api/auth/resend-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to resend code');
+    return data;
+  }
+
+  /**
+   * Request password reset code.
+   */
+  async function forgotPassword(email) {
+    const resp = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to send reset code');
+    return data;
+  }
+
+  /**
+   * Verify reset code (returns resetToken).
+   */
+  async function verifyResetCode(email, code) {
+    const resp = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Invalid code');
+    return data;
+  }
+
+  /**
+   * Set new password with reset token.
+   */
+  async function resetPassword(resetToken, newPassword) {
+    const resp = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resetToken, newPassword }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to reset password');
+    return data;
+  }
+
+  /**
+   * Change password (logged-in user).
+   */
+  async function changePassword(currentPassword, newPassword) {
+    const token = getToken();
+    const resp = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to change password');
+    return data;
+  }
+
   async function logout() {
     const token = getToken();
     if (token) {
@@ -180,5 +313,12 @@ const Auth = (() => {
   function getUser() { return currentUser; }
   function isAuthenticated() { return !!getToken() && !!currentUser; }
 
-  return { init, login, logout, getHeaders, apiFetch, getUser, isAuthenticated, getToken };
+  return {
+    init, login, logout, getHeaders, apiFetch, getUser, isAuthenticated, getToken,
+    // SMTP auth methods
+    emailLogin, register, verifyEmail, resendCode,
+    forgotPassword, verifyResetCode, resetPassword, changePassword,
+    // For external use (landing page)
+    setToken, showApp, verifyToken: verifyToken,
+  };
 })();

@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuid } = require('uuid');
 const storage = require('../services/storage');
-const { extractText, convertDocxToHtml } = require('../utils/fileParser');
+const { extractText, convertDocxToHtml, fixFilename } = require('../utils/fileParser');
 const { runAnalysis } = require('../services/pipeline');
 const llm = require('../services/llm');
 const config = require('../config');
@@ -150,11 +150,12 @@ router.post('/:id/files', upload.array('files', 20), async (req, res) => {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files provided' });
     const saved = [];
     for (const file of req.files) {
-      const ext = path.extname(file.originalname).toLowerCase();
+      const fname = fixFilename(file.originalname);
+      const ext = path.extname(fname).toLowerCase();
       if (!['.txt', '.docx', '.pdf'].includes(ext)) continue;
       const ct = { '.txt': 'text/plain', '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '.pdf': 'application/pdf' }[ext];
-      await storage.saveProjectFile(uid(req.user), req.params.id, file.originalname, file.buffer, ct);
-      saved.push({ name: file.originalname, size: file.size, sizeLabel: formatSize(file.size) });
+      await storage.saveProjectFile(uid(req.user), req.params.id, fname, file.buffer, ct);
+      saved.push({ name: fname, size: file.size, sizeLabel: formatSize(file.size) });
     }
     // Update project timestamp
     const project = await storage.getProject(uid(req.user), req.params.id);
@@ -505,7 +506,8 @@ router.post('/:id/estimate', async (req, res) => {
     const totalTokens = files.reduce((s, f) => s + f.estimatedTokens, 0);
     const estInputCost = (totalTokens * 0.7 / 1_000_000) * pricing.promptPer1M;
     const estOutputCost = (totalTokens * 0.3 / 1_000_000) * pricing.completionPer1M;
-    const estimatedCost = estInputCost + estOutputCost;
+    const multiplier = config.quota.costMultiplier || 2.0;
+    const estimatedCost = (estInputCost + estOutputCost) * multiplier;
 
     res.json({
       files,
@@ -514,6 +516,7 @@ router.post('/:id/estimate', async (req, res) => {
       totalEstimatedTokens: totalTokens,
       estimatedCost: Math.round(estimatedCost * 1000) / 1000,
       pricing,
+      costMultiplier: multiplier,
       enabledLayers: project.config.enabledLayers,
       llmCallsPerFile,
     });

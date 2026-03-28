@@ -76,7 +76,7 @@ app.get('/health', (req, res) => {
   const info = llm.getProviderInfo();
   // Attach pricing per 1M tokens for cost estimation
   info.pricing = llm.getPricing();
-  res.json({ status: 'ok', version: '0.9.0', environment: config.nodeEnv, llm: info });
+  res.json({ status: 'ok', version: '0.9.0', environment: config.nodeEnv, llm: info, costMultiplier: config.quota.costMultiplier || 2.0 });
 });
 
 // ─── Public routes (no auth) ─────────────────────────────────────────────────
@@ -118,11 +118,12 @@ llmService.setAuditCallback((entry) => {
   // 1. Buffer full interaction for admin audit log (fire-and-forget, flushed in batches)
   storage.saveAuditEntry(entry);
 
-  // 2. Calculate cost for this LLM call
+  // 2. Calculate cost for this LLM call (with service multiplier)
   const pricing = llmService.getPricing();
   const promptCost = ((entry.tokens?.prompt || 0) / 1_000_000) * pricing.promptPer1M;
   const completionCost = ((entry.tokens?.completion || 0) / 1_000_000) * pricing.completionPer1M;
-  const cost = promptCost + completionCost;
+  const rawCost = promptCost + completionCost;
+  const cost = rawCost * (config.quota.costMultiplier || 2.0);
 
   // 3. Buffer usage summary for per-project usage log (flushed after debounce)
   if (entry.userId && entry.projectId) {
