@@ -7,6 +7,7 @@ const { extractText, convertDocxToHtml, fixFilename } = require('../utils/filePa
 const { runAnalysis } = require('../services/pipeline');
 const llm = require('../services/llm');
 const config = require('../config');
+const { getRecommendedLayers, GENRE_CATEGORIES } = require('../services/genres');
 
 const router = express.Router();
 const upload = multer({
@@ -225,7 +226,10 @@ router.post('/:id/files/:filename/auto-meta', async (req, res) => {
     const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
     const preview = text.substring(0, 3000);
 
-    const prompt = `You are an expert writing analyst. Analyze the following document excerpt and infer metadata about it.
+    // Build flat genre ID list for the prompt
+    const allGenreIds = GENRE_CATEGORIES.flatMap(c => c.genres.map(g => g.id));
+    const prompt = `You are an expert document analyst. Analyze the following document excerpt and infer metadata about it.
+You must identify the EXACT document type — this could be anything: an essay, code, AI chat transcript, legal document, meeting transcript, data file, etc.
 
 DOCUMENT (first ~3000 chars):
 """
@@ -237,15 +241,25 @@ Word count: ${wordCount}
 Return a JSON object with these fields (use empty string "" if you cannot determine a field):
 {
   "language": "ISO 639-1 code of the document's language, e.g. en, es, fr, de, zh, ja, ko, ar, etc.",
-  "genre": "one of: academic-essay, research-paper, argumentative-essay, expository-essay, narrative-essay, personal-narrative, reflection, lab-report, book-review, literary-analysis, opinion-editorial, creative-fiction, creative-nonfiction, business-report, technical-writing, other",
-  "readingLevel": "one of: elementary, middle-school, high-school, college, graduate",
-  "assignmentType": "one of: argumentative, expository, narrative, analytical, compare-contrast, research-paper, lab-report, reflection, creative, summary, other",
-  "promptText": "your best guess at what the writing assignment/prompt was, based on the content",
+  "genre": "one of: ${allGenreIds.join(', ')}",
+  "readingLevel": "one of: elementary, middle-school, high-school, college, graduate (or 'n/a' for non-prose like code/data)",
+  "assignmentType": "one of: argumentative, expository, narrative, analytical, compare-contrast, research-paper, lab-report, reflection, creative, summary, code-implementation, code-review, chat-conversation, data-analysis, legal-review, transcription, other",
+  "promptText": "your best guess at what the writing assignment/prompt was, based on the content (empty for code, chat, data, etc.)",
   "expectedWordCount": "estimated expected range like 800-1000",
   "authorLevel": "one of: esl-beginner, esl-intermediate, esl-advanced, native-k5, native-middle, native-high, college-freshman, college-upper, graduate, professional",
   "focusAreas": "comma-separated areas that deserve attention based on a quick read",
   "knownIssues": "any obvious issues spotted in the excerpt"
-}`;
+}
+
+IMPORTANT: Be precise about genre detection:
+- If the document is source code (Python, JavaScript, etc.), use "source-code"
+- If it's a chat/conversation between human and AI, use "ai-chat"
+- If it's a human-to-human chat, use "human-chat"
+- If it's a legal contract or terms, use "legal-contract"
+- If it's meeting/interview transcript, use "meeting-transcript" or "interview-transcript"
+- If it's log output or data, use "log-file" or "spreadsheet-notes"
+- If it's a config file, use "config-file"
+- Only use "other" if nothing else fits`;
 
     const language = llm.getRequestLanguage(req);
     const result = await llm.completeJSON(prompt, { language });
@@ -256,6 +270,90 @@ Return a JSON object with these fields (use empty string "" if you cannot determ
     });
   } catch (err) {
     console.error('[POST /auto-meta]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/projects/:id/pre-analyze — Pre-analysis review for selected files.
+ * Detects document types and returns recommended layers for each file.
+ * Body: { fileNames: [...] }
+ * Returns: { files: [{ fileName, genre, genreLabel, profile, layers, description, rationale, metadata }] }
+ */
+router.post('/:id/pre-analyze', async (req, res) => {
+  try {
+    const userId = uid(req.user);
+    const fileNames = req.body.fileNames || [];
+    if (fileNames.length === 0) return res.status(400).json({ error: 'No files specified' });
+
+    const allGenreIds = GENRE_CATEGORIES.flatMap(c => c.genres.map(g => g.id));
+    const results = [];
+
+    for (const fileName of fileNames) {
+      const meta = await storage.loadProjectFileMeta(userId, req.params.id, fileName) || {};
+      let genre = meta.genre || '';
+
+      // If no genre in metadata, detect it from content
+      if (!genre) {
+        const doc = await storage.loadProjectFile(userId, req.params.id, fileName);
+        if (!doc) { results.push({ fileName, error: 'File not found' }); continue; }
+
+        const text = await extractText(doc.buffer, doc.name);
+        const preview = text.substring(0, 2000);
+
+        const detectPrompt = `Identify the document type of this text. Return ONLY a JSON object: { "genre": "<id>", "confidence": <0-1>, "reasoning": "<one sentence>" }
+
+Valid genre IDs: ${allGenreIds.join(', ')}
+
+TEXT (first ~2000 chars):
+"""
+${preview}
+"""
+
+RULES:
+- Source code (Python, JS, etc.) → "source-code"
+- AI/chatbot conversation → "ai-chat"
+- Human chat/messaging → "human-chat"
+- Legal contract/terms → "legal-contract"
+- Config files → "config-file"
+- Log/system output → "log-file"
+- Meeting transcript → "meeting-transcript"
+- Be specific — prefer a precise genre over "other"`;
+
+        try {
+          const language = llm.getRequestLanguage(req);
+          const detected = await llm.completeJSON(detectPrompt, { language });
+          genre = detected.genre || 'other';
+          results.push({
+            fileName,
+            genre,
+            detected: true,
+            confidence: detected.confidence || 0.5,
+            reasoning: detected.reasoning || '',
+            ...getRecommendedLayers(genre),
+            metadata: meta,
+          });
+        } catch {
+          genre = 'other';
+          results.push({ fileName, genre, detected: true, confidence: 0, ...getRecommendedLayers('other'), metadata: meta });
+        }
+      } else {
+        // Genre already in metadata
+        results.push({
+          fileName,
+          genre,
+          detected: false,
+          confidence: 1.0,
+          reasoning: 'Genre set in file metadata.',
+          ...getRecommendedLayers(genre),
+          metadata: meta,
+        });
+      }
+    }
+
+    res.json({ files: results });
+  } catch (err) {
+    console.error('[POST /pre-analyze]', err);
     res.status(500).json({ error: err.message });
   }
 });

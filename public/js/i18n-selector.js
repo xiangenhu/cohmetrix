@@ -1,100 +1,108 @@
 /**
- * I18nSelector — URL-based language switching with a compact topbar indicator.
+ * I18nSelector — Language dropdown selector in the topbar.
  *
- * Language is set via URL parameter: ?lang=zh (or &lang=zh)
- * When a non-English language is active, shows a small indicator in the topbar
- * with the current language code and a link to switch back to English.
- *
- * On init: detects language from URL/cookie/localStorage, initializes the engine.
+ * Always visible as a compact select-style dropdown showing current language.
+ * Clicking opens a scrollable list of available languages.
+ * Selecting a language sets ?lang= URL param and reloads.
  */
 const I18nSelector = (() => {
   let currentLang = 'en';
+  let languages = [];
 
-  /**
-   * Initialize: detect language, start engine if non-English, show indicator.
-   */
   async function init() {
     currentLang = I18nConfig.detectLanguage();
     I18nConfig.setLanguage(currentLang);
 
-    // Build indicator in topbar
-    insertIndicator();
+    languages = await fetchLanguages();
+    insertSelector();
 
-    // If non-English, start the translation engine
     if (currentLang !== 'en') {
       await I18nEngine.init(currentLang, 'auto');
     }
   }
 
-  /**
-   * Build and insert the language indicator into the topbar.
-   * Shows current language code with a dropdown of available languages.
-   */
-  function insertIndicator() {
+  function getCurrentLangName() {
+    const lang = languages.find(l => l.code === currentLang);
+    return lang ? lang.name : currentLang.toUpperCase();
+  }
+
+  function insertSelector() {
     const topbarRight = document.querySelector('.topbar-right');
     if (!topbarRight) return;
 
     const container = document.createElement('div');
     container.className = 'i18n-selector';
-    container.style.cssText = 'position:relative;display:inline-flex;align-items:center;';
 
-    // Trigger button
+    // Trigger button — globe icon + language name + chevron
     const trigger = document.createElement('button');
-    trigger.className = 'i18n-trigger';
-    trigger.textContent = currentLang.toUpperCase();
-    trigger.title = currentLang === 'en' ? 'Translate: add ?lang=zh to URL' : 'Current language: ' + currentLang;
-    trigger.style.cssText =
-      'background:' + (currentLang === 'en' ? 'transparent' : 'var(--teal, #2dd4bf)') + ';' +
-      'color:' + (currentLang === 'en' ? 'var(--text-tertiary, #888)' : 'var(--bg-primary, #0f1117)') + ';' +
-      'border:1px solid ' + (currentLang === 'en' ? 'var(--border-secondary, #333)' : 'var(--teal, #2dd4bf)') + ';' +
-      'border-radius:var(--radius-md, 6px);' +
-      'padding:3px 7px;' +
-      'font-size:11px;font-weight:600;cursor:pointer;letter-spacing:0.5px;line-height:1;' +
-      'font-family:var(--font-mono, monospace);transition:all 0.15s;';
+    trigger.className = 'i18n-current';
+    trigger.innerHTML =
+      '<svg class="i18n-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="12" cy="12" r="10"/>' +
+        '<path d="M2 12h20"/>' +
+        '<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>' +
+      '</svg>' +
+      '<span class="i18n-current-label">' + getCurrentLangName() + '</span>' +
+      '<svg class="i18n-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+        '<polyline points="6 9 12 15 18 9"/>' +
+      '</svg>';
+    trigger.title = 'Select language';
 
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleDropdown(container);
+      const dd = container.querySelector('.i18n-dropdown');
+      if (dd) dd.classList.toggle('open');
     });
 
-    // Dropdown
+    // Dropdown panel
     const dropdown = document.createElement('div');
     dropdown.className = 'i18n-dropdown';
-    dropdown.style.cssText =
-      'display:none;position:absolute;top:calc(100% + 6px);right:0;' +
-      'min-width:160px;max-height:280px;overflow-y:auto;' +
-      'background:var(--bg-secondary, #1a1b26);border:1px solid var(--border-primary, #333);' +
-      'border-radius:var(--radius-md, 8px);box-shadow:0 8px 24px rgba(0,0,0,0.4);' +
-      'z-index:1000;padding:4px 0;';
 
-    // Fetch languages and build list
-    fetchLanguages().then(languages => {
-      languages.forEach(lang => {
-        const item = document.createElement('a');
-        const url = new URL(window.location.href);
-        if (lang.code === 'en') {
-          url.searchParams.delete('lang');
-        } else {
-          url.searchParams.set('lang', lang.code);
-        }
-        item.href = url.toString();
-        item.className = 'i18n-lang-item';
-        item.style.cssText =
-          'display:block;padding:6px 12px;font-size:13px;text-decoration:none;' +
-          'color:var(--text-primary, #cdd6f4);transition:background 0.1s;' +
-          (lang.code === currentLang
-            ? 'background:var(--teal, #2dd4bf);color:var(--bg-primary, #0f1117);font-weight:600;'
-            : '');
-        item.textContent = lang.name;
-        item.addEventListener('mouseenter', () => {
-          if (lang.code !== currentLang) item.style.background = 'rgba(45,212,191,0.15)';
-        });
-        item.addEventListener('mouseleave', () => {
-          if (lang.code !== currentLang) item.style.background = 'transparent';
-        });
-        dropdown.appendChild(item);
-      });
+    // Language list
+    const list = document.createElement('div');
+    list.className = 'i18n-lang-list';
+
+    languages.forEach(lang => {
+      const item = document.createElement('a');
+      const url = new URL(window.location.href);
+      if (lang.code === 'en') {
+        url.searchParams.delete('lang');
+      } else {
+        url.searchParams.set('lang', lang.code);
+      }
+      item.href = url.toString();
+      item.className = 'i18n-lang-item' + (lang.code === currentLang ? ' active' : '');
+      item.innerHTML =
+        '<span class="i18n-lang-name">' + lang.name + '</span>' +
+        '<span class="i18n-lang-code">' + lang.code.toUpperCase() + '</span>';
+      list.appendChild(item);
     });
+
+    dropdown.appendChild(list);
+
+    // Mode switcher (only when non-English)
+    if (currentLang !== 'en') {
+      const modes = document.createElement('div');
+      modes.className = 'i18n-mode-switcher';
+      [
+        { id: 'auto', label: 'Auto' },
+        { id: 'hover-replace', label: 'Hover' },
+        { id: 'hover-tooltip', label: 'Tooltip' },
+      ].forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = 'i18n-mode-btn' + (m.id === 'auto' ? ' active' : '');
+        btn.textContent = m.label;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          modes.querySelectorAll('.i18n-mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (typeof I18nEngine !== 'undefined') I18nEngine.switchMode(m.id);
+        });
+        modes.appendChild(btn);
+      });
+      dropdown.appendChild(modes);
+    }
 
     container.appendChild(trigger);
     container.appendChild(dropdown);
@@ -110,14 +118,9 @@ const I18nSelector = (() => {
     // Close on outside click
     document.addEventListener('click', (e) => {
       if (!container.contains(e.target)) {
-        dropdown.style.display = 'none';
+        dropdown.classList.remove('open');
       }
     });
-  }
-
-  function toggleDropdown(container) {
-    const dd = container.querySelector('.i18n-dropdown');
-    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
   }
 
   async function fetchLanguages() {
@@ -146,7 +149,11 @@ const I18nSelector = (() => {
 
   function switchLang(code) {
     const url = new URL(window.location.href);
-    url.searchParams.set('lang', code);
+    if (code === 'en') {
+      url.searchParams.delete('lang');
+    } else {
+      url.searchParams.set('lang', code);
+    }
     window.location.href = url.toString();
   }
 

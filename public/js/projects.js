@@ -434,7 +434,7 @@ const Projects = (() => {
       selectedFiles = Array.from(s.querySelectorAll('.proj-file-check:checked')).map(c => c.dataset.name);
       if (selectedFiles.length === 0) return;
       wizardConfig = { ...(currentProject.config || {}) };
-      renderStep3();
+      renderPreAnalysis();
     });
 
     updateSelectionState();
@@ -937,7 +937,7 @@ const Projects = (() => {
     if (selectedFiles.length === 0) selectedFiles = readyFiles.map(f => f.name);
 
     s.innerHTML = `
-      ${header('&larr; Back', '<span data-i18n="5e573109207e2470">Step 1 of 2: Select Files</span>')}
+      ${header('&larr; Back', '<span data-i18n="5e573109207e2470">Step 1: Select Files</span>')}
       <div class="proj-step-body">
         <div class="proj-step-label">${readyFiles.length} of ${currentFiles.length} files ready for analysis</div>
         ${readyFiles.length > 0 ? `
@@ -965,7 +965,7 @@ const Projects = (() => {
         </div>` : ''}
         <div class="proj-step-nav">
           <div></div>
-          <button class="proj-next-btn" id="proj-next1" ${readyFiles.length===0?'disabled':''}><span data-i18n="9594e1f9746f7826">Next: Review &amp; Estimate</span> &rarr;</button>
+          <button class="proj-next-btn" id="proj-next1" ${readyFiles.length===0?'disabled':''}>Next: Document Review &rarr;</button>
         </div>
       </div>`;
 
@@ -977,83 +977,196 @@ const Projects = (() => {
       selectedFiles = Array.from(s.querySelectorAll('.proj-file-check:checked')).map(c => c.dataset.name);
       if (selectedFiles.length === 0) { alert('Select at least one file.'); return; }
       wizardConfig = { ...(currentProject.config || {}) };
-      renderStep3();
+      renderPreAnalysis();
     });
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // STEP 2: Configure
+  // PRE-ANALYSIS: Document Type Review & Measure Selection
   // ═══════════════════════════════════════════════════════════════════════
 
-  function renderStep2() {
+  const LAYER_LABELS = {
+    L0: 'Surface & Structural', L1: 'Lexical Sophistication', L2: 'Syntactic Complexity',
+    L3: 'Referential Cohesion', L4: 'Semantic Cohesion', L5: 'Connective & Deep Cohesion',
+    L6: 'Situation Model', L7: 'Rhetorical Structure', L8: 'Argumentation Quality',
+    L9: 'Pragmatic Stance', L10: 'Affective & Engagement', L11: 'Reader-Adaptive Scoring',
+  };
+  const ALL_LAYERS = ['L0','L1','L2','L3','L4','L5','L6','L7','L8','L9','L10','L11'];
+
+  // Pre-analysis review state
+  let preAnalysisData = null;
+
+  async function renderPreAnalysis() {
     const s = screen();
     const cfg = wizardConfig;
-    const allLayers = ['L0','L1','L2','L3','L4','L5','L6','L7','L8','L9','L10','L11'];
-    const enabled = new Set(cfg.enabledLayers || allLayers.slice(0, 11));
 
     s.innerHTML = `
-      ${header('&larr; Back', '<span data-i18n="c456c2494bf2182e">Step 2 of 3: Configure</span>')}
+      ${header('&larr; Back', 'Document Review')}
       <div class="proj-step-body">
-        <div class="proj-step-label">${selectedFiles.length} file${selectedFiles.length>1?'s':''} <span data-i18n="d7cbbb688b2e506c">selected</span></div>
-        <div class="proj-config-form">
+        <div class="proj-step-label" style="margin-bottom:4px">Identifying document types for ${selectedFiles.length} file${selectedFiles.length>1?'s':''}...</div>
+        <div class="proj-preanalysis-note">AI analyzes each file to recommend the right measures. You can adjust before running.</div>
+        <div id="pre-analysis-results" class="proj-preanalysis-loading">
+          <div class="proj-preanalysis-spinner"></div>
+          Detecting document types...
+        </div>
+        <div class="proj-config-extras" id="pre-analysis-extras" style="display:none">
           <div>
-            <div class="field-label" data-i18n="160ae9e27ab03126">Analysis layers</div>
-            <div class="options-row" style="flex-wrap:wrap;gap:6px">
-              ${allLayers.map(l => `<div class="opt-chip${enabled.has(l)?' on':''}" data-layer="${l}"><div class="opt-dot"></div>${l}</div>`).join('')}
-            </div>
+            <div class="field-label">Assignment prompt <span style="font-weight:400;color:var(--text-tertiary)">(optional)</span></div>
+            <input type="text" id="proj-cfg-prompt" value="${esc(cfg.promptText||'')}" placeholder="e.g. Discuss the impact of AI on education…" class="proj-input">
           </div>
           <div>
-            <div class="field-label"><span data-i18n="6a72b0aeff61b579">Assignment prompt</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="0059798b7f7023e4">(optional)</span></div>
-            <input type="text" id="proj-cfg-prompt" value="${esc(cfg.promptText||'')}" placeholder="e.g. Discuss the impact of AI…" class="proj-input">
-          </div>
-          <div>
-            <div class="field-label"><span data-i18n="6da795a8664f37f6">Genre</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="0059798b7f7023e4">(optional)</span></div>
-            <select id="proj-cfg-genre" class="proj-input"><option value="" data-i18n="285bb526e02fedf1">Select genre…</option></select>
-          </div>
-          <div>
-            <div class="field-label"><span data-i18n="5b32ac8d29a125c8">Learner ID</span> <span style="font-weight:400;color:var(--text-tertiary)" data-i18n="2b9079c02d741dc0">(for L11)</span></div>
+            <div class="field-label">Learner ID <span style="font-weight:400;color:var(--text-tertiary)">(for adaptive scoring)</span></div>
             <input type="text" id="proj-cfg-learner" value="${esc(cfg.learnerId||'')}" placeholder="student_4821" class="proj-input">
           </div>
         </div>
         <div class="proj-step-nav">
           <div></div>
-          <button class="proj-next-btn" id="proj-next2"><span data-i18n="9594e1f9746f7826">Next: Review &amp; Estimate</span> &rarr;</button>
+          <button class="proj-next-btn" id="proj-next-pre" disabled>Confirm &amp; Estimate Cost &rarr;</button>
         </div>
       </div>`;
 
-    // Populate genres
+    s.querySelector('.proj-back-btn').addEventListener('click', renderStep1);
+
+    // Fetch pre-analysis
+    try {
+      const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/pre-analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileNames: selectedFiles }),
+      });
+      const data = await resp.json();
+      preAnalysisData = data.files || [];
+      renderPreAnalysisResults(s);
+    } catch (err) {
+      // Fallback: skip pre-analysis, go with defaults
+      const container = s.querySelector('#pre-analysis-results');
+      container.className = '';
+      container.innerHTML = `<div style="color:var(--amber);font-size:12px;padding:12px">Could not detect document types. Using default analysis settings.</div>`;
+      preAnalysisData = selectedFiles.map(f => ({ fileName: f, genre: 'other', profile: 'standard-prose', layers: ALL_LAYERS.slice(0, 11), label: 'Standard Prose Analysis', description: 'Full analysis with all layers.' }));
+      s.querySelector('#pre-analysis-extras').style.display = '';
+      const nextBtn = s.querySelector('#proj-next-pre');
+      nextBtn.disabled = false;
+      nextBtn.addEventListener('click', () => { gatherPreAnalysisConfig(s); renderStep3(); });
+    }
+  }
+
+  function renderPreAnalysisResults(s) {
+    const container = s.querySelector('#pre-analysis-results');
+    container.className = 'proj-preanalysis-results';
+
+    // Compute merged layer set (union of all file recommendations)
+    const mergedLayers = new Set();
+    preAnalysisData.forEach(f => (f.layers || []).forEach(l => mergedLayers.add(l)));
+
+    container.innerHTML = preAnalysisData.map((f, i) => {
+      const conf = f.confidence != null ? Math.round(f.confidence * 100) : null;
+      const confColor = conf >= 80 ? 'var(--teal)' : conf >= 50 ? 'var(--amber)' : 'var(--coral)';
+      return `
+      <div class="proj-preanalysis-card" data-idx="${i}">
+        <div class="proj-preanalysis-card-header">
+          <div class="proj-preanalysis-filename">${esc(f.fileName)}</div>
+          ${conf != null ? `<span class="proj-preanalysis-conf" style="color:${confColor}">${conf}% confident</span>` : ''}
+        </div>
+        <div class="proj-preanalysis-genre-row">
+          <div class="proj-preanalysis-genre-label">Document type:</div>
+          <select class="proj-input proj-preanalysis-genre-select" data-idx="${i}">
+            <option value="">Select type...</option>
+          </select>
+        </div>
+        ${f.reasoning ? `<div class="proj-preanalysis-reasoning">${esc(f.reasoning)}</div>` : ''}
+        <div class="proj-preanalysis-profile">
+          <div class="proj-preanalysis-profile-label">${esc(f.label || 'Standard Prose Analysis')}</div>
+          <div class="proj-preanalysis-profile-desc">${esc(f.description || '')}</div>
+        </div>
+        <div class="proj-preanalysis-layers">
+          <div class="field-label" style="margin-bottom:4px;font-size:11px">Recommended layers:</div>
+          <div class="options-row" style="flex-wrap:wrap;gap:4px">
+            ${ALL_LAYERS.map(l => {
+              const isOn = (f.layers || []).includes(l);
+              const skipReason = f.rationale && f.rationale[l + '-skip'];
+              return `<div class="opt-chip opt-chip-sm${isOn ? ' on' : ''}" data-layer="${l}" data-idx="${i}" ${skipReason ? `title="${escAttr(skipReason)}"` : `title="${LAYER_LABELS[l] || l}"`}>
+                <div class="opt-dot"></div>${l}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Populate genre selects
     fetch('/api/genres').then(r=>r.json()).then(data => {
-      const sel = s.querySelector('#proj-cfg-genre');
-      (data.categories||[]).forEach(cat => {
-        const grp = document.createElement('optgroup');
-        grp.label = cat.category;
-        if (cat.i18n) grp.setAttribute('data-i18n-label', cat.i18n);
-        cat.genres.forEach(g => {
-          const opt = document.createElement('option');
-          opt.value = g.id; opt.textContent = g.name;
-          if (g.i18n) opt.setAttribute('data-i18n', g.i18n);
-          if (g.id === cfg.genre) opt.selected = true;
-          grp.appendChild(opt);
+      s.querySelectorAll('.proj-preanalysis-genre-select').forEach(sel => {
+        const idx = parseInt(sel.dataset.idx);
+        const currentGenre = preAnalysisData[idx]?.genre || '';
+        (data.categories||[]).forEach(cat => {
+          const grp = document.createElement('optgroup');
+          grp.label = cat.category;
+          cat.genres.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.name;
+            if (g.id === currentGenre) opt.selected = true;
+            grp.appendChild(opt);
+          });
+          sel.appendChild(grp);
         });
-        sel.appendChild(grp);
+        // On genre change, update recommended layers
+        sel.addEventListener('change', async () => {
+          const newGenre = sel.value;
+          if (!newGenre) return;
+          try {
+            const resp = await fetch(`/api/measure-profiles?genre=${encodeURIComponent(newGenre)}`);
+            const profile = await resp.json();
+            preAnalysisData[idx].genre = newGenre;
+            preAnalysisData[idx].layers = profile.layers || ALL_LAYERS.slice(0, 11);
+            preAnalysisData[idx].label = profile.label || '';
+            preAnalysisData[idx].description = profile.description || '';
+            preAnalysisData[idx].rationale = profile.rationale || {};
+            renderPreAnalysisResults(s);
+          } catch {}
+        });
       });
     }).catch(()=>{});
 
-    s.querySelectorAll('.opt-chip').forEach(chip => chip.addEventListener('click', () => chip.classList.toggle('on')));
-    s.querySelector('.proj-back-btn').addEventListener('click', renderStep1);
-    s.querySelector('#proj-next2').addEventListener('click', () => {
-      gatherConfig(s);
+    // Layer chip toggles
+    s.querySelectorAll('.proj-preanalysis-card .opt-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('on');
+        const idx = parseInt(chip.dataset.idx);
+        const layer = chip.dataset.layer;
+        const layers = preAnalysisData[idx].layers || [];
+        if (chip.classList.contains('on')) {
+          if (!layers.includes(layer)) layers.push(layer);
+        } else {
+          const pos = layers.indexOf(layer);
+          if (pos >= 0) layers.splice(pos, 1);
+        }
+        preAnalysisData[idx].layers = layers;
+      });
+    });
+
+    // Show extras and enable next
+    s.querySelector('#pre-analysis-extras').style.display = '';
+    const nextBtn = s.querySelector('#proj-next-pre');
+    nextBtn.disabled = false;
+    nextBtn.addEventListener('click', () => {
+      gatherPreAnalysisConfig(s);
       renderStep3();
     });
   }
 
-  function gatherConfig(s) {
-    const layers = [];
-    s.querySelectorAll('.opt-chip.on').forEach(c => layers.push(c.dataset.layer));
+  function gatherPreAnalysisConfig(s) {
+    // Merge layers from all files into a single set
+    const mergedLayers = new Set();
+    let genre = '';
+    (preAnalysisData || []).forEach(f => {
+      (f.layers || []).forEach(l => mergedLayers.add(l));
+      if (!genre && f.genre) genre = f.genre;
+    });
     wizardConfig = {
-      enabledLayers: layers,
+      enabledLayers: ALL_LAYERS.filter(l => mergedLayers.has(l)),
       promptText: (s.querySelector('#proj-cfg-prompt')?.value || '').trim(),
-      genre: s.querySelector('#proj-cfg-genre')?.value || '',
+      genre: genre,
       learnerId: (s.querySelector('#proj-cfg-learner')?.value || '').trim(),
     };
   }
@@ -1064,6 +1177,9 @@ const Projects = (() => {
 
   async function renderStep3() {
     const s = screen();
+
+    // Build per-file genre info for display
+    const fileGenres = (preAnalysisData || []).map(f => `${esc(f.fileName)}: ${esc(f.label || f.genre || 'Standard')}`).join('<br>');
 
     s.innerHTML = `
       ${header('&larr; Back', '<span data-i18n="0f38605c24042fbd">Review &amp; Run</span>')}
@@ -1086,7 +1202,7 @@ const Projects = (() => {
         </div>
       </div>`;
 
-    s.querySelector('.proj-back-btn').addEventListener('click', renderStep0);
+    s.querySelector('.proj-back-btn').addEventListener('click', renderPreAnalysis);
 
     // Save config & fetch estimate
     await Auth.apiFetch(`/api/projects/${currentProject.id}`, {

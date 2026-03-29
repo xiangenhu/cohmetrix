@@ -38,6 +38,16 @@ app.get('/api/genres', (req, res) => {
   res.json({ categories });
 });
 
+// Measure profiles for genre→layer mapping (static, no auth needed)
+app.get('/api/measure-profiles', (req, res) => {
+  const { MEASURE_PROFILES, getRecommendedLayers } = require('./services/genres');
+  const genreId = req.query.genre;
+  if (genreId) {
+    return res.json(getRecommendedLayers(genreId));
+  }
+  res.json({ profiles: MEASURE_PROFILES });
+});
+
 // App metadata for landing page (no auth needed)
 app.get('/api/meta', (req, res) => {
   const { layers } = require('./layers');

@@ -655,3 +655,132 @@
   letter-spacing: 0.5px;
   color: var(--text-tertiary);
 }
+
+/* ── Pre-analysis review ── */
+.proj-preanalysis-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.proj-preanalysis-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.proj-preanalysis-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border-secondary);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: pa-spin 0.7s linear infinite;
+}
+@keyframes pa-spin { to { transform: rotate(360deg); } }
+
+.proj-preanalysis-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.proj-preanalysis-card {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: border-color 0.15s;
+}
+.proj-preanalysis-card:hover { border-color: var(--border-primary); }
+
+.proj-preanalysis-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.proj-preanalysis-filename {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 65%;
+}
+
+.proj-preanalysis-conf {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.proj-preanalysis-genre-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.proj-preanalysis-genre-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.proj-preanalysis-genre-select {
+  flex: 1;
+  max-width: 280px;
+  font-size: 12px !important;
+  padding: 5px 8px !important;
+}
+
+.proj-preanalysis-reasoning {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.proj-preanalysis-profile {
+  margin-bottom: 10px;
+}
+.proj-preanalysis-profile-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+  margin-bottom: 2px;
+}
+.proj-preanalysis-profile-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.proj-preanalysis-layers .field-label {
+  color: var(--text-tertiary);
+}
+
+.opt-chip-sm {
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+  gap: 4px !important;
+}
+.opt-chip-sm .opt-dot {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+.proj-config-extras {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
