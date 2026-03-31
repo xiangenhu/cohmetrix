@@ -462,13 +462,40 @@ const Results = (() => {
     const displayMetrics = Object.entries(l.metrics)
       .filter(([, m]) => typeof m.value !== 'string' || !m.value.startsWith('{'));
 
-    const metricsHtml = displayMetrics.map(([id, m]) => {
+    // Separate applicable and non-applicable metrics
+    const applicableMetrics = [];
+    const nonApplicableMetrics = [];
+    displayMetrics.forEach(([id, m]) => {
+      const app = m.applicability || { applicable: true, weight: 1.0 };
+      if (app.applicable === false) {
+        nonApplicableMetrics.push([id, m]);
+      } else {
+        applicableMetrics.push([id, m]);
+      }
+    });
+
+    function renderMetricCard(id, m) {
+      const app = m.applicability || { applicable: true, weight: 1.0 };
+      const isNA = app.applicable === false;
+      const isReduced = app.applicable !== false && app.weight != null && app.weight < 1.0;
+      const cardClass = isNA ? 'metric-card metric-not-applicable'
+                       : isReduced ? 'metric-card metric-reduced-weight'
+                       : 'metric-card';
+
       const pct = metricPct(m);
       const color = metricColor(pct);
       const hasEvidence = m.evidence && m.evidence.length > 0;
       const hasPlain = m.plainDescription && m.plainDescription.length > 0;
       const verdict = m.verdict || '';
       const verdictHtml = verdict ? `<span class="mc-verdict ${verdict}">${verdict.replace('_', ' ')}</span>` : '';
+
+      // Applicability badge
+      let appBadge = '';
+      if (isNA) {
+        appBadge = `<span class="mc-na-badge" title="${escapeHtml(app.reason || '')}">n/a for genre</span>`;
+      } else if (isReduced) {
+        appBadge = `<span class="mc-weight-badge" title="${escapeHtml(app.reason || '')}">weight: ${app.weight}</span>`;
+      }
 
       // Evidence section
       let evidenceHtml = '';
@@ -487,16 +514,30 @@ const Results = (() => {
       // Distribution statistics section
       const distHtml = renderDistribution(id, m.distribution);
 
-      return `<div class="metric-card">
-        <div class="mc-id">${id}<button class="help-btn" data-help-id="${id}" title="What is ${m.label}?">?</button>${verdictHtml}</div>
+      return `<div class="${cardClass}">
+        <div class="mc-id">${id}${appBadge}<button class="help-btn" data-help-id="${id}" title="What is ${m.label}?">?</button>${verdictHtml}</div>
         <div class="mc-val">${m.value}<span style="font-size:11px;color:var(--text-tertiary);font-weight:400"> ${m.unit}</span></div>
         <div class="mc-label" data-i18n-dynamic>${m.label}</div>
         ${hasPlain ? `<div class="mc-plain" data-i18n-dynamic>${escapeHtml(m.plainDescription)}</div>` : ''}
-        <div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${color}"></div></div>
+        ${!isNA ? `<div class="mc-bar-bg"><div class="mc-bar" style="width:${pct}%;background:${color}"></div></div>` : ''}
         ${distHtml}
         ${evidenceHtml}
       </div>`;
-    }).join('');
+    }
+
+    let metricsHtml = applicableMetrics.map(([id, m]) => renderMetricCard(id, m)).join('');
+
+    // Non-applicable metrics behind a toggle
+    if (nonApplicableMetrics.length > 0) {
+      const naCards = nonApplicableMetrics.map(([id, m]) => renderMetricCard(id, m)).join('');
+      metricsHtml += `
+        <div class="mc-na-toggle-wrap">
+          <button class="mc-na-toggle" onclick="const c=this.nextElementSibling;const open=c.classList.toggle('open');this.textContent=open?'Hide ${nonApplicableMetrics.length} non-applicable metrics \\u25b4':'Show ${nonApplicableMetrics.length} non-applicable metrics \\u25be'">
+            Show ${nonApplicableMetrics.length} non-applicable metrics \u25be
+          </button>
+          <div class="mc-na-container">${naCards}</div>
+        </div>`;
+    }
 
     // Layer summary (plain language) + collapsible technical basis
     const summaryHtml = hasLayerSummary
@@ -508,11 +549,16 @@ const Results = (() => {
          <div class="cp-basis-technical" id="tech-basis"><span data-i18n="${basisEntry.i18n}">${escapeHtml(technicalBasis)}</span></div>`
       : '';
 
+    const metricCountHtml = nonApplicableMetrics.length > 0
+      ? `<div class="cp-metric-count">${applicableMetrics.length} of ${displayMetrics.length} metrics applicable for this genre</div>`
+      : '';
+
     cp.innerHTML = `
       <div class="cp-header">
         <div class="cp-layer-name">${l.layerId} — <span data-i18n-dynamic>${l.layerName}</span></div>
         <div class="cp-layer-tag">score: <strong>${l.score}/100</strong></div>
       </div>
+      ${metricCountHtml}
       ${summaryHtml}
       ${basisHtml}
       <div class="metrics-grid">${metricsHtml}</div>

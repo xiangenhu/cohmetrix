@@ -15,6 +15,7 @@ const { parseDocument } = require('../utils/nlp');
 const config = require('../config');
 const llm = require('./llm');
 const { enrichWithEvidence } = require('./evidence');
+const { getApplicableMetrics } = require('./genres');
 
 // Layer execution groups for parallel processing
 const EXECUTION_PLAN = [
@@ -125,6 +126,28 @@ async function runAnalysis(text, options = {}) {
     enrichedLayers = Object.values(layerResults);
   }
 
+  // Tag metrics with genre-specific applicability
+  let genreProfile = null;
+  if (genre) {
+    const applicability = getApplicableMetrics(genre);
+    genreProfile = {
+      profile: applicability.profile,
+      label: applicability.label,
+      metricOverrides: applicability.metricOverrides,
+    };
+    enrichedLayers.forEach(layer => {
+      if (!layer.metrics) return;
+      Object.keys(layer.metrics).forEach(metricId => {
+        const info = applicability.getMetricApplicability(metricId);
+        layer.metrics[metricId].applicability = {
+          applicable: info.applicable,
+          weight: info.weight,
+          reason: info.reason,
+        };
+      });
+    });
+  }
+
   // Compute composite scores (PCA analog: F1-F8)
   const compositeScores = computeCompositeScores(layerResults);
 
@@ -168,6 +191,7 @@ async function runAnalysis(text, options = {}) {
     overallScore,
     feedback,
     readerProfile: layerResults.L11?.readerProfile || null,
+    genreProfile,
     layerTimings,
   };
 }

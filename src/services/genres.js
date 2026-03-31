@@ -757,6 +757,127 @@ const TYPE_TO_PROFILE = {
 };
 
 /**
+ * Metric-level applicability overrides per measure profile.
+ *
+ * Sparse representation: only metrics that deviate from the default
+ * (applicable = true, weight = 1.0) are listed. If a metric's layer is
+ * included in the profile and the metric is not listed here, it is fully
+ * applicable. Two override types:
+ *   - { applicable: false, reason } — metric computed but tagged as non-applicable
+ *   - { weight: 0.3–0.5, reason }  — applicable but less important for the genre
+ */
+const METRIC_APPLICABILITY = {
+
+  'standard-prose': {
+    // All metrics fully applicable — no overrides
+  },
+
+  'code': {
+    'L0.7': { applicable: false, reason: 'MATTR measures prose vocabulary diversity; variable/function names follow different patterns' },
+    'L0.8': { applicable: false, reason: 'Paragraph length assumes prose paragraphs, not code blocks' },
+    'L0.9': { applicable: false, reason: 'Intro/body/conclusion structure does not apply to source code' },
+    'L1.1': { weight: 0.5, reason: 'Token surprisal is language-model-based; code tokens have different predictability patterns' },
+    'L1.3': { applicable: false, reason: 'Age of acquisition norms are calibrated for natural language, not identifiers' },
+    'L1.4': { applicable: false, reason: 'Concreteness norms do not apply to programming keywords and identifiers' },
+    'L1.5': { applicable: false, reason: 'Academic Word List is irrelevant to programming vocabulary' },
+    'L1.6': { applicable: false, reason: 'Rare word ratio is calibrated against natural language frequency; code identifiers are domain-specific' },
+    'L1.7': { weight: 0.5, reason: 'Register consistency is meaningful for code comments but not for code syntax itself' },
+    'L1.8': { applicable: false, reason: 'Morphological complexity norms assume natural language derivation patterns' },
+    'L2.5': { applicable: false, reason: 'Passive voice is a prose construct; code uses imperative/declarative statements' },
+    'L2.6': { applicable: false, reason: 'NP elaboration assumes noun phrases in prose, not code expressions' },
+    'L2.7': { applicable: false, reason: 'Left-branching ratio assumes prose clause structure' },
+    'L4.7': { applicable: false, reason: 'Intro-conclusion alignment assumes essay structure' },
+  },
+
+  'conversational': {
+    'L0.8': { weight: 0.5, reason: 'Paragraph structure is less defined in chat; messages replace paragraphs' },
+    'L0.9': { applicable: false, reason: 'Intro/body/conclusion structure does not apply to conversations' },
+    'L1.5': { applicable: false, reason: 'Academic word density is not a meaningful measure for conversational text' },
+    'L1.8': { weight: 0.5, reason: 'Morphological complexity expectations differ in casual speech' },
+    'L2.5': { weight: 0.5, reason: 'Passive voice norms are different in conversational contexts' },
+    'L2.6': { weight: 0.5, reason: 'NP elaboration is typically lower in conversation without being a deficiency' },
+    'L2.7': { weight: 0.5, reason: 'Left-branching norms differ in spoken/chat register; fragments are acceptable' },
+    'L4.7': { applicable: false, reason: 'Intro-conclusion alignment assumes essay structure, not conversation' },
+    'L9.6': { applicable: false, reason: 'Formal evidentiality and source attribution are not expected in conversation' },
+  },
+
+  'data': {
+    'L0.4': { weight: 0.5, reason: 'Mean sentence length norms assume prose; data entries may be fragments' },
+    'L0.5': { applicable: false, reason: 'Sentence length variance is not meaningful for tabular/structured data' },
+    'L0.7': { applicable: false, reason: 'MATTR assumes continuous prose; structured data has different repetition patterns' },
+    'L0.8': { applicable: false, reason: 'Paragraph length is not meaningful for structured/tabular content' },
+    'L0.9': { applicable: false, reason: 'Intro/body/conclusion structure does not apply to data' },
+    'L1.1': { applicable: false, reason: 'Surprisal norms assume continuous prose context' },
+    'L1.2': { applicable: false, reason: 'Surprisal SD requires meaningful prose context' },
+    'L1.3': { applicable: false, reason: 'Age of acquisition is not meaningful for data labels and values' },
+    'L1.4': { applicable: false, reason: 'Concreteness norms are not calibrated for data content' },
+    'L1.5': { applicable: false, reason: 'Academic word density is not a meaningful measure for data' },
+    'L1.6': { applicable: false, reason: 'Rare word ratio has no meaningful baseline for structured data' },
+    'L1.7': { applicable: false, reason: 'Register consistency assumes prose with a sustained register' },
+    'L1.8': { applicable: false, reason: 'Morphological complexity is not meaningful for data entries' },
+    'L4.7': { applicable: false, reason: 'Intro-conclusion alignment assumes essay structure' },
+  },
+
+  'legal': {
+    'L0.9': { weight: 0.5, reason: 'Legal documents often use numbered sections rather than intro/body/conclusion' },
+    'L1.3': { weight: 0.5, reason: 'Age of acquisition norms may not reflect legal terminology acquisition patterns' },
+    'L1.6': { weight: 0.5, reason: 'Legal terminology is "rare" in general corpora but standard in legal writing' },
+    'L2.5': { weight: 0.3, reason: 'Passive voice is conventionally high in legal writing and not a deficiency' },
+    'L8.4': { weight: 0.5, reason: 'Counter-arguments apply to briefs/filings but not contracts or policies' },
+    'L8.5': { weight: 0.5, reason: 'Rebuttal quality applies to litigation documents, not all legal texts' },
+    'L9.8': { applicable: false, reason: 'First-person stance is deliberately avoided in most legal writing' },
+  },
+
+  'narrative': {
+    'L0.9': { weight: 0.5, reason: 'Narrative structure follows story arcs, not essay intro/body/conclusion' },
+    'L1.5': { applicable: false, reason: 'Academic word density is not relevant to fiction or narrative writing' },
+    'L1.7': { weight: 0.5, reason: 'Register shifts may be deliberate in narrative (dialogue vs. narration)' },
+    'L2.5': { weight: 0.5, reason: 'Passive voice evaluation differs in narrative; stylistic choice, not deficiency' },
+    'L3.8': { weight: 0.5, reason: 'Pronoun-antecedent distance norms differ in narrative with sustained character focus' },
+    'L4.7': { weight: 0.5, reason: 'Stories may intentionally diverge from opening setup; circularity is optional' },
+    'L5.4': { weight: 0.5, reason: 'Adversative connectives are less central to narrative than to argumentation' },
+    'L5.6': { weight: 0.5, reason: 'Causal cohesion ratio norms differ; narrative causality is event-driven, not argument-driven' },
+    'L7.4': { weight: 0.5, reason: 'Evidence relations are rhetorical; narrative uses scene/summary, not evidence' },
+    'L7.5': { weight: 0.5, reason: 'Contrast/concession is rhetorical-argumentative; narrative uses conflict differently' },
+  },
+
+  'academic': {
+    'L3.8': { weight: 0.5, reason: 'Academic writing prefers explicit noun repetition over pronoun reference' },
+    'L9.8': { weight: 0.5, reason: 'First-person stance acceptability varies by discipline' },
+  },
+
+  'poetic': {
+    'L0.4': { weight: 0.5, reason: 'Mean sentence length norms differ radically in poetry; line != sentence' },
+    'L0.5': { weight: 0.5, reason: 'Sentence length variance is stylistically intentional in poetry' },
+    'L0.7': { applicable: false, reason: 'MATTR is calibrated for prose windows; poems are too short and use intentional repetition' },
+    'L0.8': { applicable: false, reason: 'Paragraph length does not apply; poetry uses stanzas with different conventions' },
+    'L0.9': { applicable: false, reason: 'Intro/body/conclusion structure does not apply to poetry' },
+    'L1.1': { weight: 0.5, reason: 'Surprisal norms differ in poetic language where unusual word choices are valued' },
+    'L1.3': { weight: 0.5, reason: 'Age of acquisition interpretation differs; poets mix registers deliberately' },
+    'L1.5': { applicable: false, reason: 'Academic word density is irrelevant to poetry' },
+    'L1.6': { weight: 0.5, reason: 'Rare words may be a deliberate poetic strength, not a deficiency' },
+    'L1.7': { applicable: false, reason: 'Register consistency assumes sustained prose; poetry mixes registers deliberately' },
+    'L2.5': { weight: 0.5, reason: 'Passive voice in poetry is a stylistic tool, not a clarity issue' },
+    'L2.6': { weight: 0.5, reason: 'NP elaboration norms differ; poetry may favor sparse or dense NPs for effect' },
+    'L2.7': { weight: 0.5, reason: 'Left-branching in poetry is a stylistic choice, not a complexity indicator' },
+    'L4.7': { applicable: false, reason: 'Intro-conclusion alignment assumes essay framing, not poetic form' },
+    'L10.6': { applicable: false, reason: 'Affect-argument alignment assumes argumentative structure; not applicable to poetry' },
+    'L10.7': { applicable: false, reason: 'Emotional intrusion is the purpose of poetry, not a flaw' },
+  },
+
+  'technical': {
+    'L0.9': { weight: 0.5, reason: 'Technical documents use sections/headings rather than intro/body/conclusion' },
+    'L1.1': { weight: 0.5, reason: 'Technical vocabulary has high surprisal in general models but is expected in context' },
+    'L1.3': { weight: 0.5, reason: 'Age of acquisition norms may not reflect technical terminology' },
+    'L1.5': { weight: 0.5, reason: 'Academic word density matters but technical jargon may not be in the AWL' },
+    'L1.6': { weight: 0.5, reason: 'Technical terms are "rare" in general corpora but standard in technical writing' },
+    'L2.5': { weight: 0.5, reason: 'Passive voice is conventionally accepted in technical documentation' },
+    'L3.8': { weight: 0.5, reason: 'Technical writing prefers explicit noun repetition over pronoun reference' },
+    'L7.5': { applicable: false, reason: 'Contrast/concession relations are minimal in instructional/procedural text' },
+  },
+};
+
+/**
  * Get recommended layers and profile for a genre ID.
  * Returns { profile, layers[], label, description, rationale }.
  */
@@ -769,11 +890,56 @@ function getRecommendedLayers(genreId) {
   return { profile: profileKey, ...profile };
 }
 
+/**
+ * Get full metric applicability for a genre, including layer-level and metric-level info.
+ *
+ * @param {string} genreId - Genre identifier (e.g. 'research-paper', 'poetry-general')
+ * @returns {{ profile, label, description, layers, metricOverrides, getMetricApplicability }}
+ */
+function getApplicableMetrics(genreId) {
+  const exp = GENRE_EXPECTATIONS[genreId];
+  const profileKey = exp ? (TYPE_TO_PROFILE[exp.type] || 'standard-prose') : 'standard-prose';
+  const profile = MEASURE_PROFILES[profileKey] || MEASURE_PROFILES['standard-prose'];
+  const overrides = METRIC_APPLICABILITY[profileKey] || {};
+
+  return {
+    profile: profileKey,
+    label: profile.label,
+    description: profile.description,
+    layers: profile.layers,
+    metricOverrides: overrides,
+
+    /**
+     * Get applicability info for a single metric.
+     * @param {string} metricId - e.g. 'L1.5'
+     * @returns {{ applicable: boolean, weight: number, reason: string|null, inScope: boolean }}
+     */
+    getMetricApplicability(metricId) {
+      const layerId = metricId.split('.')[0];
+      if (!profile.layers.includes(layerId)) {
+        return { applicable: false, weight: 0, reason: 'Layer excluded for this genre profile', inScope: false };
+      }
+      const override = overrides[metricId];
+      if (override) {
+        return {
+          applicable: override.applicable !== false,
+          weight: override.weight || (override.applicable === false ? 0 : 1.0),
+          reason: override.reason || null,
+          inScope: true,
+        };
+      }
+      return { applicable: true, weight: 1.0, reason: null, inScope: true };
+    },
+  };
+}
+
 module.exports = {
   GENRE_CATEGORIES,
   GENRE_EXPECTATIONS,
   MEASURE_PROFILES,
+  METRIC_APPLICABILITY,
   getGenreContext,
   getGenre,
   getRecommendedLayers,
+  getApplicableMetrics,
 };
