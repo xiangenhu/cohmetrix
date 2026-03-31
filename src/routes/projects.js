@@ -7,7 +7,7 @@ const { extractText, convertDocxToHtml, fixFilename } = require('../utils/filePa
 const { runAnalysis } = require('../services/pipeline');
 const llm = require('../services/llm');
 const config = require('../config');
-const { getRecommendedLayers, GENRE_CATEGORIES } = require('../services/genres');
+const { getRecommendedLayers, GENRE_CATEGORIES, GENRE_EXPECTATIONS } = require('../services/genres');
 
 const router = express.Router();
 const upload = multer({
@@ -354,6 +354,72 @@ RULES:
     res.json({ files: results });
   } catch (err) {
     console.error('[POST /pre-analyze]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/projects/:id/genre-analysis — LLM-powered detailed genre analysis of a file.
+ * Body: { fileName }
+ * Returns: { analysis }
+ */
+router.post('/:id/genre-analysis', async (req, res) => {
+  try {
+    const userId = uid(req.user);
+    const { fileName } = req.body;
+    if (!fileName) return res.status(400).json({ error: 'fileName is required' });
+
+    const doc = await storage.loadProjectFile(userId, req.params.id, fileName);
+    if (!doc) return res.status(404).json({ error: 'File not found' });
+
+    const text = await extractText(doc.buffer, doc.name);
+    const preview = text.substring(0, 3000);
+    const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+
+    // Load metadata for genre context
+    const meta = await storage.loadProjectFileMeta(userId, req.params.id, fileName) || {};
+    const genre = meta.genre || '';
+    const exp = GENRE_EXPECTATIONS[genre] || {};
+    const genreLabel = exp.label || genre || 'Unknown';
+
+    const prompt = `You are an expert in discourse analysis, genre theory, and computational linguistics.
+
+Analyze the following document in detail from a genre perspective. The system has classified it as "${genreLabel}" (type: ${exp.type || 'unknown'}).
+
+DOCUMENT (${wordCount} words, first ~3000 chars):
+"""
+${preview}
+"""
+
+Provide a detailed genre analysis covering:
+
+1. **Genre Identification**: Confirm or refine the detected genre. Is this classification accurate? What specific genre conventions does the text follow?
+
+2. **Register & Formality**: Analyze the register (frozen, formal, consultative, casual, intimate). How does the language formality match the genre expectations (expected: ${exp.formality || 'unknown'})?
+
+3. **Discourse Structure**: How is the text organized? Does it follow expected structural patterns for this genre (e.g., introduction-body-conclusion, narrative arc, problem-solution)?
+
+4. **Rhetorical Features**: What rhetorical strategies are employed? Consider argumentation ${exp.argumentation ? `(expected: ${exp.argumentation})` : ''}, persuasion, evidence use, citation patterns ${exp.citation ? `(expected: ${exp.citation})` : ''}.
+
+5. **Audience & Purpose**: Who is the intended audience? What is the communicative purpose? How well does the text achieve its purpose?
+
+6. **Affect & Stance**: Analyze emotional tone and authorial stance. How does this match genre expectations (expected affect level: ${exp.affect || 'unknown'}, hedging: ${exp.hedging || 'unknown'})?
+
+7. **Strengths & Considerations**: What does this document do well within its genre? What aspects might benefit from attention in the cohesion analysis?
+
+Write in clear, accessible prose. Use the section headings above. Be specific — reference actual passages from the text to support your observations. Keep each section to 2-3 sentences.`;
+
+    const language = llm.getRequestLanguage(req);
+    const analysis = await llm.complete(prompt, {
+      maxTokens: 1000,
+      temperature: 0.3,
+      language,
+      systemPrompt: 'You are a genre analysis expert. Provide insightful, document-specific analysis. Be concrete and reference the actual text.',
+    });
+
+    res.json({ analysis: analysis.trim(), genre, genreLabel, wordCount });
+  } catch (err) {
+    console.error('[POST /genre-analysis]', err);
     res.status(500).json({ error: err.message });
   }
 });

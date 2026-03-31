@@ -1074,12 +1074,18 @@ const Projects = (() => {
           </select>
         </div>
         ${f.reasoning ? `<div class="proj-preanalysis-reasoning">${esc(f.reasoning)}</div>` : ''}
+        <div style="margin-bottom:6px">
+          <button class="proj-genre-analysis-btn" data-idx="${i}">Genre Analysis</button>
+        </div>
         <div class="proj-preanalysis-profile">
           <div class="proj-preanalysis-profile-label">${esc(f.label || 'Standard Prose Analysis')}</div>
           <div class="proj-preanalysis-profile-desc">${esc(f.description || '')}</div>
         </div>
         <div class="proj-preanalysis-layers">
-          <div class="field-label" style="margin-bottom:4px;font-size:11px">Recommended layers:</div>
+          <div class="field-label" style="margin-bottom:4px;font-size:11px;display:flex;align-items:center;gap:6px">
+            Recommended layers:
+            <button class="proj-explain-layers-btn" data-idx="${i}" title="Why these layers?">?</button>
+          </div>
           <div class="options-row" style="flex-wrap:wrap;gap:4px">
             ${ALL_LAYERS.map(l => {
               const isOn = (f.layers || []).includes(l);
@@ -1142,6 +1148,105 @@ const Projects = (() => {
           if (pos >= 0) layers.splice(pos, 1);
         }
         preAnalysisData[idx].layers = layers;
+      });
+    });
+
+    // Explain layers buttons — open modal
+    s.querySelectorAll('.proj-explain-layers-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx);
+        const f = preAnalysisData[idx];
+        const profileLabel = f.label || 'Standard Prose Analysis';
+
+        // Build modal
+        const overlay = document.createElement('div');
+        overlay.className = 'proj-modal-overlay';
+        overlay.innerHTML = `
+          <div class="proj-modal-backdrop"></div>
+          <div class="proj-modal proj-explain-modal">
+            <div class="proj-modal-header">
+              <div class="proj-modal-header-title">Why these layers? — ${esc(profileLabel)}</div>
+              <button class="proj-modal-close">&times;</button>
+            </div>
+            <div class="proj-modal-body">
+              <div class="proj-explain-loading">Generating explanation...</div>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+
+        const close = () => overlay.remove();
+        overlay.querySelector('.proj-modal-backdrop').addEventListener('click', close);
+        overlay.querySelector('.proj-modal-close').addEventListener('click', close);
+        document.addEventListener('keydown', function onKey(ev) {
+          if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); }
+        });
+
+        // Fetch LLM explanation
+        const body = overlay.querySelector('.proj-modal-body');
+        try {
+          const resp = await Auth.apiFetch('/api/explain-layers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ genre: f.genre, fileName: f.fileName }),
+          });
+          const data = await resp.json();
+          body.innerHTML = `<div class="proj-explain-content">${esc(data.explanation || 'No explanation available.')}</div>`;
+        } catch {
+          body.innerHTML = '<div class="proj-explain-content" style="color:var(--coral)">Could not generate explanation.</div>';
+        }
+      });
+    });
+
+    // Genre Analysis buttons — open modal
+    s.querySelectorAll('.proj-genre-analysis-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx);
+        const f = preAnalysisData[idx];
+
+        const overlay = document.createElement('div');
+        overlay.className = 'proj-modal-overlay';
+        overlay.innerHTML = `
+          <div class="proj-modal-backdrop"></div>
+          <div class="proj-modal proj-genre-analysis-modal">
+            <div class="proj-modal-header">
+              <div class="proj-modal-header-title">Genre Analysis — ${esc(f.fileName)}</div>
+              <button class="proj-modal-close">&times;</button>
+            </div>
+            <div class="proj-modal-body">
+              <div class="proj-explain-loading">Analyzing document genre...</div>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+
+        const close = () => overlay.remove();
+        overlay.querySelector('.proj-modal-backdrop').addEventListener('click', close);
+        overlay.querySelector('.proj-modal-close').addEventListener('click', close);
+        document.addEventListener('keydown', function onKey(ev) {
+          if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); }
+        });
+
+        const body = overlay.querySelector('.proj-modal-body');
+        try {
+          const resp = await Auth.apiFetch(`/api/projects/${currentProject.id}/genre-analysis`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: f.fileName }),
+          });
+          const data = await resp.json();
+          // Render markdown-like headings and paragraphs
+          let html = esc(data.analysis || 'No analysis available.');
+          html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          body.innerHTML = `
+            <div class="proj-genre-analysis-meta">
+              <span>Detected genre: <strong>${esc(data.genreLabel || f.genre || 'Unknown')}</strong></span>
+              <span>${(data.wordCount || 0).toLocaleString()} words</span>
+            </div>
+            <div class="proj-explain-content">${html}</div>`;
+        } catch {
+          body.innerHTML = '<div class="proj-explain-content" style="color:var(--coral)">Could not generate genre analysis.</div>';
+        }
       });
     });
 

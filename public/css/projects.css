@@ -778,6 +778,76 @@
   height: 5px !important;
 }
 
+/* Explain layers button & modal */
+.proj-explain-layers-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.15s;
+}
+.proj-explain-layers-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: var(--bg-tertiary);
+}
+.proj-explain-modal {
+  width: 520px;
+}
+.proj-explain-modal .proj-modal-body {
+  min-height: 80px;
+}
+.proj-explain-loading {
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: 12px;
+}
+.proj-explain-content {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+/* Genre analysis button & modal */
+.proj-genre-analysis-btn {
+  background: none;
+  border: 1px solid var(--border-primary);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.proj-genre-analysis-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--teal);
+}
+.proj-genre-analysis-modal {
+  width: 640px;
+}
+.proj-genre-analysis-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 0.5px solid var(--border-tertiary);
+}
+
 .proj-config-extras {
   margin-top: 14px;
   display: flex;

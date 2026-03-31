@@ -40,12 +40,66 @@ app.get('/api/genres', (req, res) => {
 
 // Measure profiles for genre→layer mapping (static, no auth needed)
 app.get('/api/measure-profiles', (req, res) => {
-  const { MEASURE_PROFILES, getRecommendedLayers } = require('./services/genres');
+  const { MEASURE_PROFILES, METRIC_APPLICABILITY, getRecommendedLayers, getApplicableMetrics } = require('./services/genres');
   const genreId = req.query.genre;
   if (genreId) {
-    return res.json(getRecommendedLayers(genreId));
+    const layers = getRecommendedLayers(genreId);
+    const metrics = getApplicableMetrics(genreId);
+    return res.json({ ...layers, metricOverrides: metrics.metricOverrides });
   }
-  res.json({ profiles: MEASURE_PROFILES });
+  res.json({ profiles: MEASURE_PROFILES, metricApplicability: METRIC_APPLICABILITY });
+});
+
+// LLM-powered explanation of why specific layers are recommended for a genre
+app.post('/api/explain-layers', requireAuth, async (req, res) => {
+  const llm = require('./services/llm');
+  const { GENRE_EXPECTATIONS, MEASURE_PROFILES, getRecommendedLayers } = require('./services/genres');
+  const { genre, fileName } = req.body;
+  if (!genre) return res.status(400).json({ error: 'genre is required' });
+
+  const rec = getRecommendedLayers(genre);
+  const exp = GENRE_EXPECTATIONS[genre] || {};
+  const enabledLayers = rec.layers || [];
+  const allLayers = ['L0','L1','L2','L3','L4','L5','L6','L7','L8','L9','L10'];
+  const skippedLayers = allLayers.filter(l => !enabledLayers.includes(l));
+  const layerNames = {
+    L0: 'Surface & Structural', L1: 'Lexical Sophistication', L2: 'Syntactic Complexity',
+    L3: 'Referential Cohesion', L4: 'Semantic Cohesion', L5: 'Connective & Deep Cohesion',
+    L6: 'Situation Model', L7: 'Rhetorical Structure', L8: 'Argumentation Quality',
+    L9: 'Pragmatic Stance', L10: 'Affective & Engagement',
+  };
+
+  const prompt = `You are an expert in computational linguistics and text cohesion analysis (Graesser & McNamara's multilevel discourse framework).
+
+A user is about to analyze a document classified as genre "${genre}" (type: ${exp.type || 'unknown'}, formality: ${exp.formality || 'unknown'}).
+${fileName ? `File: "${fileName}"` : ''}
+
+The system recommends these analysis layers:
+${enabledLayers.map(l => `  ✓ ${l} — ${layerNames[l]}`).join('\n')}
+
+${skippedLayers.length ? `And skips these layers:\n${skippedLayers.map(l => `  ✗ ${l} — ${layerNames[l]}`).join('\n')}` : 'All layers are enabled.'}
+
+${rec.rationale ? `Static rationale hints:\n${Object.entries(rec.rationale).map(([k,v]) => `  ${k}: ${v}`).join('\n')}` : ''}
+
+Write a brief, helpful explanation (3-5 short paragraphs, ~150 words total) for a non-expert user:
+1. Why these specific layers are a good fit for this document type
+2. What insights they will surface
+3. Why any skipped layers are less relevant (if any are skipped)
+4. One sentence on what the user might consider toggling on/off based on their goals
+
+Use plain language. Be specific to this genre, not generic. Do not use bullet lists — write in flowing prose. Do not repeat layer IDs verbatim; refer to them by their descriptive names.`;
+
+  try {
+    const explanation = await llm.complete(prompt, {
+      maxTokens: 400,
+      temperature: 0.3,
+      systemPrompt: 'You are a helpful writing analysis assistant. Be concise and informative.',
+    });
+    res.json({ explanation: explanation.trim() });
+  } catch (err) {
+    console.error('explain-layers error:', err.message);
+    res.status(500).json({ error: 'Could not generate explanation' });
+  }
 });
 
 // App metadata for landing page (no auth needed)
