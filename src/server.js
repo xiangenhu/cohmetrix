@@ -2,9 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const config = require('./config');
-const { requireAuth } = require('./services/auth');
+const { requireAuth, optionalAuth, requireAdmin } = require('./services/auth');
 
 const app = express();
+
+// Bug-tracking pipeline: capture process-level errors + intercept console.error/warn
+// → BUG_LRS (xAPI `failed`). No-ops silently unless BUG_LRS_* env is set (local dev).
+const bugReporter = require('./services/bugReporter');
+bugReporter.attachProcessHandlers();
 
 // Middleware
 app.use(cors());
@@ -155,6 +160,16 @@ app.use('/api/i18n', require('./routes/i18n'));
 // paths fall through to the routers below.
 app.use('/api', require('./routes/contexthelp'));
 
+// Bug-report API: POST /api/telemetry/bug-report (public, client submit) +
+// GET /api/telemetry/bug-reports (Admin-only). Fix-log is the SHARED GCS store
+// (bugFixLog) so this feed and scripts/bug-triage.js never diverge.
+app.use('/api/telemetry', require('./routes/bugReportRoutes').createBugReportRoutes({
+  bugReporter,
+  optionalAuth,
+  requireAdmin: [requireAuth, requireAdmin],
+  getFixLog: require('./services/bugFixLog').load,
+}));
+
 // ─── Protected routes (require auth) ─────────────────────────────────────────
 app.use('/api/analyze', requireAuth, require('./routes/analyze'));
 app.use('/api/results', requireAuth, require('./routes/results'));
@@ -181,6 +196,10 @@ app.get('/api/tokens', requireAuth, (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'app.html'));
 });
+
+// Express error middleware (4-arg) — MUST be last, after all routes. Reports the
+// error to BUG_LRS (no-op without creds) then re-throws to Express's default handler.
+app.use(bugReporter.bugReporterMiddleware);
 
 // Start server
 // ─── Initialize LLM audit logging ────────────────────────────────────────────

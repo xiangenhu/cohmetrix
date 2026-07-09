@@ -143,3 +143,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Bug triage local artifacts (GCS is the shared fix-log store)
+bug-fix-log.json
+bug-triage-report.md
