@@ -19,8 +19,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static files
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Static files — `extensions: ['html']` resolves extensionless requests
+// (e.g. /teasers/about, /factsheet) to their .html file instead of falling
+// through to the SPA catch-all (which would force an auth redirect).
+app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
 
 // ─── Public routes (no auth) ─────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
@@ -145,6 +147,13 @@ app.get('/health', (req, res) => {
 
 // ─── Public routes (no auth) ─────────────────────────────────────────────────
 app.use('/api/i18n', require('./routes/i18n'));
+
+// Contextual "?" help assistant. Mounted at /api and BEFORE the auth-gated
+// /api/help and /api/admin routers so its public routes (GET /api/config/help-hover,
+// POST /api/help/ask) and its self-gated admin route (GET /api/admin/help-analytics,
+// which runs requireAuth+requireAdmin internally) resolve first; all other /api/*
+// paths fall through to the routers below.
+app.use('/api', require('./routes/contexthelp'));
 
 // ─── Protected routes (require auth) ─────────────────────────────────────────
 app.use('/api/analyze', requireAuth, require('./routes/analyze'));

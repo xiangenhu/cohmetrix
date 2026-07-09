@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neo-CohMetrix — Fact Sheet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08090e;
+      --surface: #0f1117;
+      --card: #13141b;
+      --card-hover: #191a23;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #e2e4ea;
+      --text2: #8b8fa4;
+      --text3: #5a5e72;
+      --cyan: #22d3ee;
+      --teal: #2dd4bf;
+      --violet: #a78bfa;
+      --rose: #fb7185;
+      --amber: #fbbf24;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      --maxw: 1080px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text2);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(8,9,14,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+    .nav-logo span { color: var(--teal); }
+    .nav-links { display: flex; gap: 22px; align-items: center; }
+    .nav-links a { font-size: 13px; color: var(--text2); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      padding: 8px 20px; border: none; border-radius: 8px;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--bg); font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 16px rgba(45,212,191,0.25);
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 24px rgba(45,212,191,0.4); }
+    @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 78vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 120px 24px 70px; text-align: center;
+      position: relative; overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 25%, rgba(45,212,191,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 72% 68%, rgba(34,211,238,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 22% 62%, rgba(167,139,250,0.07) 0%, transparent 60%),
+        var(--bg);
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, black 20%, transparent 72%);
+      mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, black 20%, transparent 72%);
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 18px; border-radius: 100px;
+      background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.2);
+      color: var(--teal); font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+      margin-bottom: 26px;
+    }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+    .hero h1 {
+      font-size: clamp(34px, 6vw, 62px); font-weight: 800; color: var(--text);
+      letter-spacing: -1.5px; line-height: 1.04; margin-bottom: 22px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(120deg, var(--teal), var(--cyan) 55%, var(--violet));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { max-width: 640px; font-size: clamp(15px, 2vw, 19px); color: var(--text2); margin: 0 auto; }
+    .hero-actions { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; border: none;
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--bg);
+      box-shadow: 0 0 20px rgba(45,212,191,0.3); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(45,212,191,0.5); }
+    .btn-ghost {
+      padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: transparent; color: var(--text); border: 1px solid var(--border-hover); transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--teal); background: rgba(45,212,191,0.05); }
+
+    /* ── STAT BAND ── */
+    .statband {
+      max-width: var(--maxw); margin: -30px auto 0; padding: 0 24px; position: relative; z-index: 2;
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+    }
+    .stat {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px 14px; text-align: center;
+    }
+    .stat .num { font-size: clamp(24px, 4vw, 36px); font-weight: 800; color: var(--text); letter-spacing: -1px; }
+    .stat .num span { background: linear-gradient(120deg, var(--teal), var(--cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat .lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 6px; }
+    @media (max-width: 860px) { .statband { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 460px) { .statband { grid-template-columns: repeat(2, 1fr); } }
+
+    /* ── SECTIONS ── */
+    section.block { max-width: var(--maxw); margin: 0 auto; padding: 84px 24px 20px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px;
+    }
+    .eyebrow .idx { font-family: var(--mono); color: var(--text3); }
+    .e-theory { color: var(--teal); }
+    .e-tech { color: var(--cyan); }
+    .e-apps { color: var(--violet); }
+    .e-impact { color: var(--amber); }
+    section.block h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; color: var(--text); letter-spacing: -0.8px; line-height: 1.1; }
+    section.block > p.lead { font-size: 16px; color: var(--text2); max-width: 680px; margin-top: 14px; }
+
+    .grid { display: grid; gap: 16px; margin-top: 34px; }
+    .g2 { grid-template-columns: repeat(2, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 820px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px; transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    }
+    .card:hover { border-color: var(--border-hover); background: var(--card-hover); transform: translateY(-2px); }
+    .card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -0.2px; }
+    .card p { font-size: 14px; color: var(--text2); }
+    .card .maps {
+      display: block; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-hover);
+      font-size: 13px; color: var(--text3);
+    }
+    .card .maps b { color: var(--teal); font-weight: 600; }
+
+    .tag { display: inline-block; font-family: var(--mono); font-size: 11px; color: var(--teal);
+      background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.18); padding: 2px 8px; border-radius: 6px; margin: 2px 4px 2px 0; }
+
+    /* discourse ladder */
+    .ladder { margin-top: 34px; display: flex; flex-direction: column; gap: 10px; }
+    .rung {
+      display: grid; grid-template-columns: 60px 1fr auto; align-items: center; gap: 16px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px;
+    }
+    .rung .lvl { font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--teal); }
+    .rung .body h4 { font-size: 15px; color: var(--text); font-weight: 700; }
+    .rung .body p { font-size: 13px; color: var(--text3); margin-top: 2px; }
+    .rung .lys { text-align: right; }
+    @media (max-width: 640px) { .rung { grid-template-columns: 48px 1fr; } .rung .lys { grid-column: 1 / -1; text-align: left; } }
+
+    /* how it works flow */
+    .flow { margin-top: 34px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .step { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 18px; position: relative; }
+    .step .n { font-family: var(--mono); font-size: 13px; color: var(--bg); background: linear-gradient(135deg, var(--teal), var(--cyan));
+      width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; margin-bottom: 12px; }
+    .step h4 { font-size: 14px; color: var(--text); font-weight: 700; margin-bottom: 5px; }
+    .step p { font-size: 13px; color: var(--text3); }
+    @media (max-width: 820px) { .flow { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 440px) { .flow { grid-template-columns: 1fr; } }
+
+    /* pipeline groups */
+    .pipe { margin-top: 20px; display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    .pgroup { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .pgroup .ph { font-size: 12px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+    .pgroup .pd { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+    @media (max-width: 820px) { .pipe { grid-template-columns: repeat(2,1fr); } }
+
+    .divider { max-width: var(--maxw); margin: 40px auto 0; padding: 0 24px; }
+    .divider hr { border: none; border-top: 1px solid var(--border); }
+
+    footer { max-width: var(--maxw); margin: 60px auto 0; padding: 40px 24px 70px; border-top: 1px solid var(--border); }
+    footer p { font-size: 13px; color: var(--text3); }
+    footer .fnote { margin-top: 12px; font-size: 12px; color: var(--text3); max-width: 720px; }
+    footer a.fl { color: var(--teal); }
+
+    .kicker { color: var(--text); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-logo" href="/landing.html">Neo<span>CohMetrix</span></a>
+    <div class="nav-links">
+      <a href="#theory">Theory</a>
+      <a href="#technology">Technology</a>
+      <a href="#applications">Applications</a>
+      <a href="#impacts">Impacts</a>
+      <a class="nav-cta" href="/">Open the app →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="badge"><span class="dot"></span>FACT SHEET · Deep text cohesion analysis</div>
+    <h1>Read writing at <span class="grad">every level</span><br>of discourse.</h1>
+    <p>Neo-CohMetrix decomposes a text into <span class="kicker">12 analysis layers</span> and
+       <span class="kicker">111 metrics</span> — from surface wording to argument structure — then explains
+       every score with evidence pulled straight from the text.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="/">Open the app →</a>
+      <a class="btn-ghost" href="/teasers/about.html">Watch the 2-min teaser</a>
+    </div>
+  </header>
+
+  <!-- STAT BAND (all verified against /api/meta) -->
+  <div class="statband">
+    <div class="stat"><div class="num"><span>12</span></div><div class="lbl">Layers</div></div>
+    <div class="stat"><div class="num"><span>111</span></div><div class="lbl">Metrics</div></div>
+    <div class="stat"><div class="num"><span>8</span></div><div class="lbl">Composite factors</div></div>
+    <div class="stat"><div class="num"><span>5</span></div><div class="lbl">Discourse levels</div></div>
+    <div class="stat"><div class="num"><span>162</span></div><div class="lbl">Genres</div></div>
+    <div class="stat"><div class="num"><span>23</span></div><div class="lbl">Genre categories</div></div>
+  </div>
+
+  <!-- 1 · THEORY -->
+  <section class="block" id="theory">
+    <div class="eyebrow e-theory"><span class="idx">01</span> · Theory</div>
+    <h2>The science it rests on</h2>
+    <p class="lead">Neo-CohMetrix is a modern re-implementation of the multilevel discourse comprehension tradition.
+       Each idea below maps directly to a design decision in the engine.</p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h3>Multilevel discourse comprehension</h3>
+        <p>Comprehension is not one skill but a stack — surface code, an explicit textbase, and a situation
+           model (Kintsch's construction–integration; Graesser &amp; McNamara's Coh-Metrix program).</p>
+        <span class="maps">→ maps to <b>layers L0–L11</b>, grouped into 5 discourse levels + a cross-level meta layer.</span>
+      </div>
+      <div class="card">
+        <h3>Principal-component profiling</h3>
+        <p>The original Coh-Metrix reduced thousands of texts to a handful of principal components that track
+           readability and cohesion across grade levels.</p>
+        <span class="maps">→ maps to <b>8 composite factors (F1–F8)</b>, PCA-analog dimensions rolled into one overall score.</span>
+      </div>
+      <div class="card">
+        <h3>Zone of proximal development</h3>
+        <p>Difficulty is relative to a reader. A text that stretches one learner overwhelms another (Vygotsky).</p>
+        <span class="maps">→ maps to <b>L11 reader-adaptive scoring</b>, which re-scores challenge against a learner profile.</span>
+      </div>
+      <div class="card">
+        <h3>Genre &amp; register expectations</h3>
+        <p>A lab report and a personal narrative are "good" in different ways; cohesion norms shift with genre.</p>
+        <span class="maps">→ maps to <b>genre-aware scoring</b> across 162 genres, adjusting metric applicability and weights.</span>
+      </div>
+      <div class="card">
+        <h3>Explainable assessment</h3>
+        <p>A score is only useful if a writer can see <em>why</em>. Evidence beats black-box numbers.</p>
+        <span class="maps">→ maps to <b>per-metric evidence excerpts + verdicts</b> and prioritized LLM tutor feedback.</span>
+      </div>
+      <div class="card">
+        <h3>Language-relative analysis</h3>
+        <p>Discourse features are expressed differently across languages; analysis should follow the text's language.</p>
+        <span class="maps">→ maps to <b>language-aware LLM prompting</b> driven by each document's language metadata.</span>
+      </div>
+    </div>
+
+    <div class="ladder">
+      <div class="rung"><div class="lvl">I</div><div class="body"><h4>Surface Code</h4><p>Exact wording, syntax, sentence structure — decoding and parsing.</p></div><div class="lys"><span class="tag">L0</span><span class="tag">L1</span><span class="tag">L2</span></div></div>
+      <div class="rung"><div class="lvl">II</div><div class="body"><h4>Textbase</h4><p>Explicit propositions and their connections.</p></div><div class="lys"><span class="tag">L3</span><span class="tag">L4</span><span class="tag">L5</span></div></div>
+      <div class="rung"><div class="lvl">III</div><div class="body"><h4>Situation Model</h4><p>The "mental world" — causal, temporal, spatial, intentional dimensions.</p></div><div class="lys"><span class="tag">L6</span></div></div>
+      <div class="rung"><div class="lvl">IV</div><div class="body"><h4>Genre &amp; Rhetorical Structure</h4><p>Discourse organization, rhetorical moves, argumentation.</p></div><div class="lys"><span class="tag">L7</span><span class="tag">L8</span></div></div>
+      <div class="rung"><div class="lvl">V</div><div class="body"><h4>Pragmatic Communication</h4><p>Author–reader interaction, stance, affect, audience awareness.</p></div><div class="lys"><span class="tag">L9</span><span class="tag">L10</span></div></div>
+      <div class="rung"><div class="lvl">+</div><div class="body"><h4>Cross-Level (Meta)</h4><p>Reader-relative scoring across all discourse levels.</p></div><div class="lys"><span class="tag">L11</span></div></div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- 2 · TECHNOLOGY -->
+  <section class="block" id="technology">
+    <div class="eyebrow e-tech"><span class="idx">02</span> · Technology</div>
+    <h2>How it's built</h2>
+    <p class="lead">A Node/Express backend and a zero-build vanilla-JS front end. NLP does the deterministic work;
+       a single LLM gateway does the interpretive work. Every model call goes through one chokepoint.</p>
+
+    <div class="grid g3">
+      <div class="card">
+        <h3>Hybrid NLP + LLM</h3>
+        <p>Deterministic metrics come from local NLP (compromise, natural, wink-nlp). LLM calls handle
+           semantics, rhetoric, stance and feedback — routed through one abstraction with token tracking.</p>
+      </div>
+      <div class="card">
+        <h3>Parallel analysis pipeline</h3>
+        <p>Layers run in four dependency-ordered groups so fast NLP work never waits on slow LLM work.
+           The reader-adaptive meta layer runs last, over everything.</p>
+      </div>
+      <div class="card">
+        <h3>Real-time streaming</h3>
+        <p>Server-Sent Events push layer-by-layer (and file-by-file, for batches) progress to the browser
+           as analysis runs — no polling, no spinner-in-the-dark.</p>
+      </div>
+      <div class="card">
+        <h3>Multi-provider LLM gateway</h3>
+        <p>One abstraction over Anthropic / OpenAI / Azure with structured-JSON parsing, batching, and
+           language-aware prompting. Swap providers without touching layer code.</p>
+      </div>
+      <div class="card">
+        <h3>Durable, user-scoped storage</h3>
+        <p>Google Cloud Storage with an in-memory fallback for local dev. Every artifact is namespaced under
+           <span class="tag">users/{email}/projects/…</span> — projects, documents, metadata, results.</p>
+      </div>
+      <div class="card">
+        <h3>Auth, quota &amp; i18n</h3>
+        <p>OAuth gateway with cached token verification and a super-admin panel; per-user token/cost quotas;
+           hash-based internationalization with right-to-left support.</p>
+      </div>
+    </div>
+
+    <h3 style="color:var(--text);margin-top:40px;font-size:15px;letter-spacing:0.4px;">The four-group pipeline</h3>
+    <div class="pipe">
+      <div class="pgroup"><div class="ph">Group 1</div><div class="pd">Fast · NLP only</div><span class="tag">L0</span><span class="tag">L5</span></div>
+      <div class="pgroup"><div class="ph">Group 2</div><div class="pd">Mixed NLP + LLM</div><span class="tag">L1</span><span class="tag">L2</span><span class="tag">L3</span><span class="tag">L4</span></div>
+      <div class="pgroup"><div class="ph">Group 3</div><div class="pd">LLM-heavy</div><span class="tag">L6</span><span class="tag">L7</span><span class="tag">L8</span><span class="tag">L9</span><span class="tag">L10</span></div>
+      <div class="pgroup"><div class="ph">Group 4</div><div class="pd">Meta · depends on all</div><span class="tag">L11</span></div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- HOW IT WORKS -->
+  <section class="block">
+    <div class="eyebrow e-tech"><span class="idx">↳</span> · From project to insight</div>
+    <h2>How it works</h2>
+    <div class="flow">
+      <div class="step"><div class="n">1</div><h4>Create a project</h4><p>Group documents into a project. Upload files, import from Google Drive, or paste text.</p></div>
+      <div class="step"><div class="n">2</div><h4>Batch analyze</h4><p>Pick one file or many. The pipeline runs every layer in parallel, streaming progress live.</p></div>
+      <div class="step"><div class="n">3</div><h4>Explore</h4><p>Browse per-metric scores, composite factors, and evidence excerpts pulled from the text.</p></div>
+      <div class="step"><div class="n">4</div><h4>Act</h4><p>Get prioritized tutor feedback, ask follow-ups, or evaluate against your own rubric.</p></div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- 3 · APPLICATIONS -->
+  <section class="block" id="applications">
+    <div class="eyebrow e-apps"><span class="idx">03</span> · Applications</div>
+    <h2>Where it fits</h2>
+    <p class="lead">One engine, several jobs — diagnostic feedback, corpus research, and self-directed revision.</p>
+
+    <div class="grid g3">
+      <div class="card">
+        <h3>Writing instructors</h3>
+        <p>Diagnostic breakdowns that show <em>why</em> an essay is (or isn't) cohesive — not just a grade.
+           Map cohesion metrics onto your own rubric for aligned, scored reviews.</p>
+      </div>
+      <div class="card">
+        <h3>Researchers</h3>
+        <p>The full metric set across every discourse level, for corpus and readability studies. Metrics tie
+           back to published constructs; batch analysis handles many documents at once.</p>
+      </div>
+      <div class="card">
+        <h3>Students &amp; self-learners</h3>
+        <p>Evidence-backed feedback that explains each metric in plain language and suggests concrete
+           revisions, with reader-adaptive difficulty tuned to level.</p>
+      </div>
+      <div class="card">
+        <h3>Genre-specific assessment</h3>
+        <p>162 genres across 23 categories, each with its own expectations — a narrative, a lab report, and an
+           opinion piece are judged by different, appropriate norms.</p>
+      </div>
+      <div class="card">
+        <h3>Multilingual programs</h3>
+        <p>Analysis follows each document's language metadata, and the interface localizes with right-to-left
+           support — usable beyond English-only settings.</p>
+      </div>
+      <div class="card">
+        <h3>Rubric-driven grading</h3>
+        <p>Upload a grading framework and the system maps metrics to each criterion, producing a structured,
+           per-criterion evaluation you can defend.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- 4 · IMPACTS -->
+  <section class="block" id="impacts">
+    <div class="eyebrow e-impact"><span class="idx">04</span> · Impacts</div>
+    <h2>What changes</h2>
+    <p class="lead">Framed as mechanisms the design produces — not measured study outcomes.</p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h3>Feedback becomes traceable</h3>
+        <p>Because every metric carries evidence excerpts and a verdict, feedback points to specific sentences
+           instead of asserting a verdict from nowhere — the reasoning is inspectable.</p>
+      </div>
+      <div class="card">
+        <h3>Assessment adapts to genre and reader</h3>
+        <p>Genre profiles change which metrics apply, and the meta layer re-scores difficulty per learner — so
+           the same text is judged appropriately in different contexts.</p>
+      </div>
+      <div class="card">
+        <h3>Scale without losing the thread</h3>
+        <p>Batch analysis with upfront cost estimates and streaming progress lets a class set or research corpus
+           be processed in one run while staying observable.</p>
+      </div>
+      <div class="card">
+        <h3>Provider and cost stay under control</h3>
+        <p>A single LLM gateway with token tracking and per-user quotas means model spend is measured at one
+           chokepoint and providers can be swapped without rewrites.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><span class="kicker">Neo-CohMetrix</span> — 12-layer deep text cohesion analysis and essay grading, grounded in the multilevel discourse comprehension model.</p>
+    <p class="fnote">
+      All figures on this page are verified against the running application's <span class="tag">/api/meta</span> endpoint and source
+      (12 layers L0–L11, 111 metrics, 8 composite factors, 5 discourse levels + a meta layer, 162 genres across 23 categories).
+      "Impacts" describe mechanisms the design produces, not measured efficacy results.
+      See <a class="fl" href="/landing.html">the landing page</a> · <a class="fl" href="/teasers/about.html">the teaser</a> · or
+      <a class="fl" href="/">open the app</a>.
+    </p>
+  </footer>
+</body>
+</html>

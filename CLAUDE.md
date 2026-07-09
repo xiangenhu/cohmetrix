@@ -37,6 +37,8 @@ Copy `.env.example` to `.env`. Required: `ANTHROPIC_API_KEY`. Optional: `GCS_BUC
 - `services/auth.js` — OAuth gateway token verification, `requireAuth` middleware, `isSuperAdmin()`/`requireAdmin` for admin routes
 - `services/evidence.js` — Post-analysis LLM enrichment: plain descriptions, evidence excerpts, verdicts per metric, audience-aware
 - `services/rubric.js` — Rubric-based essay evaluation
+- `services/genres.js` — Genre taxonomy (162 genres across 23 categories), per-genre expectations, measure profiles, and metric applicability used for genre-aware scoring
+- `services/definitions.js` — `LAYER_DEFINITIONS` (per-layer `metricCount`, definition, rationale) and `DISCOURSE_LEVELS`; source of the canonical layer/metric counts surfaced at `/api/meta`
 - `utils/fileParser.js` — PDF/DOCX/TXT text extraction + `convertDocxToHtml()` for in-browser DOCX preview
 
 ### Routes (`src/routes/`)
@@ -44,12 +46,16 @@ Copy `.env.example` to `.env`. Required: `ANTHROPIC_API_KEY`. Optional: `GCS_BUC
 - `analyze.js` — Single-file analysis with SSE streaming progress
 - `projects.js` — Project CRUD, file management, file metadata, batch analysis (SSE), cost estimation, Google Drive import, project summary, file content viewing (`?extract=true` for text, `?format=html` for rendered preview)
 - `admin.js` — Super admin routes (browse all users/projects/files/results, delete); protected by `requireAdmin`
+- `quota.js` — Per-user token/cost quota tracking and cost-multiplier reporting
 - `results.js`, `documents.js`, `interpret.js`, `help.js`, `rubric.js`, `auth.js`, `i18n.js`
+
+Two public (no-auth) endpoints live directly in `server.js`: `GET /api/meta` (canonical layer/metric/genre/composite counts + max essay length, consumed by `landing.html`) and `GET /health` (Cloud Run health + LLM provider/pricing). The static mount is registered before the `app.get('*')` SPA catch-all, so real files under `public/` (e.g. `factsheet.html`, `landing.html`) are served ahead of the SPA fallback.
 
 ### Frontend (`public/`)
 
 - Vanilla JS SPA (no framework), modular files in `js/` and `css/`
-- SPA entry: `public/app.html` (not `index.html` — `index.html` is an older version)
+- SPA entry: `public/app.html` (not `index.html` — `index.html` is an older version; `app2.html`–`app16.html` are prior design iterations kept for reference)
+- `public/landing.html` — public marketing page; `js/landing.js` populates it dynamically from `GET /api/meta` (layer/metric/factor/genre counts are fetched, never hardcoded)
 - `app.js` — Screen navigation: upload, project, process, results, review, admin
 - `projects.js` — Project workflow UI (file table, metadata editor modal, document viewer modal with PDF/DOCX/TXT native rendering, summary view, auto-detect-all, workflow help banner)
 - `admin.js` — Admin panel UI (users → projects → files/results drill-down); shown only when `isAdmin` flag is true
