@@ -1,356 +1,192 @@
-# Team i18n Implementation
+---
+description: Hash-based i18n audit & implementation (canonical)
+argument-hint: [<files> | audit]
+---
 
-Execute internationalization using the **Hash-Based Three-Mode Translation** pattern.
+# Team i18n
+
+Implement and audit internationalization. **The canonical pattern for these apps is
+SHA-256 hash-based i18n** (below); a generic fallback for non-hash projects is at the end.
+
+> Consolidated from the former `team-i18n` + `team-i18n-hash`. There is now one i18n
+> command so the two cannot drift apart.
 
 ## Target: $ARGUMENTS
-Scope: specific files, "audit" for full compliance check, or "adopt" to add i18n to a new app
-
-## Step 0: Discover Project i18n Files
-
-Before any work, scan the codebase to locate the i18n implementation files. Search for:
-- Files containing `data-i18n` attributes (HTML)
-- Files containing `generateHash` or `i18n` in name (JS)
-- Translation JSON files (`{lang}.json` with hash keys)
-- Server routes handling `/translate` or `/i18n`
-- Language selector / mode switcher UI components
-
-Map what you find to these **roles** (the filenames will vary by project):
-
-| Role | What to look for |
-|------|-----------------|
-| **Config/Init** | Language detection, `i18nConfig`, cookie/localStorage persistence |
-| **Utils** | `generateHash()`, `addText()`, hash registry builder |
-| **Translation Engine** | Display mode logic, caching, batch save, MutationObserver |
-| **Language Selector UI** | Dropdown with mode switcher (Auto / Hover Replace / Hover Tooltip) |
-| **Server API** | `/load`, `/translate`, `/batch-save` endpoints |
-| **Translation Store** | JSON files: `{ "hash": "translatedText", ... }` |
-| **Migration Scripts** | CLI tools for adding `data-i18n` attributes or generating hashes |
+Options: specific files | "audit" for full compliance check
 
 ## Workflow Phases
 
 ### Phase 1: Audit (Parallel)
-Launch simultaneously:
-- **Internationalization Expert**: Hash-based i18n compliance audit
-- **Code Standards Specialist**: CSS class usage, inline style detection
+- **Internationalization Expert**: Hash compliance, untranslated strings, missing wrappers
+- **Code Standards Specialist**: Inline styles (break RTL), embedded `<style>` / `<script>`
 
 ### Phase 2: Implementation (Sequential)
-- **Fullstack Developer**: Implement i18n fixes and text wrapping
+- **Fullstack Developer**: Wrap text, generate hashes, register translations
 
 ### Phase 3: Validation (Parallel)
-Launch simultaneously:
-- **QA Testing**: Verify translations and hash accuracy
-- **Cross Platform Specialist**: Test across devices and browsers
-- **Accessibility Compliance Checker**: Ensure RTL and language accessibility
+- **QA Testing**: Verify translations match hashes; spot-check all supported languages
+- **Cross Platform Specialist**: Test on devices and browsers
+- **Accessibility Compliance Checker**: RTL layout and language accessibility
 
----
+## The Hash-Based Pattern
 
-## The Hash-Based Three-Mode Translation Pattern
-
-This is a **generic i18n architecture** that any web app can adopt. It eliminates manual key management by deriving keys from the source text itself, and offers three user-facing translation display modes.
-
-### Core Concept: Hash Keys
-
-Instead of manually-assigned keys like `nav.home.title`, keys are **auto-generated**:
-
-```
-Key = SHA-256( englishText.trim() ).substring(0, 16)
-```
-
-**Why this is superior:**
-- **No key collisions** — SHA-256 is collision-resistant
-- **No key management** — key is deterministic from text
-- **No stale keys** — if text changes, hash changes, triggering re-translation
-- **Client/server parity** — same algorithm on both sides
-- **Self-documenting** — the English text IS the fallback
-
-**Client-side (Web Crypto API):**
+### Hash Generation
 ```javascript
-async function generateHash(text) {
-  const data = new TextEncoder().encode(text.trim());
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
-}
+// Hash = SHA-256 of trimmed English text, first 16 hex chars
+generateHash("Continue")        // => "31fbef162594de01"
+generateHash("Welcome back!")   // => "a7c4e9..."
 ```
+- Source language is **English**; whitespace trimmed before hashing; **case-sensitive**
+- 16 hex chars (first 64 bits of SHA-256) — collision risk acceptable for human text
 
-**Server-side (Node.js):**
-```javascript
-function generateHash(text) {
-  return require('crypto').createHash('sha256')
-    .update(text.trim()).digest('hex').substring(0, 16);
-}
-```
-
-**HTML markup:**
+### Static Text Wrapping
 ```html
-<span data-i18n="a1b2c3d4e5f6g7h8">Hello World</span>
+<span data-i18n="31fbef162594de01">Continue</span>
 ```
+- Every visible text node MUST be wrapped
+- **Emojis stay outside the span**: `📚 <span data-i18n="hash">Library</span>`
+- No inline styles — they break RTL flipping. Use CSS classes only.
 
-### Three Translation Display Modes
-
-Users select a mode from the language selector. Switching modes resets all listeners and element state.
-
-#### Mode 1: Auto (Default)
-- All `[data-i18n]` elements translated **immediately** on page load
-- Translated elements get `.i18n-translated` class
-- **Click** toggles between original and translated text
-- **MutationObserver** auto-translates dynamically loaded content
-
-#### Mode 2: Hover Replace
-- English text stays until user **hovers** — then **replaced in-place**
-- Before hover: `.i18n-hover` class (dashed underline signals interactivity)
-- While fetching: `.i18n-translating` class (opacity: 0.6)
-- Translation **persists** after mouse leaves
-- **Click** toggles back to English
-- Fetched on **first hover only** (cached thereafter)
-
-#### Mode 3: Hover Tooltip
-- Original English text **never replaced**
-- Translation shown as **browser tooltip** (`title` attribute) on hover
-- Before hover: `.i18n-has-tooltip` class (dotted underline)
-- **Click** converts to in-place replacement (promotes to replace behavior)
-
-#### Required CSS Classes
-```css
-.i18n-translating { opacity: 0.6; }               /* Fetch in progress */
-.i18n-translated  { cursor: pointer; }             /* Click to toggle */
-.i18n-hover       { border-bottom: 1px dashed; }   /* Hover-replace target */
-.i18n-has-tooltip  { border-bottom: 1px dotted; }   /* Tooltip available */
-```
-
-### Translation Data Flow
-
-```
-Page Load
-  ├── detectLanguage()                ← URL param > cookie > localStorage > browser > default
-  ├── preloadTranslations(lang)       ← GET /api/translate/load → full { hash: text } map
-  ├── buildHashRegistry()             ← scan DOM for [data-i18n], map hash → English
-  ├── initTranslationListeners()      ← attach mode-specific listeners
-  └── observeDOM()                    ← MutationObserver for lazy-loaded content
-
-User Interaction (cache miss)
-  ├── POST /api/translate             ← single text → LLM translation
-  ├── applyTranslation(el, text)      ← update DOM
-  └── markDirty(hash, text)           ← add to dirtyBuffer
-
-Background Flush (debounced / page hide)
-  ├── POST /api/translate/batch-save  ← { lang, entries: { hash: text, ... } }
-  └── Server: read-modify-write       ← merge into persistent store, invalidate cache
-```
-
-### Toggle Behavior (All Modes)
-Every translated element stores the original HTML in `data-i18n-original`:
+### Dynamic Text
 ```javascript
-// Before translating
-el.setAttribute('data-i18n-original', el.innerHTML);
-// On click: swap between original and translated
+const wrapped = await addText("Welcome back!");
+element.innerHTML = wrapped; // registers hash if new; returns <span data-i18n="...">…</span>
+```
+- All dynamic strings go through `addText()` (or the project's equivalent)
+- Never concatenate translated fragments — translate whole phrases with placeholders
+
+### Mandatory Script Loading (exact order, start of `<body>`)
+```html
+<body>
+    <script src="/js/shared/i18nInit.js"></script>
+    <script src="/js/shared/i18nUtils.js"></script>
+    <script src="/js/i18nDynamicTranslator.js"></script>
+</body>
 ```
 
-### Server API Pattern
+### Language Detection Priority
+1. URL param `?lang=zh` (also `?lng=`, `?language=`)
+2. Cookie `preferredLanguage` (30-day)
+3. localStorage `preferredLanguage` (backup)
+4. `navigator.language`
+5. Default `'en'`
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/translate/load?lang=zh` | GET | Preload all translations for a language |
-| `/api/translate` | POST | Translate single text via LLM (cache in memory) |
-| `/api/translate/batch-save` | POST | Persist accumulated new translations to store |
+### Supported Languages
+- **LTR**: en, zh, es, de, fr, it, pt, ja, ko, th, vi, ru, hi
+- **RTL**: ar, he, fa, ur — applied via `dir="rtl"` at document level
 
-**Concurrency control:** Queue LLM calls with a concurrency cap (e.g., max 3) to avoid rate limits.
+### Translation Storage (always GCS)
+Translation/language files **always live in GCS**, never in the repo, never bundled into the
+build, never in `localStorage` (see `@.claude/commands/_shared/storage-invariants.md`). The hash registry
+(`hash → { en, zh, … }`) is a GCS object — canonical path `i18n/registry.json` (see `/team-gcs`) —
+loaded at runtime. A language file committed to the repo is an audit violation.
 
-### Translation Store Format
+## Translation Suggestion Mode (crowd-correction loop)
+A teacher/admin-facing tool for correcting bad translations in place, built directly on the
+hash pattern: because every string renders as `<span data-i18n="{hash}">…</span>` and that
+`{hash}` is the shared key across `en.json` and every locale, any element yields all three
+pieces of a correction — Original English (`translations.en[hash]`), Current translation
+(`translations[lang][hash]`), and the identity to file against.
 
-Translations are flat JSON files keyed by hash:
-```json
-{
-  "a1b2c3d4e5f6g7h8": "你好世界",
-  "9f8e7d6c5b4a3210": "欢迎来到课程"
-}
-```
+**Flow:** toggle mode → click any translated string → "Language Suggestion" modal
+(English · current · editable suggestion, plus **"✨ Suggest with AI"** for LLM alternatives) →
+submit → queued in GCS → admin approves in the Admin Dashboard → written to the live locale file,
+**visible in real time**.
 
-Storage can be any backend (GCS, S3, database, local filesystem). Organized by scope:
-```
-store/
-├── i18n/                     # App-level translations
-│   ├── zh.json
-│   └── ja.json
-└── {scope}/                  # Content-specific translations
-    └── i18n/
-        ├── zh.json
-        └── ...
-```
+**Hard constraints (don't regress these):**
+- Only active when **display language ≠ English** — there is nothing to correct in the original.
+  Both the client toggle and the server reject `lang === 'en'`.
+- **Approve is always admin-only** (`requireAdmin`). Submission defaults to **teacher/admin**
+  (`requireTeacher`), but is env-switchable — see debugging mode below.
+- Approve **writes live immediately**, reusing the on-demand-translation merge path
+  (`applyTranslationToLocale` → merge one `{hash: translation}` into `locales/{lang}.json` in GCS
+  → invalidate `translationCache`). No separate publish step.
+- **Real-time visibility:** locale files are served `Cache-Control: no-cache` (+ Express ETag →
+  cheap 304s), and approve calls the client's `reloadTranslations(lang)`. Do **not** reintroduce
+  `max-age` on locale responses — it re-hides approved edits for up to 5 minutes.
+- **One suggestion per string:** the id is deterministic `{lang}_{hash}`, so re-submitting the same
+  string overwrites its single entry (no duplicate pile-up). Persisted as one GCS object each at
+  `locales/suggestions/{id}.json` (race-free); **not** locale files, never bundled/committed.
+- The tool's own chrome carries `data-suggest-ui`; the click delegator skips that subtree so the
+  modal's own labels aren't themselves click-to-suggest targets.
 
-### Dynamic Content Wrapping
+**Debugging mode (`I18N_SUGGEST_MODE`):** `normal` (default, teacher/admin) | `debugging` (any user,
+**including guests** on public/landing pages). Server swaps `requireTeacher` → `optionalAuthWithGuest`
+on `/suggestions` + `/suggest-alternatives`; the client reads the public `GET /suggest-config`
+(`{ mode, allowAny }`) and opens the tool accordingly. Safe because nothing goes live without admin
+approval — the approval gate is the safety valve.
 
-For text generated in JavaScript, use a helper that wraps and hashes:
-```javascript
-// addText() wraps dynamic text with the i18n span
-const wrapped = await addText("Welcome");
-element.innerHTML = wrapped;
-// → <span data-i18n="31fbef162594de01">Welcome</span>
-```
+**Gotcha — one hash per exact English string.** "Student" and "Students" (singular/plural), or any
+phrasing variant, are **separate hashes** even if they share a translation. Correcting one does not
+change the others — the classic "approved but still shows the old word" is usually a *different* hash
+on the visible element. When a term recurs, expect to correct each variant.
 
-### RTL Support
-- Detect RTL languages (ar, he, fa, ur) and set `dir="rtl"` on document root
-- **No inline styles** — all styling via CSS classes so RTL overrides work cleanly
+**Key files (this app):** `client/src/i18n/SuggestionMode.jsx` (+ `.css`, mounted once in `App.jsx`),
+`api.{submit,get,approve,reject}TranslationSuggestion` + `suggestTranslationAlternatives` +
+`getTranslationSuggestConfig` (`client/src/utils/api.js`), `TranslationsTab` in
+`client/src/pages/AdminDashboard.jsx`, and the `/suggestions*`, `/suggest-alternatives`,
+`/suggest-config` routes + `applyTranslationToLocale` in `server/routes/i18n.js`.
+Requires GCS configured; AI button needs an LLM provider; endpoints 503 otherwise.
 
----
+### Installable runtime (transfer to another of our apps)
+The **whole** hash-based i18n system — client runtime, server routes, on-demand translation, and
+Suggestion Mode — is packaged as a self-contained, installable kit for our stack
+(Node.js + Express + GCS + React):
 
-## Text Wrapping Rules
-1. **ALL visible text** must be wrapped: `<span data-i18n="hash">Text</span>`
-2. **Hash** = SHA-256 of trimmed English text, first 16 hex chars
-3. **Emojis outside span**: `📚 <span data-i18n="hash">Curriculum</span>`
-4. **No inline styles**: Use CSS classes only (blocks RTL and mode styling)
-5. **`data-i18n-original`** preserved for toggle behavior
+> **Kit:** `@.claude/commands/_shared/i18n-kit/` — `README.md` (complete document + integration
+> contract), `install.mjs` (copies the runtime, prints wiring), and `runtime/` (the actual code).
+>
+> ```bash
+> node .claude/commands/_shared/i18n-kit/install.mjs --admin-tab
+> ```
+>
+> The kit's `README.md` is the canonical, portable spec (mirrors how `team-help.md` points at
+> `_shared/CONTEXT_HELP.md`). A sibling app injects only what varies — its **GCS storage service**,
+> **auth middleware** (`requireTeacher`/`requireAdmin`), and **LLM translate fn** — into one factory,
+> `createI18nRouter({...})`. Everything above (hash pattern, invariants) holds unchanged.
 
-## Language Detection Priority
-1. URL parameter: `?lang=zh`
-2. Cookie: `preferredLanguage`
-3. localStorage: `preferredLanguage`
-4. Browser language
-5. Default: `en`
-
----
+## Common Violations
+- ❌ Hardcoded text in JSX/templates (most common)
+- ❌ String concatenation `"Hello, " + name` — translate the whole phrase with a placeholder
+- ❌ Inline `style="…"` — breaks RTL mirroring
+- ❌ Emoji inside `<span data-i18n>` — wraps the emoji as translatable
+- ❌ Script loading out of order — `i18nInit.js` must be first
+- ❌ Hash that doesn't match the English source — silent translation failure
+- ❌ Dynamic content via raw `innerHTML` without `addText()`
 
 ## Audit Checklist
+**HTML** — three scripts in order; all text wrapped; hashes match (case + whitespace);
+emojis outside spans; no inline styles.
+**JavaScript** — dynamic text via `addText()`; no `innerHTML = "raw text"`; hash registration present.
+**CSS** — no hardcoded text in pseudo-elements; logical properties (`margin-inline-start`).
+**Assets** — fonts support target scripts (CJK, Arabic); images-with-text have language alternates.
 
-### HTML Files
-- [ ] i18n scripts loaded in correct order (init → utils → engine)
-- [ ] All visible text wrapped with `data-i18n`
-- [ ] Hashes match English text (SHA-256, first 16 chars)
-- [ ] Emojis outside spans
-- [ ] No inline styles
-- [ ] `data-i18n-original` preserved for toggle behavior
-
-### JavaScript Files
-- [ ] Dynamic text uses `addText()` or equivalent wrapper
-- [ ] No hardcoded user-facing strings
-- [ ] Language-aware URL building
-
-### CSS Files
-- [ ] No hardcoded text in CSS
-- [ ] RTL support classes present
-- [ ] i18n state classes defined (`.i18n-translating`, `.i18n-translated`, `.i18n-hover`, `.i18n-has-tooltip`)
-
----
+## Generic Fallback (non-hash projects only)
+If a project does **not** use the hash registry, hold the same invariants with a key-based library:
+- All user-facing text routes through a translation layer (no hardcoded display strings)
+- Pluralization and date/number formatting use a locale-aware library (`Intl`, ICU)
+- Locale selection is persisted and survives reload
+- Same RTL and font-coverage rules as above
 
 ## Output Format
-
 ```
 ## i18n Compliance Report
 
 ### Summary
-- Files Audited: [count]
-- Compliance Score: [%]
-- Issues Found: [count]
-- Auto-Fixable: [count]
-
-### Coverage Status
-| Category | Total | Compliant | Issues |
-|----------|-------|-----------|--------|
-| HTML Files | [n] | [n] | [n] |
-| JS Files | [n] | [n] | [n] |
-| Dynamic Content | [n] | [n] | [n] |
+- Files audited: [count]  ·  Compliance score: [%]  ·  Issues: [count] (auto-fixable: [count])
 
 ### Issues by Severity
-
 #### Critical (Breaks i18n)
-1. **Missing i18n Scripts**
-   - File: [file]
-   - Fix: Add script loading in correct order
-
-2. **Inline Styles Blocking Translation**
-   - File: [file:line]
-   - Fix: Move to CSS class
-
-#### Warnings (Should Fix)
-1. **Unwrapped Text**
-   - File: [file:line]
-   - Text: "[text]"
-   - Hash: [generated hash]
-   - Fix: Wrap with `<span data-i18n="[hash]">[text]</span>`
-
-2. **Hash Mismatch**
-   - File: [file:line]
-   - Current: [wrong hash]
-   - Expected: [correct hash]
-   - Text: "[text]"
-
-3. **Emoji Inside Span**
-   - File: [file:line]
-   - Fix: Move emoji outside span
-
+- [file:line] — [issue] — [fix]
+#### Warning (Should Fix)
+- [file:line] Text: "[text]" — Add: `<span data-i18n="[hash]">[text]</span>`
 #### Info (Best Practice)
-[Similar format]
+- [file:line] — [item]
 
-### Manual Fixes Required
-1. **[Issue]**
-   - Location: [file:line]
-   - Current: [code]
-   - Should Be: [code]
-
-### Hash Registry Updates
-New hashes to register:
+### New Hashes to Register
 | Hash | English Text |
-|------|-------------|
-| [hash] | [text] |
+|------|--------------|
 
 ### RTL Testing Required
-Files with potential RTL issues:
-- [file] - [reason]
-
-### Next Steps
-1. [action]
-2. [action]
-3. [action]
-```
-
-## Agent Prompts
-
-### Internationalization Expert
-```
-You are an Internationalization Expert implementing the Hash-Based Three-Mode Translation pattern.
-
-FIRST: Scan the codebase to discover i18n files (search for data-i18n, generateHash, i18n in filenames, translation JSON files, /translate routes). Map them to roles: Config/Init, Utils, Translation Engine, Language Selector, Server API, Translation Store.
-
-This pattern uses:
-- **Hash keys**: SHA-256(text.trim()).substring(0,16) — no manual key management
-- **Three display modes**: Auto (translate on load), Hover Replace (translate on hover, persist), Hover Tooltip (show as title attribute)
-- **Click-to-toggle**: All modes support clicking to swap original/translated text
-- **Batch save**: New translations accumulate client-side, flush to server periodically
-
-Audit for compliance:
-
-1. **Script Loading** — init → utils → engine, in correct order
-2. **Text Wrapping** — all visible text: `<span data-i18n="hash">text</span>`
-3. **Hash Accuracy** — SHA-256 of trimmed text, first 16 hex chars, case-sensitive
-4. **Emojis** — must be OUTSIDE spans
-5. **No Inline Styles** — all styling via CSS classes (required for RTL + mode classes)
-6. **Dynamic Content** — must use addText() or equivalent wrapper
-7. **Mode Compatibility** — elements support all three modes (click handler, hover handler, CSS classes)
-8. **Caching** — translations preloaded on page load, concurrency-limited API calls
-
-Return specific file:line references. Generate correct hashes for unwrapped text.
-```
-
-### Code Standards Specialist (i18n Focus)
-```
-You are a Code Standards Specialist auditing for i18n compliance.
-
-FIRST: Scan the codebase to discover i18n files and understand the project's implementation.
-
-Focus on:
-1. **Inline style detection** (style="...") — blocks RTL support and mode styling
-2. **Embedded <style>/<script> tags** — should be externalized
-3. **Hardcoded text in JavaScript** — should use addText() wrapper
-4. **CSS class usage** for i18n states:
-   - .i18n-translating (fetch in progress)
-   - .i18n-translated (click to toggle)
-   - .i18n-hover (hover-replace target, dashed underline)
-   - .i18n-has-tooltip (tooltip available, dotted underline)
-5. **RTL readiness** — dir="rtl" support, no layout assumptions
-
-For each violation:
-- Exact file:line
-- Current code
-- Recommended fix
-- CSS class suggestion if applicable
+- [file/page] — [reason]
 ```

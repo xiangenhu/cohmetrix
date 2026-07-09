@@ -200,6 +200,39 @@ async function loadDocument(filePath) {
 }
 
 /**
+ * Return the initialized GCS Bucket, or null when running on the in-memory
+ * fallback. Used by helpStore for CAS-safe cache/analytics writes — the help
+ * feature degrades to "answer, don't persist" when this is null.
+ */
+function getBucket() {
+  initStorage();
+  return bucket;
+}
+
+/**
+ * True when GCS is configured (a real bucket is available).
+ */
+function isConfigured() {
+  initStorage();
+  return !!bucket;
+}
+
+/**
+ * Download raw bytes at an arbitrary object path. Returns a Buffer, or null
+ * when GCS is unconfigured or the object is missing. (Used for the help
+ * grounding doc; distinct from loadDocument which is library-scoped.)
+ */
+async function downloadFile(filePath) {
+  initStorage();
+  if (!bucket) return null;
+  const file = bucket.file(filePath);
+  const [exists] = await file.exists();
+  if (!exists) return null;
+  const [buffer] = await file.download();
+  return buffer;
+}
+
+/**
  * Delete a document from the library.
  */
 async function deleteDocument(filePath) {
@@ -817,6 +850,7 @@ async function recordUserSpending(userId, cost) {
 module.exports = {
   saveResult, loadResult, saveUpload, listResults, deleteResult,
   listDocuments, saveDocument, loadDocument, deleteDocument,
+  getBucket, isConfigured, downloadFile,
   getUserId,
   listProjects, getProject, saveProject, deleteProject,
   listProjectFiles, saveProjectFile, loadProjectFile, deleteProjectFile,

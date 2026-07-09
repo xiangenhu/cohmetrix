@@ -1,22 +1,13 @@
+---
+description: Full feature build with a coordinated team
+argument-hint: <feature description>
+---
+
 # Team Feature Development
 
-Execute full feature development with coordinated team workflow.
+Execute full feature development with a coordinated team workflow.
 
 ## Feature: $ARGUMENTS
-
-## Step 0: Discover Project Context
-
-Before any work, scan the codebase to understand:
-- **Architecture**: Framework, language, entry points, routing patterns
-- **Auth pattern**: How authentication/authorization works (cookies, JWT, OAuth, etc.)
-- **Data layer**: Database, APIs, state management, caching
-- **Frontend pattern**: Templating, components, static assets, SPA vs MPA
-- **i18n**: Whether internationalization is used and how
-- **Testing**: Test framework, test locations, coverage tooling
-- **Deployment**: Dockerfile, CI/CD, cloud platform
-- **Conventions**: Existing code style, naming patterns, file organization
-
-Use this context to inform all phases below. Do NOT assume any specific framework or architecture.
 
 ## Workflow Phases
 
@@ -24,7 +15,7 @@ Use this context to inform all phases below. Do NOT assume any specific framewor
 Launch simultaneously:
 - **Architect**: System design, patterns, integration points
 - **UI/UX Specialist**: Interface design, user flows, accessibility
-- **Data Analyst**: Analytics requirements, tracking needs
+- **Data Analyst**: Analytics/tracking requirements
 
 ### Phase 2: Implementation (Sequential)
 - **Fullstack Developer**: Core implementation based on planning phase outputs
@@ -46,7 +37,7 @@ Launch simultaneously:
 ### Phase 5: Documentation (Parallel)
 Launch simultaneously:
 - **Documentation Specialist**: Technical documentation
-- **Code Documentation Generator**: JSDoc/API docs
+- **Code Documentation Generator**: API docs / docstrings
 - **Demo Documentation Specialist**: Examples and demos
 
 ### Phase 6: Deployment (Sequential)
@@ -55,55 +46,12 @@ Launch simultaneously:
 
 ## Execution Instructions
 
-1. **Planning Phase**
-   - Use Agent tool to launch parallel planning agents
-   - Wait for all to complete
-   - Consolidate design decisions
-
-2. **Implementation Phase**
-   - Pass consolidated plan to Fullstack Developer
-   - Create/modify files as needed
-   - Follow existing project conventions discovered in Step 0
-
-3. **Quality Gates Phase**
-   - Launch parallel quality agents
-   - Collect all findings
-   - If critical issues found, iterate on implementation
-
-4. **Testing Phase**
-   - Launch parallel testing agents
-   - Generate test files using project's test framework
-   - Report coverage metrics
-
-5. **Documentation Phase**
-   - Launch parallel documentation agents
-   - Update relevant documentation files
-
-6. **Deployment Phase**
-   - Prepare deployment configuration
-   - Update CI/CD if needed
-
-## Implementation Guidelines
-
-### Authentication
-- Follow the project's existing auth pattern (discover in Step 0)
-- Never store secrets or tokens client-side unless the project explicitly does so
-- Always include proper credentials in API calls matching existing patterns
-
-### API Integration
-- Use the project's existing API client/wrapper if one exists
-- Never make direct calls to external services if the project has an abstraction layer
-- Follow existing error handling patterns
-
-### i18n Compliance
-- If the project uses i18n, wrap all user-facing text following the existing pattern
-- Use the project's text wrapping utility for dynamic content
-- No inline styles if i18n/RTL support is present
-
-### Code Style
-- Match existing naming conventions (camelCase, snake_case, etc.)
-- Follow existing file organization patterns
-- Use the same import/require style as the rest of the codebase
+1. **Planning Phase** — Launch 3 parallel agents; consolidate design decisions
+2. **Implementation Phase** — Pass consolidated plan to Fullstack Developer
+3. **Quality Gates Phase** — Launch 4 parallel quality agents; iterate on critical issues
+4. **Testing Phase** — Launch 4 parallel testing agents; generate test files and coverage
+5. **Documentation Phase** — Launch 3 parallel documentation agents
+6. **Deployment Phase** — Prepare deployment configuration
 
 ## Output Format
 
@@ -143,3 +91,11 @@ Launch simultaneously:
 1. [action item]
 2. [action item]
 ```
+
+## Shared references
+Security baseline gate: `@.claude/commands/_shared/security-baseline.md` · Minor/student-data handling: `/team-privacy`
+
+## Project invariants
+- Every feature spans Admin/Educator/Learner: `@.claude/commands/_shared/roles.md` · GCS-only persistence: `@.claude/commands/_shared/storage-invariants.md`
+
+- Learning-first UX (entry jargon, focus over density, in-place LLM help, tabs/modals): `@.claude/commands/_shared/learning-ux.md`

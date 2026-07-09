@@ -1,26 +1,16 @@
+---
+description: Comprehensive parallel code review
+argument-hint: [<files> | (default: recent changes)]
+---
+
 # Team Code Review
 
 Execute a comprehensive code review with the full quality team working in parallel.
 
-## Context
-Target: $ARGUMENTS (or current working directory if not specified)
-
-## Step 0: Discover Project Context
-
-Before any review, scan the codebase to understand:
-- **Stack**: Language, framework, runtime
-- **Code style**: Naming conventions, file organization, existing patterns
-- **Testing**: Test framework, test locations, coverage expectations
-- **Linting**: Configured linters, formatters, style guides
-- **Architecture**: Module boundaries, dependency patterns, data flow
-
-Use this context to calibrate what counts as a violation vs. an intentional pattern.
-
 ## Workflow Phases
 
 ### Phase 1: Parallel Automated Analysis
-The following agents analyze the code simultaneously:
-- **Static Code Analyzer**: Code quality, complexity, maintainability metrics
+- **Static Code Analyzer**: Quality, complexity, maintainability metrics
 - **Code Smell Detector**: Anti-patterns, duplicate code, long methods
 - **Security Vulnerability Scanner**: OWASP vulnerabilities, auth issues
 - **Dead Code Eliminator**: Unused code, unreachable branches
@@ -33,28 +23,16 @@ The following agents analyze the code simultaneously:
 - **Technical Debt Tracker**: Updates debt register with new findings
 - **Performance Metrics Collector**: Collects and reports quality metrics
 
+## Context
+
+Target: $ARGUMENTS (or current working directory / recent changes if not specified)
+
 ## Instructions
 
-When executing this review:
-
-1. **Gather Context**
-   - Identify target files from arguments or use recent changes (`git diff`)
-   - Understand the project's conventions before flagging violations
-
-2. **Launch Parallel Analysis** (use Agent tool with multiple parallel invocations)
-   - Launch all Phase 1 agents simultaneously
-   - Each agent focuses on its specialty
-   - Collect all findings
-
-3. **Synthesize Review**
-   - Pass findings to Code Review Automation agent
-   - Generate prioritized action items
-   - Filter out false positives based on project context
-
-4. **Report**
-   - Summarize findings by severity (critical/error/warning/info)
-   - Provide file:line references
-   - List recommended actions
+1. **Gather Context** — Identify target files from arguments or recent changes
+2. **Launch Parallel Analysis** — Run all Phase 1 agents simultaneously; collect findings
+3. **Synthesize Review** — Pass findings to Code Review Automation; generate prioritized action items
+4. **Report** — Summarize findings by severity with file:line references
 
 ## Output Format
 
@@ -62,83 +40,67 @@ When executing this review:
 ## Code Review Summary
 
 ### Critical Issues (must fix)
-- [file:line] Description - Agent
+- [file:line] Description — Agent
 
 ### Errors (should fix)
-- [file:line] Description - Agent
+- [file:line] Description — Agent
 
 ### Warnings (consider fixing)
-- [file:line] Description - Agent
+- [file:line] Description — Agent
 
 ### Info (for awareness)
-- [file:line] Description - Agent
+- [file:line] Description — Agent
 
 ### Action Items
-1. High priority action
-2. Medium priority action
-3. Low priority action
+1. High priority
+2. Medium priority
+3. Low priority
 
 ### Technical Debt Added
-- Item 1
-- Item 2
+- [item]
 ```
 
 ## Agent Prompts
 
-Use these specialized prompts when invoking each agent:
-
 ### Static Code Analyzer
 ```
-You are the Static Code Analyzer Agent.
-
-FIRST: Scan the codebase to understand the language, framework, and coding conventions.
-
 Analyze code for:
 - Cyclomatic complexity (flag >10)
 - Cognitive complexity
 - Maintainability index
 - Code duplication percentage
 - Lines per function (flag >50)
-- Deeply nested logic (flag >3 levels)
-
-Return structured metrics with file:line references. Calibrate thresholds to the project's existing patterns.
+Return structured metrics with file:line references.
 ```
 
 ### Code Smell Detector
 ```
-You are the Code Smell Detector Agent.
-
-FIRST: Scan the codebase to understand the architecture and design patterns in use.
-
 Identify:
-- God classes/objects (too many responsibilities)
-- Feature envy (methods that use another class's data excessively)
-- Shotgun surgery (one change requires edits in many places)
-- Long parameter lists (flag >4 parameters)
-- Primitive obsession (should be a type/class)
-- Duplicate logic that should be abstracted
-
-Return each smell with severity, location (file:line), and refactoring suggestion.
+- God classes/objects
+- Feature envy
+- Shotgun surgery
+- Long parameter lists
+- Primitive obsession
+- Switch statements that should be polymorphism
+Return each smell with severity and refactoring suggestion.
 ```
 
 ### Security Vulnerability Scanner
 ```
-You are the Security Vulnerability Scanner Agent.
-
-FIRST: Scan the codebase to understand the auth pattern, data handling, and external integrations.
-
 Scan for:
-1. OWASP Top 10 vulnerabilities
-2. Authentication/authorization flaws
-3. Injection vulnerabilities (SQL, XSS, command, path traversal)
-4. Sensitive data exposure (secrets in code, PII in logs)
-5. Security misconfiguration
-6. Broken access control
-7. Insecure dependencies
-
-For each finding provide:
-- CWE reference if applicable
-- Exact file:line location
-- Severity (Critical/High/Medium/Low)
-- Remediation recommendation
+- Injection (SQL, XSS, command)
+- Authentication/authorization flaws
+- Sensitive data exposure
+- Missing input validation
+- Insecure dependencies
+Reference OWASP categories in findings.
 ```
+
+## Shared references
+Code-quality signals and the four-command disambiguation table live in one place — pull them in:
+`@.claude/commands/_shared/code-quality.md`
+
+## Project invariants
+- Include negative authz tests across roles: `@.claude/commands/_shared/roles.md` · Flag any non-GCS persistence or `localStorage` data: `@.claude/commands/_shared/storage-invariants.md`
+
+- Learning-first UX (entry jargon, focus over density, in-place LLM help, tabs/modals): `@.claude/commands/_shared/learning-ux.md`
